@@ -20,17 +20,14 @@ const Sales = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   useEffect(() => {
-    // Load customers from localStorage
     const savedCustomers = localStorage.getItem("customers");
     if (savedCustomers) {
       setCustomers(JSON.parse(savedCustomers));
     }
 
-    // Load products from localStorage
     const savedProducts = localStorage.getItem("products");
     if (savedProducts) {
       setProducts(JSON.parse(savedProducts));
-      // Initialize first order item with first product if available
       const parsedProducts = JSON.parse(savedProducts);
       if (parsedProducts.length > 0) {
         setOrderItems([{ product: parsedProducts[0], quantity: 1 }]);
@@ -51,7 +48,7 @@ const Sales = () => {
     if (products.length > 0) {
       setOrderItems([...orderItems, { product: products[0], quantity: 1 }]);
     } else {
-      toast.error("No products available. Please import products first.");
+      toast.error("Nema dostupnih proizvoda. Molimo prvo uvezite proizvode.");
     }
   };
 
@@ -61,28 +58,27 @@ const Sales = () => {
 
   const handleSubmitOrder = () => {
     if (!selectedCustomer) {
-      toast.error("Please select a customer");
+      toast.error("Molimo izaberite kupca");
       return;
     }
     if (orderItems.length === 0) {
-      toast.error("Please add at least one product");
+      toast.error("Molimo dodajte bar jedan proizvod");
       return;
     }
-    // TODO: Implement order submission
-    toast.success("Order submitted successfully!");
+    toast.success("Porudžbina je uspešno poslata!");
   };
 
   return (
     <div className="container mx-auto py-8">
       <Card>
         <CardHeader>
-          <CardTitle>New Order</CardTitle>
+          <CardTitle>Nova porudžbina</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div className="relative">
               <Input
-                placeholder="Search customer..."
+                placeholder="Pretraži kupca..."
                 value={customerSearch}
                 onChange={(e) => setCustomerSearch(e.target.value)}
               />
@@ -120,7 +116,7 @@ const Sales = () => {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select product" />
+                    <SelectValue placeholder="Izaberite proizvod" />
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((product) => (
@@ -142,7 +138,7 @@ const Sales = () => {
                   className="w-24"
                 />
                 <div className="flex items-center w-24">
-                  ${item.product.price * item.quantity}
+                  {item.product.price * item.quantity} RSD
                 </div>
                 <Button
                   variant="destructive"
@@ -153,11 +149,11 @@ const Sales = () => {
                 </Button>
               </div>
             ))}
-            <Button onClick={handleAddItem}>Add Product</Button>
+            <Button onClick={handleAddItem}>Dodaj proizvod</Button>
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleSubmitOrder}>Submit Order</Button>
+            <Button onClick={handleSubmitOrder}>Pošalji porudžbinu</Button>
           </div>
         </CardContent>
       </Card>

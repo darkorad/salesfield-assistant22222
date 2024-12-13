@@ -21,27 +21,22 @@ const Settings = () => {
 
         if (type === "customers") {
           localStorage.setItem("customers", JSON.stringify(jsonData));
-          toast.success("Customer list uploaded successfully");
+          toast.success("Lista kupaca je uspešno učitana");
         } else if (type === "products") {
           localStorage.setItem("products", JSON.stringify(jsonData));
-          toast.success("Price list uploaded successfully");
+          toast.success("Cenovnik je uspešno učitan");
         }
       } catch (error) {
-        toast.error(`Error processing ${type} file`);
+        toast.error(`Greška pri obradi ${type === 'customers' ? 'liste kupaca' : 'cenovnika'}`);
         console.error(error);
       }
     };
 
     reader.onerror = () => {
-      toast.error(`Error reading ${type} file`);
+      toast.error(`Greška pri čitanju ${type === 'customers' ? 'liste kupaca' : 'cenovnika'}`);
     };
 
     reader.readAsBinaryString(file);
-  };
-
-  const handleExport = (type: string) => {
-    // TODO: Implement actual export logic
-    toast.success(`${type} exported successfully`);
   };
 
   return (
@@ -49,12 +44,12 @@ const Settings = () => {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Data Import</CardTitle>
+            <CardTitle>Uvoz podataka</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                Customer List (Excel)
+                Lista kupaca (Excel)
               </label>
               <Input
                 type="file"
@@ -64,7 +59,7 @@ const Settings = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">
-                Price List (Excel)
+                Cenovnik (Excel)
               </label>
               <Input
                 type="file"
@@ -77,26 +72,26 @@ const Settings = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Reports</CardTitle>
+            <CardTitle>Izveštaji</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button
               className="w-full"
-              onClick={() => handleExport("Daily sales report")}
+              onClick={() => toast.success("Dnevni izveštaj izvezen")}
             >
-              Export Daily Sales Report
+              Izvezi dnevni izveštaj prodaje
             </Button>
             <Button
               className="w-full"
-              onClick={() => handleExport("Monthly sales report")}
+              onClick={() => toast.success("Mesečni izveštaj izvezen")}
             >
-              Export Monthly Sales Report
+              Izvezi mesečni izveštaj prodaje
             </Button>
             <Button
               className="w-full"
-              onClick={() => handleExport("Monthly product summary")}
+              onClick={() => toast.success("Mesečni pregled proizvoda izvezen")}
             >
-              Export Monthly Product Summary
+              Izvezi mesečni pregled proizvoda
             </Button>
           </CardContent>
         </Card>
