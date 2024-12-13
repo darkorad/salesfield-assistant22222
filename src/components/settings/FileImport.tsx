@@ -46,7 +46,11 @@ export const FileImport = () => {
     };
 
     reader.onerror = () => {
-      toast.error(`Greška pri čitanju ${type === "customers" ? "liste kupaca" : "cenovnika"}`);
+      toast({
+        variant: "destructive",
+        title: "Greška",
+        description: `Greška pri čitanju ${type === "customers" ? "liste kupaca" : "cenovnika"}`
+      });
     };
 
     reader.readAsBinaryString(file);
