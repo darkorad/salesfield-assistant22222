@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,23 +12,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
 
-// Temporary mock data
-const mockCustomers: Customer[] = [
-  { id: "1", name: "John Doe", address: "123 Main St", city: "Belgrade" },
-  { id: "2", name: "Jane Smith", address: "456 Oak St", city: "Novi Sad" },
-];
-
-const mockProducts: Product[] = [
-  { id: "1", name: "Product 1", manufacturer: "Manufacturer A", price: 100, unit: "pcs" },
-  { id: "2", name: "Product 2", manufacturer: "Manufacturer B", price: 200, unit: "kg" },
-];
-
 const Sales = () => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([{ product: mockProducts[0], quantity: 1 }]);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
-  const filteredCustomers = mockCustomers.filter((customer) =>
+  useEffect(() => {
+    // Load customers from localStorage
+    const savedCustomers = localStorage.getItem("customers");
+    if (savedCustomers) {
+      setCustomers(JSON.parse(savedCustomers));
+    }
+
+    // Load products from localStorage
+    const savedProducts = localStorage.getItem("products");
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
+      // Initialize first order item with first product if available
+      const parsedProducts = JSON.parse(savedProducts);
+      if (parsedProducts.length > 0) {
+        setOrderItems([{ product: parsedProducts[0], quantity: 1 }]);
+      }
+    }
+  }, []);
+
+  const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
@@ -38,7 +48,11 @@ const Sales = () => {
   };
 
   const handleAddItem = () => {
-    setOrderItems([...orderItems, { product: mockProducts[0], quantity: 1 }]);
+    if (products.length > 0) {
+      setOrderItems([...orderItems, { product: products[0], quantity: 1 }]);
+    } else {
+      toast.error("No products available. Please import products first.");
+    }
   };
 
   const handleRemoveItem = (index: number) => {
@@ -101,7 +115,7 @@ const Sales = () => {
                   value={item.product.id}
                   onValueChange={(value) => {
                     const newItems = [...orderItems];
-                    newItems[index].product = mockProducts.find((p) => p.id === value)!;
+                    newItems[index].product = products.find((p) => p.id === value)!;
                     setOrderItems(newItems);
                   }}
                 >
@@ -109,7 +123,7 @@ const Sales = () => {
                     <SelectValue placeholder="Select product" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockProducts.map((product) => (
+                    {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.name} - {product.manufacturer}
                       </SelectItem>
