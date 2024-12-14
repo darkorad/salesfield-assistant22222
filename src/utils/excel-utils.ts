@@ -18,6 +18,7 @@ export const processExcelFile = (data: any, type: "customers" | "products") => {
     if (type === "customers") {
       const customers = jsonData.map((row: any) => ({
         id: crypto.randomUUID(),
+        code: row["Šifra kupca"] || "",
         name: row["Naziv kupca"] || "",
         address: row["Adresa"] || "",
         city: row["Grad"] || "",

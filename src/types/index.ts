@@ -6,6 +6,7 @@ export interface User {
 
 export interface Customer {
   id: string;
+  code: string;
   name: string;
   address: string;
   city: string;
