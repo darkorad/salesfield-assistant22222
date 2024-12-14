@@ -39,6 +39,7 @@ export const OrderForm = ({
         <ProductSelect
           products={products}
           orderItems={orderItems}
+          selectedCustomer={selectedCustomer}
           onOrderItemsChange={onOrderItemsChange}
         />
       )}

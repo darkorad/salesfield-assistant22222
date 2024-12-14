@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { Product, OrderItem } from "@/types";
+import { Product, OrderItem, Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 interface ProductSelectProps {
   products: Product[];
   orderItems: OrderItem[];
+  selectedCustomer: Customer;
   onOrderItemsChange: (items: OrderItem[]) => void;
 }
 
 export const ProductSelect = ({
   products,
   orderItems,
+  selectedCustomer,
   onOrderItemsChange,
 }: ProductSelectProps) => {
   const [productSearch, setProductSearch] = useState("");
@@ -49,6 +51,18 @@ export const ProductSelect = ({
     <div className="space-y-4">
       <div className="space-y-2">
         <h2 className="text-lg font-semibold mb-4">Proizvodi</h2>
+        
+        <div className="bg-gray-50 p-4 rounded-md mb-4">
+          <h3 className="font-medium text-gray-700 mb-2">Izabrani kupac:</h3>
+          <div className="text-sm">
+            <p><span className="font-medium">Ime:</span> {selectedCustomer.name}</p>
+            <p><span className="font-medium">Adresa:</span> {selectedCustomer.address}</p>
+            {selectedCustomer.phone && (
+              <p><span className="font-medium">Telefon:</span> {selectedCustomer.phone}</p>
+            )}
+          </div>
+        </div>
+
         <label className="text-sm font-medium">Izbor artikala</label>
         <div className="relative">
           <Input
