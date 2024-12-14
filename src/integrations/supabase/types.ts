@@ -59,12 +59,6 @@ export type Database = {
           },
         ]
       }
-      CustomersList: {
-        Row: {}
-        Insert: {}
-        Update: {}
-        Relationships: []
-      }
       "Kupci Darko": {
         Row: {
           Adresa: string
