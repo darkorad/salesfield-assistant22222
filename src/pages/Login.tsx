@@ -4,6 +4,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,7 +12,8 @@ const Login = () => {
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (event === 'SIGNED_IN' && session) {
+        toast.success('Successfully logged in');
         navigate("/sales");
       }
     });
@@ -41,6 +43,10 @@ const Login = () => {
             }}
             providers={[]}
             redirectTo={`${window.location.origin}/sales`}
+            onError={(error) => {
+              console.error('Auth error:', error);
+              toast.error('Authentication error: ' + error.message);
+            }}
           />
         </CardContent>
       </Card>
