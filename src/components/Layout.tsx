@@ -21,7 +21,7 @@ const Layout = () => {
                   variant={location.pathname === "/sales" ? "default" : "ghost"}
                   className="text-sm md:text-base"
                 >
-                  Sales
+                  Prodaja
                 </Button>
               </Link>
               <Link to="/reports">
@@ -37,7 +37,7 @@ const Layout = () => {
                   variant={location.pathname === "/settings" ? "default" : "ghost"}
                   className="text-sm md:text-base"
                 >
-                  Settings
+                  Podešavanja
                 </Button>
               </Link>
             </div>
