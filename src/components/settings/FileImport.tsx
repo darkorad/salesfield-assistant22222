@@ -6,18 +6,21 @@ import { toast } from "@/hooks/use-toast";
 
 export const FileImport = () => {
   useEffect(() => {
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) return;
+
     // Check last import dates and auto-load if needed
-    const lastCustomersImport = localStorage.getItem("lastcustomersImport");
-    const lastProductsImport = localStorage.getItem("lastproductsImport");
+    const lastCustomersImport = localStorage.getItem(`lastCustomersImport_${currentUser}`);
+    const lastProductsImport = localStorage.getItem(`lastProductsImport_${currentUser}`);
 
     if (lastCustomersImport) {
       const lastImport = new Date(lastCustomersImport);
       const today = new Date();
       // Auto-load if last import was today
       if (lastImport.toDateString() === today.toDateString()) {
-        const savedCustomers = localStorage.getItem("customers");
+        const savedCustomers = localStorage.getItem(`customers_${currentUser}`);
         if (savedCustomers) {
-          // Data is already in localStorage, no need to reload
+          localStorage.setItem("customers", savedCustomers); // Copy to current session
           console.log("Customers auto-loaded from localStorage");
         }
       }
@@ -28,8 +31,9 @@ export const FileImport = () => {
       const lastImport = new Date(lastProductsImport);
       const today = new Date();
       if (lastImport.toDateString() === today.toDateString()) {
-        const savedProducts = localStorage.getItem("products");
+        const savedProducts = localStorage.getItem(`products_${currentUser}`);
         if (savedProducts) {
+          localStorage.setItem("products", savedProducts); // Copy to current session
           console.log("Products auto-loaded from localStorage");
         }
       }

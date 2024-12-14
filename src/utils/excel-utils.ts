@@ -27,7 +27,10 @@ export const processExcelFile = (data: any, type: "customers" | "products") => {
         gpsCoordinates: row["GPS Koordinate"] || "",
       }));
 
+      // Store in both user-specific and current session storage
       localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
+      localStorage.setItem("customers", JSON.stringify(customers));
+      localStorage.setItem(`lastCustomersImport_${currentUser}`, new Date().toISOString());
       toast.success("Lista kupaca je uspešno učitana");
     } else if (type === "products") {
       const products = jsonData.map((row: any) => ({
@@ -38,7 +41,10 @@ export const processExcelFile = (data: any, type: "customers" | "products") => {
         unit: row["Jedinica mere"] || "",
       }));
 
+      // Store in both user-specific and current session storage
       localStorage.setItem(`products_${currentUser}`, JSON.stringify(products));
+      localStorage.setItem("products", JSON.stringify(products));
+      localStorage.setItem(`lastProductsImport_${currentUser}`, new Date().toISOString());
       toast.success("Cenovnik je uspešno učitan");
     }
   } catch (error) {
