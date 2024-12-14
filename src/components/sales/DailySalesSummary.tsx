@@ -79,13 +79,13 @@ const DailySalesSummary = () => {
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            {todaySales.map((sale) => (
+            {todaySales.map((sale, index) => (
               <div
                 key={sale.id}
                 className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-2 gap-2"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">#{sale.id.slice(-4)}</span>
+                  <span className="text-muted-foreground">{index + 1}.</span>
                   <span className="font-medium">{sale.customer.name}</span>
                 </div>
                 <div className="flex justify-between w-full md:w-auto gap-2">
