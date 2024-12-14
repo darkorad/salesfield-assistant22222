@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Customer, Product, OrderItem } from "@/types";
+import { Customer, Product, OrderItem, Order } from "@/types";
 import { toast } from "sonner";
 
 const Sales = () => {
@@ -65,6 +65,30 @@ const Sales = () => {
       toast.error("Molimo dodajte bar jedan proizvod");
       return;
     }
+
+    const total = orderItems.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0
+    );
+
+    const newOrder: Order = {
+      id: crypto.randomUUID(),
+      customer: selectedCustomer,
+      items: orderItems,
+      total: total,
+      date: new Date().toISOString(),
+    };
+
+    const existingSales = localStorage.getItem("sales");
+    const sales = existingSales ? JSON.parse(existingSales) : [];
+    sales.push(newOrder);
+    localStorage.setItem("sales", JSON.stringify(sales));
+
+    // Reset form
+    setSelectedCustomer(null);
+    setCustomerSearch("");
+    setOrderItems([{ product: products[0], quantity: 1 }]);
+    
     toast.success("Porudžbina je uspešno poslata!");
   };
 

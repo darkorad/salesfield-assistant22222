@@ -17,11 +17,18 @@ export const Reports = () => {
         sale.date.startsWith(dateStr)
       );
 
+      if (todaySales.length === 0) {
+        toast.error("Nema prodaje za današnji dan");
+        return;
+      }
+
       const ws = XLSX.utils.json_to_sheet(todaySales.map((sale: Order) => ({
-        'Datum': sale.date,
+        'Datum': sale.date.split('T')[0],
+        'Vreme': sale.date.split('T')[1].substring(0, 8),
         'Kupac': sale.customer.name,
         'Ukupno (RSD)': sale.total,
-        'Broj stavki': sale.items.length
+        'Broj stavki': sale.items.length,
+        'Stavke': sale.items.map(item => `${item.product.name} (${item.quantity})`).join(', ')
       })));
 
       const wb = XLSX.utils.book_new();
@@ -48,11 +55,18 @@ export const Reports = () => {
         sale.date.startsWith(`${year}-${month}`)
       );
 
+      if (monthlySales.length === 0) {
+        toast.error("Nema prodaje za tekući mesec");
+        return;
+      }
+
       const ws = XLSX.utils.json_to_sheet(monthlySales.map((sale: Order) => ({
-        'Datum': sale.date,
+        'Datum': sale.date.split('T')[0],
+        'Vreme': sale.date.split('T')[1].substring(0, 8),
         'Kupac': sale.customer.name,
         'Ukupno (RSD)': sale.total,
-        'Broj stavki': sale.items.length
+        'Broj stavki': sale.items.length,
+        'Stavke': sale.items.map(item => `${item.product.name} (${item.quantity})`).join(', ')
       })));
 
       const wb = XLSX.utils.book_new();
@@ -78,6 +92,11 @@ export const Reports = () => {
       const monthlySales = sales.filter((sale: Order) => 
         sale.date.startsWith(`${year}-${month}`)
       );
+
+      if (monthlySales.length === 0) {
+        toast.error("Nema prodaje za tekući mesec");
+        return;
+      }
 
       const productSummary = new Map();
       
