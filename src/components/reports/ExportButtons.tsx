@@ -23,6 +23,7 @@ export const ExportButtons = () => {
     XLSX.utils.book_append_sheet(wb, ws, "Kupci");
     
     const colWidths = [
+      { wch: 15 }, // code
       { wch: 30 }, // name
       { wch: 40 }, // address
       { wch: 20 }, // city
