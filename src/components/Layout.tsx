@@ -1,5 +1,12 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu } from "lucide-react";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -24,30 +31,29 @@ const Layout = () => {
                   Prodaja
                 </Button>
               </Link>
-              <Link to="/reports">
-                <Button
-                  variant={location.pathname === "/reports" ? "default" : "ghost"}
-                  className="text-sm px-2"
-                >
-                  Izveštaji
-                </Button>
-              </Link>
-              <Link to="/settings">
-                <Button
-                  variant={location.pathname === "/settings" ? "default" : "ghost"}
-                  className="text-sm px-2"
-                >
-                  Podešavanja
-                </Button>
-              </Link>
             </div>
-            <Button 
-              variant="ghost" 
-              onClick={handleLogout}
-              className="text-sm px-2"
-            >
-              Logout
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/reports" className="w-full cursor-pointer">
+                    Izveštaji
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="w-full cursor-pointer">
+                    Podešavanja
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </nav>
