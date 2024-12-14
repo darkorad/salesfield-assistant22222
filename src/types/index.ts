@@ -37,4 +37,5 @@ export interface Order {
   total: number;
   date: string;
   paymentType: 'cash' | 'invoice';
+  sent?: boolean;
 }
