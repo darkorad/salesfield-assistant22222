@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -21,8 +21,27 @@ export const AddCustomerDialog = () => {
     city: "",
     phone: "",
     pib: "",
-    isVatRegistered: false
+    isVatRegistered: false,
+    gpsCoordinates: ""
   });
+
+  const handleGetGPSLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coordinates = `${position.coords.latitude},${position.coords.longitude}`;
+          setCustomer(prev => ({ ...prev, gpsCoordinates: coordinates }));
+          toast.success("GPS koordinate su uspešno dodate");
+        },
+        (error) => {
+          toast.error("Nije moguće dobiti GPS lokaciju");
+          console.error("Error getting GPS location:", error);
+        }
+      );
+    } else {
+      toast.error("Vaš pretraživač ne podržava GPS lokaciju");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +57,7 @@ export const AddCustomerDialog = () => {
     
     toast.success("Kupac je uspešno dodat");
     setOpen(false);
-    setCustomer({ name: "", address: "", city: "", phone: "", pib: "", isVatRegistered: false });
+    setCustomer({ name: "", address: "", city: "", phone: "", pib: "", isVatRegistered: false, gpsCoordinates: "" });
   };
 
   return (
@@ -112,6 +131,26 @@ export const AddCustomerDialog = () => {
               value={customer.phone}
               onChange={(e) => setCustomer(prev => ({ ...prev, phone: e.target.value }))}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gpsCoordinates">GPS Koordinate</Label>
+            <div className="flex gap-2">
+              <Input
+                id="gpsCoordinates"
+                value={customer.gpsCoordinates}
+                onChange={(e) => setCustomer(prev => ({ ...prev, gpsCoordinates: e.target.value }))}
+                placeholder="Latitude,Longitude"
+                readOnly
+              />
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={handleGetGPSLocation}
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                Dodaj GPS
+              </Button>
+            </div>
           </div>
           <Button type="submit" className="w-full">Dodaj kupca</Button>
         </form>

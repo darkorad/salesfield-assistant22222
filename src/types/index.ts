@@ -12,6 +12,7 @@ export interface Customer {
   phone?: string;
   pib: string;
   isVatRegistered: boolean;
+  gpsCoordinates?: string;
 }
 
 export interface Product {
