@@ -24,13 +24,23 @@ export const SalesActions = ({ contacts, sales, onOrdersSent }: SalesActionsProp
       toast.error(`Viber broj za ${contact.name} nije podešen`);
       return;
     }
-    const message = `Dnevni izveštaj prodaje:\n${sales
+
+    // Create viber message URL
+    const message = encodeURIComponent(`Dnevni izveštaj prodaje:\n${sales
       .map(
         (sale) =>
           `${sale.customer.name}: ${sale.total} RSD (${sale.items.length} stavki)`
       )
-      .join("\n")}`;
-    toast.success(`Izveštaj poslat na Viber: ${contact.name}`);
+      .join("\n")}`);
+    
+    // Open Viber with pre-filled message
+    window.open(`viber://forward?text=${message}`);
+    
+    // Mark orders as sent
+    const sentOrderIds = sales.map(sale => sale.id);
+    onOrdersSent(sentOrderIds);
+    
+    toast.success(`Izveštaj pripremljen za slanje na Viber: ${contact.name}`);
   };
 
   const handleSendEmail = () => {
@@ -45,6 +55,7 @@ export const SalesActions = ({ contacts, sales, onOrdersSent }: SalesActionsProp
     sales.forEach((sale) => {
       // Add customer header
       salesData.push([]);
+      salesData.push(['Šifra kupca:', sale.customer.code || '']);
       salesData.push(['Kupac:', sale.customer.name]);
       salesData.push(['Adresa:', `${sale.customer.address}, ${sale.customer.city}`]);
       salesData.push([]);
@@ -91,11 +102,15 @@ export const SalesActions = ({ contacts, sales, onOrdersSent }: SalesActionsProp
     const today = new Date().toLocaleDateString("sr-RS");
     XLSX.writeFile(workbook, `dnevni-izvestaj-${today}.xlsx`);
     
+    // Create mailto link with subject
+    const mailtoLink = `mailto:${contacts.email}?subject=Dnevni izveštaj prodaje - ${today}`;
+    window.location.href = mailtoLink;
+    
     // Mark orders as sent
     const sentOrderIds = sales.map(sale => sale.id);
     onOrdersSent(sentOrderIds);
     
-    toast.success("Excel izveštaj je uspešno kreiran");
+    toast.success("Excel izveštaj je uspešno kreiran i email je pripremljen");
   };
 
   return (
