@@ -2,6 +2,13 @@ import { Customer, Product, OrderItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CustomerSelect } from "./CustomerSelect";
 import { ProductSelect } from "./ProductSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface OrderFormProps {
   customers: Customer[];
@@ -12,7 +19,7 @@ interface OrderFormProps {
   onCustomerSearchChange: (value: string) => void;
   onCustomerSelect: (customer: Customer) => void;
   onOrderItemsChange: (items: OrderItem[]) => void;
-  onSubmit: () => void;
+  onSubmit: (paymentType: 'cash' | 'invoice') => void;
 }
 
 export const OrderForm = ({
@@ -45,10 +52,16 @@ export const OrderForm = ({
       )}
 
       {selectedCustomer && orderItems.length > 0 && (
-        <div className="flex justify-end">
-          <Button onClick={onSubmit} className="w-full md:w-auto">
-            Pošalji porudžbinu
-          </Button>
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <Select onValueChange={(value) => onSubmit(value as 'cash' | 'invoice')}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Izaberite način plaćanja" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="invoice">Račun</SelectItem>
+              <SelectItem value="cash">Gotovina</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
     </div>

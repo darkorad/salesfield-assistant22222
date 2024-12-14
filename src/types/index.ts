@@ -20,6 +20,7 @@ export interface Product {
   manufacturer: string;
   price: number;
   unit: string;
+  cashPrice?: number;
 }
 
 export interface OrderItem {
@@ -33,4 +34,5 @@ export interface Order {
   items: OrderItem[];
   total: number;
   date: string;
+  paymentType: 'cash' | 'invoice';
 }

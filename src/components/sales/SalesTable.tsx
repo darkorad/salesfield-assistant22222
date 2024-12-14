@@ -24,6 +24,7 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
         <TableRow>
           <TableHead>Kupac</TableHead>
           <TableHead>Adresa</TableHead>
+          <TableHead>Način plaćanja</TableHead>
           <TableHead className="text-right">Iznos</TableHead>
           <TableHead className="text-center">Broj stavki</TableHead>
         </TableRow>
@@ -37,6 +38,9 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
             <TableCell>{sale.customer.name}</TableCell>
             <TableCell>
               {sale.customer.address}, {sale.customer.city}
+            </TableCell>
+            <TableCell>
+              {sale.paymentType === 'cash' ? 'Gotovina' : 'Račun'}
             </TableCell>
             <TableCell className="text-right">{sale.total} RSD</TableCell>
             <TableCell className="text-center">{sale.items.length}</TableCell>
