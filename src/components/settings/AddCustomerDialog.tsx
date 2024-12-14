@@ -3,45 +3,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, MapPin } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { GPSCoordinatesInput } from "./GPSCoordinatesInput";
+import { VATStatusSelect } from "./VATStatusSelect";
+import { CustomerFormData, initialCustomerFormData } from "./types";
 
 export const AddCustomerDialog = () => {
   const [open, setOpen] = useState(false);
-  const [customer, setCustomer] = useState({
-    name: "",
-    address: "",
-    city: "",
-    phone: "",
-    pib: "",
-    isVatRegistered: false,
-    gpsCoordinates: ""
-  });
-
-  const handleGetGPSLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const coordinates = `${position.coords.latitude},${position.coords.longitude}`;
-          setCustomer(prev => ({ ...prev, gpsCoordinates: coordinates }));
-          toast.success("GPS koordinate su uspešno dodate");
-        },
-        (error) => {
-          toast.error("Nije moguće dobiti GPS lokaciju");
-          console.error("Error getting GPS location:", error);
-        }
-      );
-    } else {
-      toast.error("Vaš pretraživač ne podržava GPS lokaciju");
-    }
-  };
+  const [customer, setCustomer] = useState<CustomerFormData>(initialCustomerFormData);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +27,13 @@ export const AddCustomerDialog = () => {
     
     toast.success("Kupac je uspešno dodat");
     setOpen(false);
-    setCustomer({ name: "", address: "", city: "", phone: "", pib: "", isVatRegistered: false, gpsCoordinates: "" });
+    setCustomer(initialCustomerFormData);
+  };
+
+  const handleInputChange = (field: keyof CustomerFormData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setCustomer(prev => ({ ...prev, [field]: e.target.value }));
   };
 
   return (
@@ -78,7 +54,7 @@ export const AddCustomerDialog = () => {
             <Input
               id="name"
               value={customer.name}
-              onChange={(e) => setCustomer(prev => ({ ...prev, name: e.target.value }))}
+              onChange={handleInputChange("name")}
               required
             />
           </div>
@@ -87,31 +63,20 @@ export const AddCustomerDialog = () => {
             <Input
               id="pib"
               value={customer.pib}
-              onChange={(e) => setCustomer(prev => ({ ...prev, pib: e.target.value }))}
+              onChange={handleInputChange("pib")}
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="vatStatus">Kupac u PDV-u</Label>
-            <Select
-              value={customer.isVatRegistered ? "da" : "ne"}
-              onValueChange={(value) => setCustomer(prev => ({ ...prev, isVatRegistered: value === "da" }))}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Izaberi PDV status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="da">Da</SelectItem>
-                <SelectItem value="ne">Ne</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <VATStatusSelect 
+            value={customer.isVatRegistered}
+            onChange={(value) => setCustomer(prev => ({ ...prev, isVatRegistered: value }))}
+          />
           <div className="space-y-2">
             <Label htmlFor="address">Adresa</Label>
             <Input
               id="address"
               value={customer.address}
-              onChange={(e) => setCustomer(prev => ({ ...prev, address: e.target.value }))}
+              onChange={handleInputChange("address")}
               required
             />
           </div>
@@ -120,7 +85,7 @@ export const AddCustomerDialog = () => {
             <Input
               id="city"
               value={customer.city}
-              onChange={(e) => setCustomer(prev => ({ ...prev, city: e.target.value }))}
+              onChange={handleInputChange("city")}
               required
             />
           </div>
@@ -129,29 +94,13 @@ export const AddCustomerDialog = () => {
             <Input
               id="phone"
               value={customer.phone}
-              onChange={(e) => setCustomer(prev => ({ ...prev, phone: e.target.value }))}
+              onChange={handleInputChange("phone")}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="gpsCoordinates">GPS Koordinate</Label>
-            <div className="flex gap-2">
-              <Input
-                id="gpsCoordinates"
-                value={customer.gpsCoordinates}
-                onChange={(e) => setCustomer(prev => ({ ...prev, gpsCoordinates: e.target.value }))}
-                placeholder="Latitude,Longitude"
-                readOnly
-              />
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={handleGetGPSLocation}
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                Dodaj GPS
-              </Button>
-            </div>
-          </div>
+          <GPSCoordinatesInput 
+            value={customer.gpsCoordinates}
+            onChange={(value) => setCustomer(prev => ({ ...prev, gpsCoordinates: value }))}
+          />
           <Button type="submit" className="w-full">Dodaj kupca</Button>
         </form>
       </DialogContent>
