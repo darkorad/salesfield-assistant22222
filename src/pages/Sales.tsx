@@ -8,9 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Customer, Product, OrderItem, Order } from "@/types";
 import { toast } from "sonner";
+import { ChevronDown } from "lucide-react";
 
 const Sales = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -18,6 +25,7 @@ const Sales = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [productSearch, setProductSearch] = useState("");
 
   useEffect(() => {
     const savedCustomers = localStorage.getItem("customers");
@@ -37,6 +45,10 @@ const Sales = () => {
 
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(customerSearch.toLowerCase())
+  );
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(productSearch.toLowerCase())
   );
 
   const handleCustomerSelect = (customer: Customer) => {
@@ -84,7 +96,6 @@ const Sales = () => {
     sales.push(newOrder);
     localStorage.setItem("sales", JSON.stringify(sales));
 
-    // Reset form
     setSelectedCustomer(null);
     setCustomerSearch("");
     setOrderItems([{ product: products[0], quantity: 1 }]);
@@ -101,11 +112,31 @@ const Sales = () => {
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div className="relative">
-              <Input
-                placeholder="Pretraži kupca..."
-                value={customerSearch}
-                onChange={(e) => setCustomerSearch(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Pretraži kupca..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  className="flex-1"
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[200px]">
+                    {customers.map((customer) => (
+                      <DropdownMenuItem
+                        key={customer.id}
+                        onClick={() => handleCustomerSelect(customer)}
+                      >
+                        {customer.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               {customerSearch && (
                 <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
                   {filteredCustomers.map((customer) => (
@@ -131,25 +162,31 @@ const Sales = () => {
           <div className="space-y-4">
             {orderItems.map((item, index) => (
               <div key={index} className="flex gap-4">
-                <Select
-                  value={item.product.id}
-                  onValueChange={(value) => {
-                    const newItems = [...orderItems];
-                    newItems[index].product = products.find((p) => p.id === value)!;
-                    setOrderItems(newItems);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Izaberite proizvod" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name} - {product.manufacturer}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex-1 relative">
+                  <Input
+                    value={item.product.name}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    placeholder="Pretraži proizvod..."
+                  />
+                  {productSearch && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+                      {filteredProducts.map((product) => (
+                        <div
+                          key={product.id}
+                          className="p-2 cursor-pointer hover:bg-gray-100"
+                          onClick={() => {
+                            const newItems = [...orderItems];
+                            newItems[index].product = product;
+                            setOrderItems(newItems);
+                            setProductSearch("");
+                          }}
+                        >
+                          {product.name} - {product.manufacturer}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Input
                   type="number"
                   min="1"
