@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 
 interface OrderFormProps {
   customers: Customer[];
@@ -44,6 +45,30 @@ export const OrderForm = ({
         onCustomerSearchChange={onCustomerSearchChange}
         onCustomerSelect={onCustomerSelect}
       />
+
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Svi Proizvodi</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products.map((product) => (
+            <Card key={product.id} className="p-4">
+              <div className="space-y-2">
+                <h3 className="font-medium">{product.name}</h3>
+                <p className="text-sm text-gray-500">{product.manufacturer}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">
+                    {product.price} RSD/{product.unit}
+                  </span>
+                  {product.cashPrice && (
+                    <span className="text-sm text-green-600">
+                      Gotovina: {product.cashPrice} RSD
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
 
       {selectedCustomer && (
         <ProductSelect
