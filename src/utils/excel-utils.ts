@@ -1,29 +1,48 @@
 import * as XLSX from "xlsx";
-import { toast } from "sonner";
 import { Customer, Product } from "@/types";
+import { toast } from "sonner";
 
-export const processExcelFile = (data: string | ArrayBuffer | null, type: "customers" | "products"): void => {
+export const processExcelFile = (data: any, type: "customers" | "products") => {
   try {
     const workbook = XLSX.read(data, { type: "binary" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    localStorage.setItem(type, JSON.stringify(jsonData));
-    localStorage.setItem(`last${type}Import`, new Date().toISOString());
-    
-    toast.success(`${type === "customers" ? "Lista kupaca" : "Cenovnik"} je uspešno učitan`);
-  } catch (error) {
-    toast.error(`Greška pri obradi ${type === "customers" ? "liste kupaca" : "cenovnika"}`);
-    console.error(error);
-  }
-};
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) {
+      toast.error("No user logged in");
+      return;
+    }
 
-export const loadSavedData = () => {
-  const customers = localStorage.getItem("customers");
-  const products = localStorage.getItem("products");
-  return {
-    customers: customers ? JSON.parse(customers) : [],
-    products: products ? JSON.parse(products) : [],
-  };
+    if (type === "customers") {
+      const customers = jsonData.map((row: any) => ({
+        id: crypto.randomUUID(),
+        name: row["Naziv kupca"] || "",
+        address: row["Adresa"] || "",
+        city: row["Grad"] || "",
+        phone: row["Telefon"] || "",
+        pib: row["PIB"] || "",
+        isVatRegistered: row["PDV Obveznik"] === "DA",
+        gpsCoordinates: row["GPS Koordinate"] || "",
+      }));
+
+      localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
+      toast.success("Lista kupaca je uspešno učitana");
+    } else if (type === "products") {
+      const products = jsonData.map((row: any) => ({
+        id: crypto.randomUUID(),
+        name: row["Naziv"] || "",
+        manufacturer: row["Proizvođač"] || "",
+        price: parseFloat(row["Cena"]) || 0,
+        unit: row["Jedinica mere"] || "",
+      }));
+
+      localStorage.setItem(`products_${currentUser}`, JSON.stringify(products));
+      toast.success("Cenovnik je uspešno učitan");
+    }
+  } catch (error) {
+    console.error("Error processing Excel file:", error);
+    toast.error(`Greška pri učitavanju ${type === "customers" ? "liste kupaca" : "cenovnika"}`);
+  }
 };

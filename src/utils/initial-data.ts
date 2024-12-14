@@ -1,49 +1,19 @@
-import * as XLSX from 'xlsx';
-
-const sampleCustomers = [
-  { 
-    id: "1", 
-    name: "Kupac 1", 
-    address: "Adresa 1", 
-    city: "Grad 1", 
-    phone: "123-456",
-    pib: "123456789",
-    isVatRegistered: true
-  },
-  { 
-    id: "2", 
-    name: "Kupac 2", 
-    address: "Adresa 2", 
-    city: "Grad 2", 
-    phone: "234-567",
-    pib: "987654321",
-    isVatRegistered: false
-  },
-  { 
-    id: "3", 
-    name: "Kupac 3", 
-    address: "Adresa 3", 
-    city: "Grad 3", 
-    phone: "345-678",
-    pib: "456789123",
-    isVatRegistered: true
-  }
-];
-
-const sampleProducts = [
-  { id: "1", name: "Proizvod 1", manufacturer: "Proizvođač 1", price: 100, unit: "kom" },
-  { id: "2", name: "Proizvod 2", manufacturer: "Proizvođač 2", price: 200, unit: "kom" },
-  { id: "3", name: "Proizvod 3", manufacturer: "Proizvođač 3", price: 300, unit: "kom" }
-];
-
 export const initializeData = () => {
-  if (!localStorage.getItem('customers')) {
-    localStorage.setItem('customers', JSON.stringify(sampleCustomers));
-    localStorage.setItem('lastCustomersImport', new Date().toISOString());
-  }
+  const currentUser = localStorage.getItem("currentUser");
+  if (!currentUser) return;
 
-  if (!localStorage.getItem('products')) {
-    localStorage.setItem('products', JSON.stringify(sampleProducts));
-    localStorage.setItem('lastProductsImport', new Date().toISOString());
+  // Initialize user-specific storage keys if they don't exist
+  const userCustomers = localStorage.getItem(`customers_${currentUser}`);
+  const userProducts = localStorage.getItem(`products_${currentUser}`);
+  const userSales = localStorage.getItem(`sales_${currentUser}`);
+
+  if (!userCustomers) {
+    localStorage.setItem(`customers_${currentUser}`, JSON.stringify([]));
+  }
+  if (!userProducts) {
+    localStorage.setItem(`products_${currentUser}`, JSON.stringify([]));
+  }
+  if (!userSales) {
+    localStorage.setItem(`sales_${currentUser}`, JSON.stringify([]));
   }
 };

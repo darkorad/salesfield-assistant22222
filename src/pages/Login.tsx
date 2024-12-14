@@ -6,6 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
+const VALID_USERS = [
+  { username: "darko", password: "1234" },
+  { username: "veljko", password: "1234" }
+];
+
 const Login = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
@@ -14,12 +19,34 @@ const Login = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual login logic
-    if (username && password) {
+    
+    const user = VALID_USERS.find(
+      (u) => u.username === username.toLowerCase() && u.password === password
+    );
+
+    if (user) {
+      // Store the current user
+      localStorage.setItem("currentUser", user.username);
+      
+      // Initialize user-specific data if it doesn't exist
+      const userCustomers = localStorage.getItem(`customers_${user.username}`);
+      const userProducts = localStorage.getItem(`products_${user.username}`);
+      const userSales = localStorage.getItem(`sales_${user.username}`);
+      
+      if (!userCustomers) {
+        localStorage.setItem(`customers_${user.username}`, JSON.stringify([]));
+      }
+      if (!userProducts) {
+        localStorage.setItem(`products_${user.username}`, JSON.stringify([]));
+      }
+      if (!userSales) {
+        localStorage.setItem(`sales_${user.username}`, JSON.stringify([]));
+      }
+
       toast.success("Successfully logged in!");
       navigate("/sales");
     } else {
-      toast.error("Please enter both username and password");
+      toast.error("Invalid username or password");
     }
   };
 

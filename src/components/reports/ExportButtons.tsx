@@ -5,7 +5,13 @@ import * as XLSX from "xlsx";
 
 export const ExportButtons = () => {
   const handleExportBuyers = () => {
-    const buyers = localStorage.getItem("customers");
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) {
+      toast.error("No user logged in");
+      return;
+    }
+
+    const buyers = localStorage.getItem(`customers_${currentUser}`);
     if (!buyers) {
       toast.error("Nema podataka o kupcima");
       return;
@@ -30,7 +36,13 @@ export const ExportButtons = () => {
   };
 
   const handleExportPrices = () => {
-    const products = localStorage.getItem("products");
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) {
+      toast.error("No user logged in");
+      return;
+    }
+
+    const products = localStorage.getItem(`products_${currentUser}`);
     if (!products) {
       toast.error("Nema podataka o cenama");
       return;

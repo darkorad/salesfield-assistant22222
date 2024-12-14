@@ -27,9 +27,16 @@ const formatSaleRecord = (sale: Order): SaleRecord => ({
   'Stavke': sale.items.map(item => `${item.product.name} (${item.quantity})`).join(', ')
 });
 
+const getCurrentUserSales = () => {
+  const currentUser = localStorage.getItem("currentUser");
+  if (!currentUser) return [];
+  
+  const salesData = localStorage.getItem(`sales_${currentUser}`);
+  return salesData ? JSON.parse(salesData) : [];
+};
+
 const getSalesForPeriod = (startDate: string): Order[] => {
-  const salesData = localStorage.getItem('sales');
-  const sales = salesData ? JSON.parse(salesData) : [];
+  const sales = getCurrentUserSales();
   return sales.filter((sale: Order) => sale.date.startsWith(startDate));
 };
 
