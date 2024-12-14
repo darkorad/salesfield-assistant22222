@@ -5,6 +5,14 @@ import { Eye } from "lucide-react";
 import { generateDailyReport, generateMonthlyReport, generateProductReport } from "@/utils/report-utils";
 import { SalesTable } from "../sales/SalesTable";
 import { Order } from "@/types";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const Reports = () => {
   const [previewData, setPreviewData] = useState<{
@@ -80,49 +88,52 @@ export const Reports = () => {
         <CardTitle>Izveštaji</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <Button
-            className="flex-1"
-            onClick={generateDailyReport}
+            className="w-full"
+            onClick={() => generateDailyReport()}
           >
             Izvezi dnevni izveštaj prodaje
           </Button>
           <Button
             variant="outline"
+            className="w-full"
             onClick={handlePreviewDaily}
           >
             <Eye className="mr-2" />
-            Prikaži
+            Prikaži dnevni izveštaj
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <Button
-            className="flex-1"
-            onClick={generateMonthlyReport}
+            className="w-full"
+            onClick={() => generateMonthlyReport()}
           >
             Izvezi mesečni izveštaj prodaje
           </Button>
           <Button
             variant="outline"
+            className="w-full"
             onClick={handlePreviewMonthly}
           >
             <Eye className="mr-2" />
-            Prikaži
+            Prikaži mesečni izveštaj
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <Button
-            className="flex-1"
-            onClick={generateProductReport}
+            className="w-full"
+            onClick={() => generateProductReport()}
           >
             Izvezi mesečni pregled proizvoda
           </Button>
           <Button
             variant="outline"
+            className="w-full"
             onClick={handlePreviewProducts}
           >
             <Eye className="mr-2" />
-            Prikaži
+            Prikaži pregled proizvoda
           </Button>
         </div>
         {renderPreview()}
