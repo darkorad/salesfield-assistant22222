@@ -12,30 +12,30 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex space-x-2 md:space-x-4">
-              <Link to="/sales">
+      <nav className="bg-white shadow-sm sticky top-0 z-50 w-full">
+        <div className="max-w-full px-2 sm:px-4">
+          <div className="flex flex-col sm:flex-row justify-between py-2 sm:py-4 items-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2 w-full sm:w-auto">
+              <Link to="/sales" className="w-[calc(50%-0.25rem)] sm:w-auto">
                 <Button
                   variant={location.pathname === "/sales" ? "default" : "ghost"}
-                  className="text-sm md:text-base"
+                  className="w-full text-sm"
                 >
                   Prodaja
                 </Button>
               </Link>
-              <Link to="/reports">
+              <Link to="/reports" className="w-[calc(50%-0.25rem)] sm:w-auto">
                 <Button
                   variant={location.pathname === "/reports" ? "default" : "ghost"}
-                  className="text-sm md:text-base"
+                  className="w-full text-sm"
                 >
                   Izveštaji
                 </Button>
               </Link>
-              <Link to="/settings">
+              <Link to="/settings" className="w-[calc(50%-0.25rem)] sm:w-auto">
                 <Button
                   variant={location.pathname === "/settings" ? "default" : "ghost"}
-                  className="text-sm md:text-base"
+                  className="w-full text-sm"
                 >
                   Podešavanja
                 </Button>
@@ -44,7 +44,7 @@ const Layout = () => {
             <Button 
               variant="ghost" 
               onClick={handleLogout}
-              className="text-sm md:text-base"
+              className="text-sm w-full sm:w-auto"
             >
               Logout
             </Button>
