@@ -1,35 +1,48 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Order } from "@/types";
 
 interface SalesTableProps {
   sales: Order[];
+  sentOrderIds: string[];
 }
 
-export const SalesTable = ({ sales }: SalesTableProps) => {
+export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
   if (sales.length === 0) {
-    return (
-      <p className="text-muted-foreground text-center py-4">
-        Nema porudžbina za danas
-      </p>
-    );
+    return <p className="text-muted-foreground">Nema porudžbina za danas</p>;
   }
 
   return (
-    <div className="space-y-2">
-      {sales.map((sale, index) => (
-        <div
-          key={sale.id}
-          className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-2 gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">{index + 1}.</span>
-            <span className="font-medium">{sale.customer.name}</span>
-          </div>
-          <div className="flex justify-between w-full md:w-auto gap-2">
-            <span className="md:hidden">Ukupno:</span>
-            <span className="font-medium">{sale.total} RSD</span>
-          </div>
-        </div>
-      ))}
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Kupac</TableHead>
+          <TableHead>Adresa</TableHead>
+          <TableHead className="text-right">Iznos</TableHead>
+          <TableHead className="text-center">Broj stavki</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {sales.map((sale) => (
+          <TableRow 
+            key={sale.id}
+            className={sentOrderIds.includes(sale.id) ? "text-red-500" : ""}
+          >
+            <TableCell>{sale.customer.name}</TableCell>
+            <TableCell>
+              {sale.customer.address}, {sale.customer.city}
+            </TableCell>
+            <TableCell className="text-right">{sale.total} RSD</TableCell>
+            <TableCell className="text-center">{sale.items.length}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 };

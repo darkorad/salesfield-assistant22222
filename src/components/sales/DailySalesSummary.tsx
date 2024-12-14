@@ -11,6 +11,10 @@ interface Contact {
 
 const DailySalesSummary = () => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
+  const [sentOrderIds, setSentOrderIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem("sentOrders");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [contacts, setContacts] = useState<{
     email: string;
     contacts: Contact[];
@@ -45,7 +49,14 @@ const DailySalesSummary = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const totalSales = todaySales.reduce((sum, sale) => sum + sale.total, 0);
+  const handleOrdersSent = (newSentOrderIds: string[]) => {
+    const updatedSentOrders = [...sentOrderIds, ...newSentOrderIds];
+    setSentOrderIds(updatedSentOrders);
+    localStorage.setItem("sentOrders", JSON.stringify(updatedSentOrders));
+  };
+
+  const unsentSales = todaySales.filter(sale => !sentOrderIds.includes(sale.id));
+  const totalSales = unsentSales.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
     <Card className="mt-4 md:mt-8">
@@ -54,7 +65,7 @@ const DailySalesSummary = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <SalesTable sales={todaySales} />
+          <SalesTable sales={todaySales} sentOrderIds={sentOrderIds} />
           {todaySales.length > 0 && (
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
@@ -63,7 +74,11 @@ const DailySalesSummary = () => {
               </div>
             </div>
           )}
-          <SalesActions contacts={contacts} sales={todaySales} />
+          <SalesActions 
+            contacts={contacts} 
+            sales={unsentSales}
+            onOrdersSent={handleOrdersSent} 
+          />
         </div>
       </CardContent>
     </Card>
