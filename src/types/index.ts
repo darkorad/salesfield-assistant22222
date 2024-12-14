@@ -9,7 +9,9 @@ export interface Customer {
   name: string;
   address: string;
   city: string;
-  phone?: string; // Added phone as an optional field
+  phone?: string;
+  pib: string;
+  isVatRegistered: boolean;
 }
 
 export interface Product {

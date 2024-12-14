@@ -1,9 +1,33 @@
 import * as XLSX from 'xlsx';
 
 const sampleCustomers = [
-  { id: "1", name: "Kupac 1", address: "Adresa 1", city: "Grad 1", phone: "123-456" },
-  { id: "2", name: "Kupac 2", address: "Adresa 2", city: "Grad 2", phone: "234-567" },
-  { id: "3", name: "Kupac 3", address: "Adresa 3", city: "Grad 3", phone: "345-678" }
+  { 
+    id: "1", 
+    name: "Kupac 1", 
+    address: "Adresa 1", 
+    city: "Grad 1", 
+    phone: "123-456",
+    pib: "123456789",
+    isVatRegistered: true
+  },
+  { 
+    id: "2", 
+    name: "Kupac 2", 
+    address: "Adresa 2", 
+    city: "Grad 2", 
+    phone: "234-567",
+    pib: "987654321",
+    isVatRegistered: false
+  },
+  { 
+    id: "3", 
+    name: "Kupac 3", 
+    address: "Adresa 3", 
+    city: "Grad 3", 
+    phone: "345-678",
+    pib: "456789123",
+    isVatRegistered: true
+  }
 ];
 
 const sampleProducts = [

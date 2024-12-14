@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const AddCustomerDialog = () => {
   const [open, setOpen] = useState(false);
@@ -12,7 +19,9 @@ export const AddCustomerDialog = () => {
     name: "",
     address: "",
     city: "",
-    phone: ""
+    phone: "",
+    pib: "",
+    isVatRegistered: false
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,7 +38,7 @@ export const AddCustomerDialog = () => {
     
     toast.success("Kupac je uspešno dodat");
     setOpen(false);
-    setCustomer({ name: "", address: "", city: "", phone: "" });
+    setCustomer({ name: "", address: "", city: "", phone: "", pib: "", isVatRegistered: false });
   };
 
   return (
@@ -53,6 +62,30 @@ export const AddCustomerDialog = () => {
               onChange={(e) => setCustomer(prev => ({ ...prev, name: e.target.value }))}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pib">PIB</Label>
+            <Input
+              id="pib"
+              value={customer.pib}
+              onChange={(e) => setCustomer(prev => ({ ...prev, pib: e.target.value }))}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vatStatus">Kupac u PDV-u</Label>
+            <Select
+              value={customer.isVatRegistered ? "da" : "ne"}
+              onValueChange={(value) => setCustomer(prev => ({ ...prev, isVatRegistered: value === "da" }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Izaberi PDV status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="da">Da</SelectItem>
+                <SelectItem value="ne">Ne</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="address">Adresa</Label>
