@@ -10,11 +10,11 @@ const Settings = () => {
       <div className="space-y-6">
         <div className="flex gap-4">
           <Button className="w-full sm:w-auto">
-            <PlusCircle />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Novi kupac
           </Button>
           <Button className="w-full sm:w-auto">
-            <PlusCircle />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Nova stavka cenovnika
           </Button>
         </div>

@@ -9,7 +9,7 @@ interface Contact {
   viber: string;
 }
 
-const ContactSettings = () => {
+export const ContactSettings = () => {
   const [settings, setSettings] = useState<{
     email: string;
     contacts: Contact[];
@@ -75,5 +75,3 @@ const ContactSettings = () => {
     </Card>
   );
 };
-
-export default ContactSettings;
