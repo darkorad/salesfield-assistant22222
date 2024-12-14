@@ -100,10 +100,15 @@ export const SalesActions = ({ contacts, sales, onOrdersSent }: SalesActionsProp
     XLSX.utils.book_append_sheet(workbook, worksheet, "Dnevni izveštaj");
     
     const today = new Date().toLocaleDateString("sr-RS");
-    XLSX.writeFile(workbook, `dnevni-izvestaj-${today}.xlsx`);
     
-    // Create mailto link with subject
-    const mailtoLink = `mailto:${contacts.email}?subject=Dnevni izveštaj prodaje - ${today}`;
+    // Generate Excel file as base64
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' });
+    
+    // Create data URI for the Excel file
+    const dataUri = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${excelBuffer}`;
+    
+    // Create mailto link with subject and attachment
+    const mailtoLink = `mailto:${contacts.email}?subject=Dnevni izveštaj prodaje - ${today}&body=U prilogu je dnevni izveštaj prodaje.&attachment=${encodeURIComponent(dataUri)}`;
     window.location.href = mailtoLink;
     
     // Mark orders as sent
