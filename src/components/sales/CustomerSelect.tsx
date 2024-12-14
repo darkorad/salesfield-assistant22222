@@ -42,7 +42,7 @@ export const CustomerSelect = ({
             onChange={(e) => onCustomerSearchChange(e.target.value)}
             className="w-full"
           />
-          {customerSearch && filteredCustomers.length > 0 && (
+          {customerSearch && !customers.find(c => c.name === customerSearch) && filteredCustomers.length > 0 && (
             <div className="absolute w-full mt-1 bg-white border rounded-md shadow-lg z-50">
               {filteredCustomers.map((customer) => (
                 <div
