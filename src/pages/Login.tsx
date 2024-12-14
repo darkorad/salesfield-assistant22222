@@ -21,8 +21,8 @@ const Login = () => {
     // Also listen for auth errors
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
         toast.error('Authentication failed');
       }
     });
