@@ -13,29 +13,29 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm sticky top-0 z-50 w-full">
-        <div className="max-w-full px-2 sm:px-4">
-          <div className="flex flex-col sm:flex-row justify-between py-2 sm:py-4 items-center gap-2">
-            <div className="flex flex-wrap justify-center gap-2 w-full sm:w-auto">
-              <Link to="/sales" className="w-[calc(50%-0.25rem)] sm:w-auto">
+        <div className="max-w-full px-2">
+          <div className="flex justify-between py-2 items-center">
+            <div className="flex gap-1">
+              <Link to="/sales">
                 <Button
                   variant={location.pathname === "/sales" ? "default" : "ghost"}
-                  className="w-full text-sm"
+                  className="text-sm px-2"
                 >
                   Prodaja
                 </Button>
               </Link>
-              <Link to="/reports" className="w-[calc(50%-0.25rem)] sm:w-auto">
+              <Link to="/reports">
                 <Button
                   variant={location.pathname === "/reports" ? "default" : "ghost"}
-                  className="w-full text-sm"
+                  className="text-sm px-2"
                 >
                   Izveštaji
                 </Button>
               </Link>
-              <Link to="/settings" className="w-[calc(50%-0.25rem)] sm:w-auto">
+              <Link to="/settings">
                 <Button
                   variant={location.pathname === "/settings" ? "default" : "ghost"}
-                  className="w-full text-sm"
+                  className="text-sm px-2"
                 >
                   Podešavanja
                 </Button>
@@ -44,7 +44,7 @@ const Layout = () => {
             <Button 
               variant="ghost" 
               onClick={handleLogout}
-              className="text-sm w-full sm:w-auto"
+              className="text-sm px-2"
             >
               Logout
             </Button>
