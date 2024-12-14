@@ -29,30 +29,45 @@ export const CustomerSelect = ({
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Izbor kupca</label>
-      <div className="flex gap-2">
-        <Input
-          placeholder="Pretraži kupca..."
-          value={customerSearch}
-          onChange={(e) => onCustomerSearchChange(e.target.value)}
-          className="flex-1"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[200px] bg-white">
-            {customers.map((customer) => (
-              <DropdownMenuItem
+      <div className="relative">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Pretraži kupca..."
+            value={customerSearch}
+            onChange={(e) => onCustomerSearchChange(e.target.value)}
+            className="flex-1"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[200px] bg-white">
+              {customers.map((customer) => (
+                <DropdownMenuItem
+                  key={customer.id}
+                  onClick={() => onCustomerSelect(customer)}
+                >
+                  {customer.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        {customerSearch && (
+          <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+            {filteredCustomers.map((customer) => (
+              <div
                 key={customer.id}
+                className="p-2 cursor-pointer hover:bg-gray-100"
                 onClick={() => onCustomerSelect(customer)}
               >
                 {customer.name}
-              </DropdownMenuItem>
+              </div>
             ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </div>
+        )}
       </div>
     </div>
   );
