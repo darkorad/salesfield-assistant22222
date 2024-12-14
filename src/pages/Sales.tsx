@@ -21,10 +21,6 @@ const Sales = () => {
     const savedProducts = localStorage.getItem("products");
     if (savedProducts) {
       setProducts(JSON.parse(savedProducts));
-      const parsedProducts = JSON.parse(savedProducts);
-      if (parsedProducts.length > 0) {
-        setOrderItems([{ product: parsedProducts[0], quantity: 1 }]);
-      }
     }
   }, []);
 
@@ -63,7 +59,7 @@ const Sales = () => {
 
     setSelectedCustomer(null);
     setCustomerSearch("");
-    setOrderItems([{ product: products[0], quantity: 1 }]);
+    setOrderItems([]);
     
     toast.success("Porudžbina je uspešno poslata!");
   };
