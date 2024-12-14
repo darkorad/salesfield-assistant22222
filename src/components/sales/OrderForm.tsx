@@ -33,6 +33,8 @@ export const OrderForm = ({
   onOrderItemsChange,
   onSubmit,
 }: OrderFormProps) => {
+  const [selectedPaymentType, setSelectedPaymentType] = useState<'cash' | 'invoice' | null>(null);
+
   return (
     <div className="space-y-12">
       <CustomerSelect
@@ -52,8 +54,8 @@ export const OrderForm = ({
       )}
 
       {selectedCustomer && orderItems.length > 0 && (
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <Select onValueChange={(value) => onSubmit(value as 'cash' | 'invoice')}>
+        <div className="flex flex-col gap-4">
+          <Select onValueChange={(value) => setSelectedPaymentType(value as 'cash' | 'invoice')}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Izaberite način plaćanja" />
             </SelectTrigger>
@@ -62,6 +64,15 @@ export const OrderForm = ({
               <SelectItem value="cash">Gotovina</SelectItem>
             </SelectContent>
           </Select>
+          
+          {selectedPaymentType && (
+            <Button 
+              onClick={() => onSubmit(selectedPaymentType)}
+              className="w-full md:w-auto"
+            >
+              Pošalji porudžbinu
+            </Button>
+          )}
         </div>
       )}
     </div>
