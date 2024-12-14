@@ -24,6 +24,14 @@ const Layout = () => {
                   Sales
                 </Button>
               </Link>
+              <Link to="/reports">
+                <Button
+                  variant={location.pathname === "/reports" ? "default" : "ghost"}
+                  className="text-sm md:text-base"
+                >
+                  Izveštaji
+                </Button>
+              </Link>
               <Link to="/settings">
                 <Button
                   variant={location.pathname === "/settings" ? "default" : "ghost"}
