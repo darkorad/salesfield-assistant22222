@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { Order } from "@/types";
 import { toast } from "sonner";
 
@@ -62,14 +62,7 @@ const DailySalesSummary = () => {
     toast.success(`Izveštaj poslat na Viber: ${contact.name}`);
   };
 
-  const handleSendEmail = () => {
-    if (!contacts.email) {
-      toast.error("Email adresa nije podešena");
-      return;
-    }
-    // Here you would implement the actual email sending logic
-    toast.success("Izveštaj poslat na email");
-  };
+  const totalSales = todaySales.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
     <Card className="mt-4 md:mt-8">
@@ -100,7 +93,15 @@ const DailySalesSummary = () => {
               </p>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          {todaySales.length > 0 && (
+            <div className="pt-4 border-t">
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-lg">Ukupno za danas:</span>
+                <span className="font-bold text-lg">{totalSales} RSD</span>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {contacts.contacts.map((contact) => (
               <Button
                 key={contact.name}
@@ -111,10 +112,6 @@ const DailySalesSummary = () => {
                 Viber {contact.name}
               </Button>
             ))}
-            <Button onClick={handleSendEmail} className="w-full">
-              <Mail className="mr-2 h-4 w-4" />
-              Email
-            </Button>
           </div>
         </div>
       </CardContent>
