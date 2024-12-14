@@ -5,9 +5,9 @@ import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
 
 const Settings = () => {
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-4 px-4 md:py-8 md:px-8 max-w-4xl">
       <div className="space-y-6">
-        <div className="flex gap-4">
+        <div className="flex justify-center">
           <AddCustomerDialog />
         </div>
         <ContactSettings />

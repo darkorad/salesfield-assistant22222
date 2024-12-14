@@ -51,31 +51,35 @@ export const Reports = () => {
           {previewData.type === 'monthly' && "Mesečni izveštaj"}
           {previewData.type === 'products' && "Pregled proizvoda"}
         </h3>
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-x-auto">
           {(previewData.type === 'daily' || previewData.type === 'monthly') && (
-            <SalesTable sales={previewData.data as Order[]} sentOrderIds={[]} />
+            <div className="max-w-[100vw] overflow-x-auto">
+              <SalesTable sales={previewData.data as Order[]} sentOrderIds={[]} />
+            </div>
           )}
           {previewData.type === 'products' && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Proizvod</TableHead>
-                  <TableHead>Proizvođač</TableHead>
-                  <TableHead className="text-right">Ukupna količina</TableHead>
-                  <TableHead className="text-right">Ukupna vrednost (RSD)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {previewData.data.map((item: any, index: number) => (
-                  <TableRow key={index}>
-                    <TableCell>{item['Proizvod']}</TableCell>
-                    <TableCell>{item['Proizvođač']}</TableCell>
-                    <TableCell className="text-right">{item['Ukupna količina']}</TableCell>
-                    <TableCell className="text-right">{item['Ukupna vrednost (RSD)']}</TableCell>
+            <div className="max-w-[100vw] overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Proizvod</TableHead>
+                    <TableHead className="whitespace-nowrap">Proizvođač</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Ukupna količina</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Ukupna vrednost (RSD)</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {previewData.data.map((item: any, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell className="whitespace-nowrap">{item['Proizvod']}</TableCell>
+                      <TableCell className="whitespace-nowrap">{item['Proizvođač']}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap">{item['Ukupna količina']}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap">{item['Ukupna vrednost (RSD)']}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
       </div>
@@ -83,56 +87,56 @@ export const Reports = () => {
   };
 
   return (
-    <Card>
+    <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle>Izveštaji</CardTitle>
+        <CardTitle className="text-xl md:text-2xl">Izveštaji</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="space-y-2">
           <Button
-            className="w-full"
+            className="w-full py-6 text-lg font-medium"
             onClick={() => generateDailyReport()}
           >
             Izvezi dnevni izveštaj prodaje
           </Button>
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full py-4"
             onClick={handlePreviewDaily}
           >
-            <Eye className="mr-2" />
+            <Eye className="mr-2 h-5 w-5" />
             Prikaži dnevni izveštaj
           </Button>
         </div>
         <div className="space-y-2">
           <Button
-            className="w-full"
+            className="w-full py-6 text-lg font-medium"
             onClick={() => generateMonthlyReport()}
           >
             Izvezi mesečni izveštaj prodaje
           </Button>
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full py-4"
             onClick={handlePreviewMonthly}
           >
-            <Eye className="mr-2" />
+            <Eye className="mr-2 h-5 w-5" />
             Prikaži mesečni izveštaj
           </Button>
         </div>
         <div className="space-y-2">
           <Button
-            className="w-full"
+            className="w-full py-6 text-lg font-medium"
             onClick={() => generateProductReport()}
           >
             Izvezi mesečni pregled proizvoda
           </Button>
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full py-4"
             onClick={handlePreviewProducts}
           >
-            <Eye className="mr-2" />
+            <Eye className="mr-2 h-5 w-5" />
             Prikaži pregled proizvoda
           </Button>
         </div>
