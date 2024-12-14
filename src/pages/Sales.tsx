@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Customer, Product, OrderItem, Order } from "@/types";
+import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
+import { OrderForm } from "@/components/sales/OrderForm";
 import DailySalesSummary from "@/components/sales/DailySalesSummary";
 
 const Sales = () => {
@@ -19,7 +11,6 @@ const Sales = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [productSearch, setProductSearch] = useState("");
 
   useEffect(() => {
     const savedCustomers = localStorage.getItem("customers");
@@ -37,29 +28,9 @@ const Sales = () => {
     }
   }, []);
 
-  const filteredCustomers = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(customerSearch.toLowerCase())
-  );
-
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(productSearch.toLowerCase())
-  );
-
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
     setCustomerSearch(customer.name);
-  };
-
-  const handleAddItem = () => {
-    if (products.length > 0) {
-      setOrderItems([...orderItems, { product: products[0], quantity: 1 }]);
-    } else {
-      toast.error("Nema dostupnih proizvoda. Molimo prvo uvezite proizvode.");
-    }
-  };
-
-  const handleRemoveItem = (index: number) => {
-    setOrderItems(orderItems.filter((_, i) => i !== index));
   };
 
   const handleSubmitOrder = () => {
@@ -77,7 +48,7 @@ const Sales = () => {
       0
     );
 
-    const newOrder: Order = {
+    const newOrder = {
       id: crypto.randomUUID(),
       customer: selectedCustomer,
       items: orderItems,
@@ -98,118 +69,23 @@ const Sales = () => {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-4 px-4 md:py-8 md:px-8">
       <Card>
         <CardHeader>
           <CardTitle>Nova porudžbina</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <div className="relative">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Pretraži kupca..."
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  className="flex-1"
-                />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[200px]">
-                    {customers.map((customer) => (
-                      <DropdownMenuItem
-                        key={customer.id}
-                        onClick={() => handleCustomerSelect(customer)}
-                      >
-                        {customer.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              {customerSearch && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                  {filteredCustomers.map((customer) => (
-                    <div
-                      key={customer.id}
-                      className="p-2 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleCustomerSelect(customer)}
-                    >
-                      {customer.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {selectedCustomer && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input value={selectedCustomer.address} disabled />
-                <Input value={selectedCustomer.city} disabled />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {orderItems.map((item, index) => (
-              <div key={index} className="flex gap-4">
-                <div className="flex-1 relative">
-                  <Input
-                    value={item.product.name}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    placeholder="Pretraži proizvod..."
-                  />
-                  {productSearch && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                      {filteredProducts.map((product) => (
-                        <div
-                          key={product.id}
-                          className="p-2 cursor-pointer hover:bg-gray-100"
-                          onClick={() => {
-                            const newItems = [...orderItems];
-                            newItems[index].product = product;
-                            setOrderItems(newItems);
-                            setProductSearch("");
-                          }}
-                        >
-                          {product.name} - {product.manufacturer}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <Input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) => {
-                    const newItems = [...orderItems];
-                    newItems[index].quantity = parseInt(e.target.value) || 1;
-                    setOrderItems(newItems);
-                  }}
-                  className="w-24"
-                />
-                <div className="flex items-center w-24">
-                  {item.product.price * item.quantity} RSD
-                </div>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleRemoveItem(index)}
-                >
-                  ×
-                </Button>
-              </div>
-            ))}
-            <Button onClick={handleAddItem}>Dodaj proizvod</Button>
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleSubmitOrder}>Pošalji porudžbinu</Button>
-          </div>
+        <CardContent>
+          <OrderForm
+            customers={customers}
+            products={products}
+            selectedCustomer={selectedCustomer}
+            customerSearch={customerSearch}
+            orderItems={orderItems}
+            onCustomerSearchChange={setCustomerSearch}
+            onCustomerSelect={handleCustomerSelect}
+            onOrderItemsChange={setOrderItems}
+            onSubmit={handleSubmitOrder}
+          />
         </CardContent>
       </Card>
       <DailySalesSummary />
