@@ -17,6 +17,17 @@ const Login = () => {
         navigate("/sales");
       }
     });
+
+    // Also listen for auth errors
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+        toast.error('Authentication failed');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return (
@@ -43,10 +54,6 @@ const Login = () => {
             }}
             providers={[]}
             redirectTo={`${window.location.origin}/sales`}
-            onError={(error) => {
-              console.error('Auth error:', error);
-              toast.error('Authentication error: ' + error.message);
-            }}
           />
         </CardContent>
       </Card>
