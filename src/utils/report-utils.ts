@@ -40,9 +40,26 @@ const getSalesForPeriod = (startDate: string): Order[] => {
   return sales.filter((sale: Order) => sale.date.startsWith(startDate));
 };
 
-const exportToExcel = (data: any[], sheetName: string, fileName: string) => {
+const exportToExcel = (data: any[], sheetName: string, fileName: string, sentSales: string[] = []) => {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
+  
+  // Add red background style for sent sales
+  const redStyle = { fill: { fgColor: { rgb: "FFFF0000" } } };
+  
+  // Apply styles to sent sales rows
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1000');
+  for (let R = range.s.r + 1; R <= range.e.r; R++) {
+    const saleId = data[R - 1].id;
+    if (sentSales.includes(saleId)) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cell_ref]) ws[cell_ref] = { v: '' };
+        ws[cell_ref].s = redStyle;
+      }
+    }
+  }
+
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
   XLSX.writeFile(wb, fileName);
 };
@@ -62,8 +79,28 @@ export const generateDailyReport = (previewOnly: boolean = false) => {
       return todaySales;
     }
 
-    const formattedSales = todaySales.map(formatSaleRecord);
-    exportToExcel(formattedSales, "Dnevni izveštaj", `dnevni-izvestaj-${dateStr}.xlsx`);
+    const formattedSales = todaySales.map(sale => ({
+      id: sale.id,
+      'Šifra kupca': sale.customer.code || '',
+      'Kupac': sale.customer.name,
+      'Adresa': `${sale.customer.address}, ${sale.customer.city}`,
+      'Ukupno (RSD)': sale.total,
+      'Broj stavki': sale.items.length,
+      'Stavke': sale.items.map(item => 
+        `${item.product.name} (${item.quantity} ${item.product.unit})`
+      ).join(', '),
+      'Status': sale.sent ? 'Poslato' : 'Nije poslato'
+    }));
+
+    const sentSalesIds = todaySales.filter(sale => sale.sent).map(sale => sale.id);
+    
+    exportToExcel(
+      formattedSales,
+      "Dnevni izveštaj",
+      `dnevni-izvestaj-${dateStr}.xlsx`,
+      sentSalesIds
+    );
+    
     toast.success("Dnevni izveštaj je uspešno izvezen");
   } catch (error) {
     toast.error("Greška pri izvozu dnevnog izveštaja");
