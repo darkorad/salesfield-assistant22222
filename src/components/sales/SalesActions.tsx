@@ -38,37 +38,75 @@ export const SalesActions = ({ contacts, sales }: SalesActionsProps) => {
     }
 
     const emailBody = `
-      <h2>Dnevni izveštaj prodaje</h2>
-      <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Kupac</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Iznos</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Broj stavki</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sales.map(sale => `
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">${sale.customer.name}</td>
-              <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${sale.total} RSD</td>
-              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sale.items.length}</td>
-            </tr>
-          `).join('')}
-          <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">Ukupno</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">
-              ${sales.reduce((sum, sale) => sum + sale.total, 0)} RSD
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;">
-              ${sales.reduce((sum, sale) => sum + sale.items.length, 0)}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <html>
+      <head>
+        <style>
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          th { background-color: #f8f9fa; }
+          .order-header { background-color: #e9ecef; font-weight: bold; }
+          .total-row { font-weight: bold; background-color: #f8f9fa; }
+          .items-table { margin-left: 20px; margin-bottom: 20px; width: calc(100% - 20px); }
+          .items-table th, .items-table td { background-color: white; }
+        </style>
+      </head>
+      <body>
+        <h2>Dnevni izveštaj prodaje</h2>
+        ${sales
+          .map(
+            (sale) => `
+            <div class="order-header" style="padding: 12px; margin: 10px 0;">
+              <strong>Kupac:</strong> ${sale.customer.name}<br>
+              <strong>Adresa:</strong> ${sale.customer.address}, ${sale.customer.city}
+            </div>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Proizvod</th>
+                  <th>Proizvođač</th>
+                  <th>Količina</th>
+                  <th>Cena</th>
+                  <th>Ukupno</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sale.items
+                  .map(
+                    (item) => `
+                  <tr>
+                    <td>${item.product.name}</td>
+                    <td>${item.product.manufacturer}</td>
+                    <td>${item.quantity} ${item.product.unit}</td>
+                    <td>${item.product.price} RSD</td>
+                    <td>${item.product.price * item.quantity} RSD</td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+                <tr class="total-row">
+                  <td colspan="4" style="text-align: right;">Ukupno za kupca:</td>
+                  <td>${sale.total} RSD</td>
+                </tr>
+              </tbody>
+            </table>
+          `
+          )
+          .join("")}
+        <div class="total-row" style="padding: 12px; margin-top: 20px; text-align: right;">
+          <strong>Ukupno za danas: ${sales.reduce(
+            (sum, sale) => sum + sale.total,
+            0
+          )} RSD</strong>
+        </div>
+      </body>
+      </html>
     `;
 
-    const mailtoLink = `mailto:${contacts.email}?subject=Dnevni izveštaj prodaje&body=${encodeURIComponent(emailBody)}`;
+    const mailtoLink = `mailto:${
+      contacts.email
+    }?subject=Dnevni izveštaj prodaje - ${new Date().toLocaleDateString(
+      "sr-RS"
+    )}&body=${encodeURIComponent(emailBody)}`;
     window.location.href = mailtoLink;
     toast.success("Email klijent je otvoren sa izveštajem");
   };
