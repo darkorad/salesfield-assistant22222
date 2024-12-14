@@ -5,55 +5,45 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-
-const VALID_USERS = [
-  { username: "darko", password: "1234" },
-  { username: "veljko", password: "1234" }
-];
+import { supabase } from "@/lib/supabase";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const user = VALID_USERS.find(
-      (u) => u.username === username.toLowerCase() && u.password === password
-    );
+    setIsLoading(true);
 
-    if (user) {
-      // If it's Veljko, clear all data
-      if (user.username === "veljko") {
-        localStorage.setItem("customers", JSON.stringify([]));
-        localStorage.setItem("products", JSON.stringify([]));
-        localStorage.setItem("sales", JSON.stringify([]));
-      }
-      
-      // Store the current user
-      localStorage.setItem("currentUser", user.username);
-      
-      // Initialize user-specific data if it doesn't exist
-      const userCustomers = localStorage.getItem(`customers_${user.username}`);
-      const userProducts = localStorage.getItem(`products_${user.username}`);
-      const userSales = localStorage.getItem(`sales_${user.username}`);
-      
-      if (!userCustomers) {
-        localStorage.setItem(`customers_${user.username}`, JSON.stringify([]));
-      }
-      if (!userProducts) {
-        localStorage.setItem(`products_${user.username}`, JSON.stringify([]));
-      }
-      if (!userSales) {
-        localStorage.setItem(`sales_${user.username}`, JSON.stringify([]));
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
       }
 
-      toast.success("Successfully logged in!");
-      navigate("/sales");
-    } else {
-      toast.error("Invalid username or password");
+      if (data.user) {
+        // Initialize user-specific data in Supabase tables
+        const { error: initError } = await supabase.rpc('initialize_user_data');
+        if (initError) {
+          console.error('Error initializing user data:', initError);
+        }
+
+        toast.success("Successfully logged in!");
+        navigate("/sales");
+      }
+    } catch (error) {
+      toast.error("An error occurred during login");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,12 +59,13 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Input
-                id="username"
-                placeholder="Username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full"
+                required
               />
             </div>
             <div className="space-y-2">
@@ -85,6 +76,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full"
+                required
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -100,8 +92,8 @@ const Login = () => {
                 Remember me
               </label>
             </div>
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </CardContent>
