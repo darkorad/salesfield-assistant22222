@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string
+          city: string
+          code: string
+          created_at: string
+          gps_coordinates: string | null
+          id: string
+          is_vat_registered: boolean | null
+          name: string
+          phone: string | null
+          pib: string
+          user_id: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          code: string
+          created_at?: string
+          gps_coordinates?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name: string
+          phone?: string | null
+          pib: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          code?: string
+          created_at?: string
+          gps_coordinates?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name?: string
+          phone?: string | null
+          pib?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       CustomersList: {
         Row: {}
         Insert: {}
@@ -45,6 +95,62 @@ export type Database = {
           PIB?: string
           "Šifra kupca"?: number
           Telefon?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          created_at: string
+          id: string
+          manufacturer: string
+          name: string
+          price: number
+          unit: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manufacturer: string
+          name: string
+          price: number
+          unit: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manufacturer?: string
+          name?: string
+          price?: number
+          unit?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          id: string
+          name: string
+          role: string
+        }
+        Insert: {
+          id: string
+          name: string
+          role?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          role?: string
         }
         Relationships: []
       }

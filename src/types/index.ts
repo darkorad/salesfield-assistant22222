@@ -6,23 +6,24 @@ export interface User {
 
 export interface Customer {
   id: string;
+  user_id: string;
   code: string;
   name: string;
   address: string;
   city: string;
   phone?: string;
   pib: string;
-  isVatRegistered: boolean;
-  gpsCoordinates?: string;
+  is_vat_registered: boolean;
+  gps_coordinates?: string;
 }
 
 export interface Product {
   id: string;
+  user_id: string;
   name: string;
   manufacturer: string;
   price: number;
   unit: string;
-  cashPrice?: number;
 }
 
 export interface OrderItem {

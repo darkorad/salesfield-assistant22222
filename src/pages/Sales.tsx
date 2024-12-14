@@ -4,6 +4,8 @@ import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
 import { OrderForm } from "@/components/sales/OrderForm";
 import DailySalesSummary from "@/components/sales/DailySalesSummary";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Sales = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -11,18 +13,57 @@ const Sales = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const savedCustomers = localStorage.getItem("customers");
-    if (savedCustomers) {
-      setCustomers(JSON.parse(savedCustomers));
-    }
+    const fetchData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/login");
+        return;
+      }
 
-    const savedProducts = localStorage.getItem("products");
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    }
-  }, []);
+      // Fetch customers for the logged-in user
+      const { data: customersData, error: customersError } = await supabase
+        .from('customers')
+        .select('*')
+        .order('name');
+
+      if (customersError) {
+        console.error('Error fetching customers:', customersError);
+        toast.error("Greška pri učitavanju kupaca");
+      } else {
+        setCustomers(customersData);
+      }
+
+      // Fetch products for the logged-in user
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .order('name');
+
+      if (productsError) {
+        console.error('Error fetching products:', productsError);
+        toast.error("Greška pri učitavanju proizvoda");
+      } else {
+        setProducts(productsData);
+      }
+    };
+
+    fetchData();
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/login");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
