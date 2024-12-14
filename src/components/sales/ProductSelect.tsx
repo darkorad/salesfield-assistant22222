@@ -81,7 +81,7 @@ export const ProductSelect = ({
                 >
                   <span>{product.name}</span>
                   <span className="text-sm text-gray-500">
-                    {product.price} RSD
+                    {product.price} RSD/{product.unit}
                   </span>
                 </div>
               ))}
@@ -98,7 +98,7 @@ export const ProductSelect = ({
               <div className="flex-1">
                 <p className="font-medium">{item.product.name}</p>
                 <p className="text-sm text-gray-500">
-                  {item.product.manufacturer}
+                  {item.product.manufacturer} - {item.product.price} RSD/{item.product.unit}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -111,6 +111,9 @@ export const ProductSelect = ({
                   }
                   className="w-20"
                 />
+                <span className="whitespace-nowrap text-sm text-gray-600">
+                  {item.product.unit}
+                </span>
                 <span className="w-24 text-right">
                   {item.product.price * item.quantity} RSD
                 </span>
