@@ -47,6 +47,11 @@ export const ProductSelect = ({
     onOrderItemsChange(newItems);
   };
 
+  const calculateItemTotal = (product: Product, quantity: number) => {
+    const unitSize = parseFloat(product.unit) || 1;
+    return product.price * quantity * unitSize;
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -115,7 +120,7 @@ export const ProductSelect = ({
                   {item.product.unit}
                 </span>
                 <span className="w-24 text-right">
-                  {item.product.price * item.quantity} RSD
+                  {calculateItemTotal(item.product, item.quantity)} RSD
                 </span>
                 <Button
                   variant="destructive"

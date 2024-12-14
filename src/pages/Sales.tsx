@@ -29,6 +29,13 @@ const Sales = () => {
     setCustomerSearch(customer.name);
   };
 
+  const calculateTotal = (items: OrderItem[]) => {
+    return items.reduce((sum, item) => {
+      const unitSize = parseFloat(item.product.unit) || 1;
+      return sum + (item.product.price * item.quantity * unitSize);
+    }, 0);
+  };
+
   const handleSubmitOrder = () => {
     if (!selectedCustomer) {
       toast.error("Molimo izaberite kupca");
@@ -39,10 +46,7 @@ const Sales = () => {
       return;
     }
 
-    const total = orderItems.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0
-    );
+    const total = calculateTotal(orderItems);
 
     const newOrder = {
       id: crypto.randomUUID(),
