@@ -49,15 +49,13 @@ export const OrderForm = ({
     );
 
     if (existingItemIndex !== -1) {
-      // If product already exists, increment quantity
       const newItems = [...orderItems];
       newItems[existingItemIndex].quantity += 1;
       onOrderItemsChange(newItems);
     } else {
-      // If product is new, add it to the list
       onOrderItemsChange([...orderItems, { product, quantity: 1 }]);
     }
-    setProductSearch(""); // Clear search after adding
+    setProductSearch("");
   };
 
   const handleRemoveItem = (index: number) => {
@@ -66,7 +64,7 @@ export const OrderForm = ({
 
   const handleQuantityChange = (index: number, newQuantity: number) => {
     const newItems = [...orderItems];
-    newItems[index].quantity = Math.max(1, newQuantity); // Ensure quantity is at least 1
+    newItems[index].quantity = Math.max(1, newQuantity);
     onOrderItemsChange(newItems);
   };
 
@@ -118,11 +116,6 @@ export const OrderForm = ({
 
       {selectedCustomer && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input value={selectedCustomer.address} disabled />
-            <Input value={selectedCustomer.city} disabled />
-          </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium">Izbor artikala</label>
             <div className="relative">
