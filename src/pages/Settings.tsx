@@ -1,5 +1,6 @@
 import { FileImport } from "@/components/settings/FileImport";
 import { Reports } from "@/components/settings/Reports";
+import { ContactSettings } from "@/components/settings/ContactSettings";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
@@ -17,6 +18,7 @@ const Settings = () => {
             Nova stavka cenovnika
           </Button>
         </div>
+        <ContactSettings />
         <FileImport />
         <Reports />
       </div>

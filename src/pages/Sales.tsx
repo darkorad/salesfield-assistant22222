@@ -1,23 +1,17 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Customer, Product, OrderItem, Order } from "@/types";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
+import DailySalesSummary from "@/components/sales/DailySalesSummary";
 
 const Sales = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -218,6 +212,7 @@ const Sales = () => {
           </div>
         </CardContent>
       </Card>
+      <DailySalesSummary />
     </div>
   );
 };
