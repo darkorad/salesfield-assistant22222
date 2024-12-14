@@ -48,6 +48,7 @@ export const ProductSelect = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
+        <h2 className="text-lg font-semibold mb-4">Proizvodi</h2>
         <label className="text-sm font-medium">Izbor artikala</label>
         <div className="relative">
           <Input
