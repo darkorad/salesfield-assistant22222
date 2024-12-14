@@ -25,6 +25,13 @@ const Login = () => {
     );
 
     if (user) {
+      // If it's Veljko, clear all data
+      if (user.username === "veljko") {
+        localStorage.setItem("customers", JSON.stringify([]));
+        localStorage.setItem("products", JSON.stringify([]));
+        localStorage.setItem("sales", JSON.stringify([]));
+      }
+      
       // Store the current user
       localStorage.setItem("currentUser", user.username);
       
