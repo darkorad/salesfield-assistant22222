@@ -55,111 +55,119 @@ export const OrderForm = ({
 
   return (
     <div className="space-y-6">
-      <div className="relative">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Pretraži kupca..."
-            value={customerSearch}
-            onChange={(e) => onCustomerSearchChange(e.target.value)}
-            className="flex-1"
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[200px]">
-              {customers.map((customer) => (
-                <DropdownMenuItem
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Izbor kupca</label>
+        <div className="relative">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Pretraži kupca..."
+              value={customerSearch}
+              onChange={(e) => onCustomerSearchChange(e.target.value)}
+              className="flex-1"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[200px] bg-white">
+                {customers.map((customer) => (
+                  <DropdownMenuItem
+                    key={customer.id}
+                    onClick={() => onCustomerSelect(customer)}
+                  >
+                    {customer.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {customerSearch && (
+            <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+              {filteredCustomers.map((customer) => (
+                <div
                   key={customer.id}
+                  className="p-2 cursor-pointer hover:bg-gray-100"
                   onClick={() => onCustomerSelect(customer)}
                 >
                   {customer.name}
-                </DropdownMenuItem>
+                </div>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </div>
+          )}
         </div>
-        {customerSearch && (
-          <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-            {filteredCustomers.map((customer) => (
-              <div
-                key={customer.id}
-                className="p-2 cursor-pointer hover:bg-gray-100"
-                onClick={() => onCustomerSelect(customer)}
-              >
-                {customer.name}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {selectedCustomer && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input value={selectedCustomer.address} disabled />
-          <Input value={selectedCustomer.city} disabled />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input value={selectedCustomer.address} disabled />
+            <Input value={selectedCustomer.city} disabled />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Izbor artikala</label>
+            <div className="space-y-4">
+              {orderItems.map((item, index) => (
+                <div key={index} className="flex flex-col md:flex-row gap-2">
+                  <div className="flex-1 relative">
+                    <Input
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="Pretraži proizvod..."
+                    />
+                    {productSearch && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+                        {filteredProducts.map((product) => (
+                          <div
+                            key={product.id}
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => {
+                              const newItems = [...orderItems];
+                              newItems[index].product = product;
+                              onOrderItemsChange(newItems);
+                              setProductSearch("");
+                            }}
+                          >
+                            {product.name} - {product.manufacturer}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const newItems = [...orderItems];
+                      newItems[index].quantity = parseInt(e.target.value) || 1;
+                      onOrderItemsChange(newItems);
+                    }}
+                    className="w-full md:w-24"
+                  />
+                  <div className="flex items-center w-full md:w-24 justify-between md:justify-center">
+                    <span className="md:hidden">Ukupno:</span>
+                    <span>{item.product.price * item.quantity} RSD</span>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveItem(index)}
+                    className="w-full md:w-auto"
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+              <Button onClick={handleAddItem} className="w-full md:w-auto">
+                Dodaj proizvod
+              </Button>
+            </div>
+          </div>
         </div>
       )}
-
-      <div className="space-y-4">
-        {orderItems.map((item, index) => (
-          <div key={index} className="flex flex-col md:flex-row gap-2">
-            <div className="flex-1 relative">
-              <Input
-                value={item.product.name}
-                onChange={(e) => setProductSearch(e.target.value)}
-                placeholder="Pretraži proizvod..."
-              />
-              {productSearch && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                  {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="p-2 cursor-pointer hover:bg-gray-100"
-                      onClick={() => {
-                        const newItems = [...orderItems];
-                        newItems[index].product = product;
-                        onOrderItemsChange(newItems);
-                        setProductSearch("");
-                      }}
-                    >
-                      {product.name} - {product.manufacturer}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <Input
-              type="number"
-              min="1"
-              value={item.quantity}
-              onChange={(e) => {
-                const newItems = [...orderItems];
-                newItems[index].quantity = parseInt(e.target.value) || 1;
-                onOrderItemsChange(newItems);
-              }}
-              className="w-full md:w-24"
-            />
-            <div className="flex items-center w-full md:w-24 justify-between md:justify-center">
-              <span className="md:hidden">Ukupno:</span>
-              <span>{item.product.price * item.quantity} RSD</span>
-            </div>
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => handleRemoveItem(index)}
-              className="w-full md:w-auto"
-            >
-              ×
-            </Button>
-          </div>
-        ))}
-        <Button onClick={handleAddItem} className="w-full md:w-auto">
-          Dodaj proizvod
-        </Button>
-      </div>
 
       <div className="flex justify-end">
         <Button onClick={onSubmit} className="w-full md:w-auto">
