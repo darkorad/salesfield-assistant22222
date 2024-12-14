@@ -54,28 +54,25 @@ export const OrderForm = ({
         />
       )}
 
-      {selectedCustomer && orderItems.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <Select onValueChange={(value) => setSelectedPaymentType(value as 'cash' | 'invoice')}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Izaberite način plaćanja" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="invoice">Račun</SelectItem>
-              <SelectItem value="cash">Gotovina</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          {selectedPaymentType && (
-            <Button 
-              onClick={() => onSubmit(selectedPaymentType)}
-              className="w-full md:w-auto"
-            >
-              Pošalji porudžbinu
-            </Button>
-          )}
-        </div>
-      )}
+      <div className="flex flex-col gap-4">
+        <Select onValueChange={(value) => setSelectedPaymentType(value as 'cash' | 'invoice')}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Izaberite način plaćanja" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="invoice">Račun</SelectItem>
+            <SelectItem value="cash">Gotovina</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Button 
+          onClick={() => selectedPaymentType && onSubmit(selectedPaymentType)}
+          className="w-full md:w-auto"
+          disabled={!selectedCustomer || orderItems.length === 0 || !selectedPaymentType}
+        >
+          Pošalji porudžbinu
+        </Button>
+      </div>
     </div>
   );
 };
