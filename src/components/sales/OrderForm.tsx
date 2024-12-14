@@ -55,6 +55,7 @@ export const OrderForm = ({
       )}
 
       <div className="flex flex-col gap-4">
+        <h3 className="text-lg font-semibold">Način Plaćanja</h3>
         <Select onValueChange={(value) => setSelectedPaymentType(value as 'cash' | 'invoice')}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Izaberite način plaćanja" />
