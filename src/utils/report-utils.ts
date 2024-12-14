@@ -40,7 +40,7 @@ const exportToExcel = (data: any[], sheetName: string, fileName: string) => {
   XLSX.writeFile(wb, fileName);
 };
 
-export const generateDailyReport = () => {
+export const generateDailyReport = (previewOnly: boolean = false) => {
   try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
@@ -48,7 +48,11 @@ export const generateDailyReport = () => {
 
     if (todaySales.length === 0) {
       toast.error("Nema prodaje za današnji dan");
-      return;
+      return null;
+    }
+
+    if (previewOnly) {
+      return todaySales;
     }
 
     const formattedSales = todaySales.map(formatSaleRecord);
@@ -57,10 +61,11 @@ export const generateDailyReport = () => {
   } catch (error) {
     toast.error("Greška pri izvozu dnevnog izveštaja");
     console.error(error);
+    return null;
   }
 };
 
-export const generateMonthlyReport = () => {
+export const generateMonthlyReport = (previewOnly: boolean = false) => {
   try {
     const today = new Date();
     const year = today.getFullYear();
@@ -69,7 +74,11 @@ export const generateMonthlyReport = () => {
 
     if (monthlySales.length === 0) {
       toast.error("Nema prodaje za tekući mesec");
-      return;
+      return null;
+    }
+
+    if (previewOnly) {
+      return monthlySales;
     }
 
     const formattedSales = monthlySales.map(formatSaleRecord);
@@ -78,10 +87,11 @@ export const generateMonthlyReport = () => {
   } catch (error) {
     toast.error("Greška pri izvozu mesečnog izveštaja");
     console.error(error);
+    return null;
   }
 };
 
-export const generateProductReport = () => {
+export const generateProductReport = (previewOnly: boolean = false) => {
   try {
     const today = new Date();
     const year = today.getFullYear();
@@ -90,7 +100,7 @@ export const generateProductReport = () => {
 
     if (monthlySales.length === 0) {
       toast.error("Nema prodaje za tekući mesec");
-      return;
+      return null;
     }
 
     const productSummary = new Map<string, ProductSummary>();
@@ -112,8 +122,14 @@ export const generateProductReport = () => {
       });
     });
 
+    const summaryArray = Array.from(productSummary.values());
+
+    if (previewOnly) {
+      return summaryArray;
+    }
+
     exportToExcel(
-      Array.from(productSummary.values()),
+      summaryArray,
       "Pregled proizvoda",
       `pregled-proizvoda-${year}-${month}.xlsx`
     );
@@ -121,5 +137,6 @@ export const generateProductReport = () => {
   } catch (error) {
     toast.error("Greška pri izvozu pregleda proizvoda");
     console.error(error);
+    return null;
   }
 };
