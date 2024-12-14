@@ -26,16 +26,36 @@ export const CustomerSelect = ({
     customer.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
+  const handleCustomerSelect = (customer: Customer) => {
+    onCustomerSelect(customer);
+    onCustomerSearchChange(customer.name);
+  };
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Izbor kupca</label>
       <div className="flex gap-2">
-        <Input
-          placeholder="Pretraži kupca..."
-          value={customerSearch}
-          onChange={(e) => onCustomerSearchChange(e.target.value)}
-          className="flex-1"
-        />
+        <div className="relative flex-1">
+          <Input
+            placeholder="Pretraži kupca..."
+            value={customerSearch}
+            onChange={(e) => onCustomerSearchChange(e.target.value)}
+            className="w-full"
+          />
+          {customerSearch && filteredCustomers.length > 0 && (
+            <div className="absolute w-full mt-1 bg-white border rounded-md shadow-lg z-50">
+              {filteredCustomers.map((customer) => (
+                <div
+                  key={customer.id}
+                  className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleCustomerSelect(customer)}
+                >
+                  {customer.name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
@@ -43,10 +63,10 @@ export const CustomerSelect = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-[200px] bg-white">
-            {filteredCustomers.map((customer) => (
+            {customers.map((customer) => (
               <DropdownMenuItem
                 key={customer.id}
-                onClick={() => onCustomerSelect(customer)}
+                onClick={() => handleCustomerSelect(customer)}
               >
                 {customer.name}
               </DropdownMenuItem>
