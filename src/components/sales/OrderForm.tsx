@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Customer, Product, OrderItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CustomerSelect } from "./CustomerSelect";
