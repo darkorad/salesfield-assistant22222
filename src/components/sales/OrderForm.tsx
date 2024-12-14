@@ -43,14 +43,31 @@ export const OrderForm = ({
     product.name.toLowerCase().includes(productSearch.toLowerCase())
   );
 
-  const handleAddItem = () => {
-    if (products.length > 0) {
-      onOrderItemsChange([...orderItems, { product: products[0], quantity: 1 }]);
+  const handleAddProduct = (product: Product) => {
+    const existingItemIndex = orderItems.findIndex(
+      (item) => item.product.id === product.id
+    );
+
+    if (existingItemIndex !== -1) {
+      // If product already exists, increment quantity
+      const newItems = [...orderItems];
+      newItems[existingItemIndex].quantity += 1;
+      onOrderItemsChange(newItems);
+    } else {
+      // If product is new, add it to the list
+      onOrderItemsChange([...orderItems, { product, quantity: 1 }]);
     }
+    setProductSearch(""); // Clear search after adding
   };
 
   const handleRemoveItem = (index: number) => {
     onOrderItemsChange(orderItems.filter((_, i) => i !== index));
+  };
+
+  const handleQuantityChange = (index: number, newQuantity: number) => {
+    const newItems = [...orderItems];
+    newItems[index].quantity = Math.max(1, newQuantity); // Ensure quantity is at least 1
+    onOrderItemsChange(newItems);
   };
 
   return (
@@ -108,72 +125,78 @@ export const OrderForm = ({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Izbor artikala</label>
-            <div className="space-y-4">
+            <div className="relative">
+              <Input
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                placeholder="Pretraži proizvod..."
+                className="w-full"
+              />
+              {productSearch && (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {filteredProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
+                      onClick={() => handleAddProduct(product)}
+                    >
+                      <span>{product.name}</span>
+                      <span className="text-sm text-gray-500">
+                        {product.price} RSD
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 mt-4">
               {orderItems.map((item, index) => (
-                <div key={index} className="flex flex-col md:flex-row gap-2">
-                  <div className="flex-1 relative">
+                <div
+                  key={index}
+                  className="flex flex-col md:flex-row gap-2 p-3 border rounded-md bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium">{item.product.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {item.product.manufacturer}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Input
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
-                      placeholder="Pretraži proizvod..."
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(index, parseInt(e.target.value) || 1)
+                      }
+                      className="w-20"
                     />
-                    {productSearch && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                        {filteredProducts.map((product) => (
-                          <div
-                            key={product.id}
-                            className="p-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() => {
-                              const newItems = [...orderItems];
-                              newItems[index].product = product;
-                              onOrderItemsChange(newItems);
-                              setProductSearch("");
-                            }}
-                          >
-                            {product.name} - {product.manufacturer}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <span className="w-24 text-right">
+                      {item.product.price * item.quantity} RSD
+                    </span>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleRemoveItem(index)}
+                    >
+                      ×
+                    </Button>
                   </div>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => {
-                      const newItems = [...orderItems];
-                      newItems[index].quantity = parseInt(e.target.value) || 1;
-                      onOrderItemsChange(newItems);
-                    }}
-                    className="w-full md:w-24"
-                  />
-                  <div className="flex items-center w-full md:w-24 justify-between md:justify-center">
-                    <span className="md:hidden">Ukupno:</span>
-                    <span>{item.product.price * item.quantity} RSD</span>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleRemoveItem(index)}
-                    className="w-full md:w-auto"
-                  >
-                    ×
-                  </Button>
                 </div>
               ))}
-              <Button onClick={handleAddItem} className="w-full md:w-auto">
-                Dodaj proizvod
-              </Button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex justify-end">
-        <Button onClick={onSubmit} className="w-full md:w-auto">
-          Pošalji porudžbinu
-        </Button>
-      </div>
+      {selectedCustomer && orderItems.length > 0 && (
+        <div className="flex justify-end">
+          <Button onClick={onSubmit} className="w-full md:w-auto">
+            Pošalji porudžbinu
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
