@@ -20,10 +20,10 @@ export interface Customer {
 export interface Product {
   id: string;
   user_id: string;
-  name: string;
-  manufacturer: string;
-  price: number;
-  unit: string;
+  Naziv: string;
+  Proizvođač: string;
+  Cena: number;
+  "Jedinica mere": string;
 }
 
 export interface OrderItem {

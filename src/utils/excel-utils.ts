@@ -42,25 +42,13 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
 
       toast.success("Lista kupaca je uspešno učitana");
     } else if (type === "products") {
-      // Check first row to determine which column names are used
-      const firstRow = jsonData[0];
-      
-      // Define possible column mappings (Serbian to English)
-      const nameColumn = firstRow.hasOwnProperty("Naziv") ? "Naziv" : "name";
-      const manufacturerColumn = firstRow.hasOwnProperty("Proizvođač") ? "Proizvođač" : "manufacturer";
-      const priceColumn = firstRow.hasOwnProperty("Cena") ? "Cena" : "price";
-      const unitColumn = firstRow.hasOwnProperty("Jedinica mere") ? "Jedinica mere" : "unit";
-
-      console.log("Found columns:", { nameColumn, manufacturerColumn, priceColumn, unitColumn });
-      console.log("First row data:", firstRow);
-
       const products = jsonData.map((row: any) => ({
         id: crypto.randomUUID(),
         user_id: session.user.id,
-        name: row[nameColumn] || "",
-        manufacturer: row[manufacturerColumn] || "",
-        price: parseFloat(row[priceColumn]) || 0,
-        unit: row[unitColumn] || "",
+        Naziv: row["Naziv"] || "",
+        Proizvođač: row["Proizvođač"] || "",
+        Cena: parseFloat(row["Cena"]) || 0,
+        "Jedinica mere": row["Jedinica mere"] || "",
       }));
 
       console.log("Mapped products:", products);
