@@ -41,13 +41,21 @@ const Sales = () => {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
-        .order('name');
+        .order('Naziv');
 
       if (productsError) {
         console.error('Error fetching products:', productsError);
         toast.error("Greška pri učitavanju proizvoda");
       } else {
-        setProducts(productsData);
+        // Map Serbian column names to English properties
+        const mappedProducts = productsData.map(product => ({
+          ...product,
+          name: product.Naziv,
+          manufacturer: product.Proizvođač,
+          price: product.Cena,
+          unit: product["Jedinica mere"]
+        }));
+        setProducts(mappedProducts);
       }
     };
 
