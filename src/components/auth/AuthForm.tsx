@@ -17,7 +17,8 @@ export const AuthForm = () => {
           },
         },
       }}
-      providers={[]}
+      providers={["email"]}
+      redirectTo={window.location.origin}
     />
   );
 };
