@@ -52,6 +52,15 @@ const Login = () => {
             if (customersError) throw customersError;
 
             if (customersData) {
+              // Delete existing customers for this user
+              const { error: deleteError } = await supabase
+                .from('customers')
+                .delete()
+                .eq('user_id', session.user.id);
+
+              if (deleteError) throw deleteError;
+
+              // Transform and insert new customers
               const transformedCustomers = customersData.map(customer => ({
                 user_id: session.user.id,
                 code: customer['Šifra kupca'].toString(),
@@ -64,18 +73,16 @@ const Login = () => {
                 gps_coordinates: customer['GPS Koordinate']
               }));
 
-              // Delete existing customers for this user
-              await supabase
-                .from('customers')
-                .delete()
-                .eq('user_id', session.user.id);
+              // Insert customers in batches to avoid potential size limits
+              const batchSize = 50;
+              for (let i = 0; i < transformedCustomers.length; i += batchSize) {
+                const batch = transformedCustomers.slice(i, i + batchSize);
+                const { error: insertError } = await supabase
+                  .from('customers')
+                  .insert(batch);
 
-              // Insert new customers
-              const { error: insertError } = await supabase
-                .from('customers')
-                .insert(transformedCustomers);
-
-              if (insertError) throw insertError;
+                if (insertError) throw insertError;
+              }
             }
           }
 
@@ -92,7 +99,14 @@ const Login = () => {
             }
 
             if (productsData) {
-              console.log('Products data:', productsData);
+              // Delete existing products for this user
+              const { error: deleteError } = await supabase
+                .from('products')
+                .delete()
+                .eq('user_id', session.user.id);
+
+              if (deleteError) throw deleteError;
+
               const transformedProducts = productsData.map(product => ({
                 user_id: session.user.id,
                 Naziv: product['Naziv'],
@@ -101,25 +115,23 @@ const Login = () => {
                 'Jedinica mere': product['Jedinica mere']
               }));
 
-              // Delete existing products for this user
-              await supabase
-                .from('products')
-                .delete()
-                .eq('user_id', session.user.id);
+              // Insert products in batches
+              const batchSize = 50;
+              for (let i = 0; i < transformedProducts.length; i += batchSize) {
+                const batch = transformedProducts.slice(i, i + batchSize);
+                const { error: insertError } = await supabase
+                  .from('products')
+                  .insert(batch);
 
-              // Insert new products
-              const { error: insertError } = await supabase
-                .from('products')
-                .insert(transformedProducts);
-
-              if (insertError) {
-                console.error('Error inserting products:', insertError);
-                throw insertError;
+                if (insertError) {
+                  console.error('Error inserting products:', insertError);
+                  throw insertError;
+                }
               }
             }
           }
 
-          toast.success('Successfully logged in');
+          toast.success('Successfully logged in and synced data');
           navigate("/sales");
         } catch (error) {
           console.error('Error syncing data:', error);
