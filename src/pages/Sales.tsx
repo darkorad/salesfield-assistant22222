@@ -28,6 +28,7 @@ const Sales = () => {
       const { data: customersData, error: customersError } = await supabase
         .from('customers')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('name');
 
       if (customersError) {
@@ -41,6 +42,7 @@ const Sales = () => {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('Naziv');
 
       if (productsError) {
