@@ -9,7 +9,6 @@ const Layout = lazy(() => import("@/components/Layout"));
 const Sales = lazy(() => import("@/pages/Sales"));
 const Reports = lazy(() => import("@/pages/Reports"));
 const Settings = lazy(() => import("@/pages/Settings"));
-const Login = lazy(() => import("@/pages/Login"));
 const Index = lazy(() => import("@/pages/Index"));
 
 // Create a client
@@ -66,7 +65,6 @@ function App() {
                 <Route path="reports" element={<Reports />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
-              <Route path="/login" element={<Login />} />
             </Routes>
           </Suspense>
         </BrowserRouter>
