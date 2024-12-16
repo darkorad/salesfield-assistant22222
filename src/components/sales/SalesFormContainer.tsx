@@ -41,15 +41,20 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         items: orderItems,
         total,
         date: new Date().toISOString(),
-        userId: 'temp-user', // Temporary user ID
         paymentType,
       };
 
+      // Get existing sales from localStorage
       const existingSales = localStorage.getItem("sales");
       const sales = existingSales ? JSON.parse(existingSales) : [];
+      
+      // Add new order
       sales.push(newOrder);
+      
+      // Save back to localStorage
       localStorage.setItem("sales", JSON.stringify(sales));
 
+      // Reset form
       setSelectedCustomer(null);
       setCustomerSearch("");
       setOrderItems([]);

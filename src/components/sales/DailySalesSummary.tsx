@@ -31,14 +31,13 @@ const DailySalesSummary = () => {
         };
   });
 
-  const loadTodaySales = async () => {
+  const loadTodaySales = () => {
     try {
       const sales = localStorage.getItem("sales");
       if (sales) {
         const allSales = JSON.parse(sales) as Order[];
         const today = new Date().toISOString().split("T")[0];
         
-        // Filter sales by date only (removed user ID filter temporarily)
         const filteredSales = allSales.filter(
           (sale) => sale.date.split("T")[0] === today
         );
