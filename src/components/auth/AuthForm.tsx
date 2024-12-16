@@ -20,6 +20,7 @@ export const AuthForm = () => {
       providers={[]}
       view="sign_in"
       showLinks={false}
+      redirectTo={window.location.origin}
       localization={{
         variables: {
           sign_in: {
@@ -27,18 +28,16 @@ export const AuthForm = () => {
             email_input_placeholder: 'Enter your username',
             password_label: 'Password',
             password_input_placeholder: 'Enter your password',
+            button_label: 'Sign in',
           },
           sign_up: {
             email_label: 'Username',
             email_input_placeholder: 'Enter your username',
             password_label: 'Password',
             password_input_placeholder: 'Enter your password',
+            button_label: 'Sign up',
           },
         },
-      }}
-      redirectTo={window.location.origin}
-      queryParams={{
-        username_only: 'true'
       }}
     />
   );
