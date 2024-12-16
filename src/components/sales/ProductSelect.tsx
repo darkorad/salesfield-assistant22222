@@ -17,34 +17,10 @@ export const ProductSelect = ({
   onOrderItemsChange,
 }: ProductSelectProps) => {
   const [productSearch, setProductSearch] = useState("");
-  const [currentQuantity, setCurrentQuantity] = useState("");
-  const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(productSearch.toLowerCase())
   );
-
-  const handleNumberClick = (number: string) => {
-    if (selectedProductIndex === null) return;
-    setCurrentQuantity(prev => `${prev}${number}`);
-  };
-
-  const handleClearQuantity = () => {
-    setCurrentQuantity("");
-  };
-
-  const handleConfirmQuantity = () => {
-    if (selectedProductIndex === null || !currentQuantity) return;
-    
-    const quantity = parseFloat(currentQuantity);
-    if (isNaN(quantity) || quantity <= 0) return;
-
-    const newItems = [...orderItems];
-    newItems[selectedProductIndex].quantity = quantity;
-    onOrderItemsChange(newItems);
-    setCurrentQuantity("");
-    setSelectedProductIndex(null);
-  };
 
   const handleAddProduct = (product: Product) => {
     const existingItemIndex = orderItems.findIndex(
@@ -65,17 +41,16 @@ export const ProductSelect = ({
     onOrderItemsChange(orderItems.filter((_, i) => i !== index));
   };
 
-  const handleQuantityChange = (index: number) => {
-    setSelectedProductIndex(index);
-    setCurrentQuantity("");
+  const handleQuantityChange = (index: number, newQuantity: number) => {
+    const newItems = [...orderItems];
+    newItems[index].quantity = Math.max(1, newQuantity);
+    onOrderItemsChange(newItems);
   };
 
   const calculateItemTotal = (product: Product, quantity: number) => {
     const unitSize = parseFloat(product.unit) || 1;
     return product.price * quantity * unitSize;
   };
-
-  const numberPad = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'];
 
   return (
     <div className="space-y-4">
@@ -119,45 +94,6 @@ export const ProductSelect = ({
           )}
         </div>
 
-        {selectedProductIndex !== null && (
-          <div className="fixed inset-x-0 bottom-0 bg-white p-4 shadow-lg border-t">
-            <div className="max-w-md mx-auto">
-              <div className="text-center mb-2">
-                <span className="text-lg font-medium">
-                  Količina: {currentQuantity || "0"}
-                </span>
-              </div>
-              <div className="grid grid-cols-6 gap-2 mb-2">
-                {numberPad.map((num) => (
-                  <Button
-                    key={num}
-                    variant="outline"
-                    onClick={() => handleNumberClick(num)}
-                    className="h-12 text-lg"
-                  >
-                    {num}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleClearQuantity}
-                  className="flex-1"
-                >
-                  Obriši
-                </Button>
-                <Button
-                  onClick={handleConfirmQuantity}
-                  className="flex-1"
-                >
-                  Potvrdi
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="space-y-2 mt-4">
           {orderItems.map((item, index) => (
             <div
@@ -171,13 +107,18 @@ export const ProductSelect = ({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleQuantityChange(index)}
-                  className="w-24"
-                >
-                  {item.quantity} {item.product.unit}
-                </Button>
+                <Input
+                  type="number"
+                  min="1"
+                  value={item.quantity}
+                  onChange={(e) =>
+                    handleQuantityChange(index, parseInt(e.target.value) || 1)
+                  }
+                  className="w-20"
+                />
+                <span className="whitespace-nowrap text-sm text-gray-600">
+                  {item.product.unit}
+                </span>
                 <span className="w-24 text-right">
                   {calculateItemTotal(item.product, item.quantity)} RSD
                 </span>
