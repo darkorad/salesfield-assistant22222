@@ -16,17 +16,33 @@ const Login = () => {
         try {
           // Get user email
           const userEmail = session.user.email;
+          let sourceCustomersTable = '';
+          let sourceProductsTable = '';
           
-          // If it's Veljko's email, sync his data
-          if (userEmail === 'zirmd.veljko@gmail.com') {
-            // Copy data from KupciVeljko to customers table
+          // Map email to corresponding tables
+          switch(userEmail) {
+            case 'zirmd.veljko@gmail.com':
+              sourceCustomersTable = 'KupciVeljko';
+              sourceProductsTable = 'CenovnikVeljko';
+              break;
+            case 'zirmd.darko@gmail.com':
+              sourceCustomersTable = 'Kupci Darko';
+              break;
+            default:
+              // For other users, no sync needed
+              toast.success('Successfully logged in');
+              navigate("/sales");
+              return;
+          }
+
+          // Sync customers if source table exists
+          if (sourceCustomersTable) {
             const { data: customersData, error: customersError } = await supabase
-              .from('KupciVeljko')
+              .from(sourceCustomersTable)
               .select('*');
 
             if (customersError) throw customersError;
 
-            // Transform and insert the data into customers table
             if (customersData) {
               const transformedCustomers = customersData.map(customer => ({
                 user_id: session.user.id,
@@ -53,15 +69,16 @@ const Login = () => {
 
               if (insertError) throw insertError;
             }
+          }
 
-            // Copy data from CenovnikVeljko to products table
+          // Sync products if source table exists
+          if (sourceProductsTable) {
             const { data: productsData, error: productsError } = await supabase
-              .from('CenovnikVeljko')
+              .from(sourceProductsTable)
               .select('*');
 
             if (productsError) throw productsError;
 
-            // Transform and insert the data into products table
             if (productsData) {
               const transformedProducts = productsData.map(product => ({
                 user_id: session.user.id,
