@@ -258,7 +258,55 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      citext:
+        | {
+            Args: {
+              "": boolean
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: string
+          }
+      citext_hash: {
+        Args: {
+          "": string
+        }
+        Returns: number
+      }
+      citextin: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      citextout: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
+      citextrecv: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      citextsend: {
+        Args: {
+          "": string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

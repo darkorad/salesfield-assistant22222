@@ -25,14 +25,21 @@ export const AuthForm = () => {
           sign_in: {
             email_label: 'Username',
             email_input_placeholder: 'Enter your username',
+            password_label: 'Password',
+            password_input_placeholder: 'Enter your password',
           },
           sign_up: {
             email_label: 'Username',
             email_input_placeholder: 'Enter your username',
+            password_label: 'Password',
+            password_input_placeholder: 'Enter your password',
           },
         },
       }}
       redirectTo={window.location.origin}
+      queryParams={{
+        username_only: 'true'
+      }}
     />
   );
 };
