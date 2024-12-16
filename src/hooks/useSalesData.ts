@@ -27,10 +27,12 @@ export const useSalesData = () => {
           supabase
             .from('customers')
             .select('*')
+            .eq('user_id', session.user.id)
             .order('name'),
           supabase
             .from('products')
             .select('*')
+            .eq('user_id', session.user.id)
             .order('Naziv')
         ]);
 
