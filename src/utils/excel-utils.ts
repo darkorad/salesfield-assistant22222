@@ -5,20 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 export const processExcelFile = async (data: any, type: "customers" | "products", userId: string) => {
   try {
     // First check if profile exists
-    const { data: profile, error: profileError } = await supabase
+    const { data: profiles } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
-      .single();
+      .eq('id', userId);
 
-    if (profileError || !profile) {
+    if (!profiles || profiles.length === 0) {
       // Create profile if it doesn't exist
       const { data: session } = await supabase.auth.getSession();
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
           id: userId,
-          name: session.session?.user.email || 'Unknown',
+          name: session?.user?.email || 'Unknown',
           role: 'salesperson'
         });
 
