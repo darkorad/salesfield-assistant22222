@@ -1,6 +1,7 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
+import { Provider } from "@supabase/supabase-js";
 
 export const AuthForm = () => {
   return (
@@ -17,7 +18,7 @@ export const AuthForm = () => {
           },
         },
       }}
-      providers={["email"]}
+      providers={["email" as Provider]}
       redirectTo={window.location.origin}
     />
   );
