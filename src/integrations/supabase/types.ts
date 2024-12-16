@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      "Kupci Veljko": {
+        Row: {
+          Adresa: string
+          "GPS Koordinate": string | null
+          Grad: string
+          "Naziv kupca": string
+          "PDV Obveznik": string
+          PIB: string
+          "Šifra kupca": number
+          Telefon: string
+        }
+        Insert: {
+          Adresa: string
+          "GPS Koordinate"?: string | null
+          Grad: string
+          "Naziv kupca": string
+          "PDV Obveznik": string
+          PIB: string
+          "Šifra kupca": number
+          Telefon: string
+        }
+        Update: {
+          Adresa?: string
+          "GPS Koordinate"?: string | null
+          Grad?: string
+          "Naziv kupca"?: string
+          "PDV Obveznik"?: string
+          PIB?: string
+          "Šifra kupca"?: number
+          Telefon?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           Cena: number
@@ -129,6 +162,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ProductsVeljko: {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
