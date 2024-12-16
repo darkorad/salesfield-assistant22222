@@ -16,7 +16,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-    },
+    }
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    exclude: ['@supabase/supabase-js']
   },
   build: {
     target: 'esnext',
@@ -30,7 +34,7 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-slot', '@radix-ui/react-toast'],
-          'data-vendor': ['@tanstack/react-query', '@supabase/supabase-js'],
+          'data-vendor': ['@tanstack/react-query'],
           'form-vendor': ['react-hook-form', 'zod'],
           'utils-vendor': ['date-fns', 'xlsx']
         }
@@ -38,9 +42,5 @@ export default defineConfig(({ mode }) => ({
     },
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-    exclude: ['@supabase/supabase-js']
   }
 }));
