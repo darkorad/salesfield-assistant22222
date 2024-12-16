@@ -14,7 +14,15 @@ const LoadingFallback = () => (
 );
 
 const Sales = () => {
-  const { customers, products } = useSalesData();
+  const { customers, products, isLoading } = useSalesData();
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-4 px-4 md:py-8 md:px-8">
+        <LoadingFallback />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-4 px-4 md:py-8 md:px-8">

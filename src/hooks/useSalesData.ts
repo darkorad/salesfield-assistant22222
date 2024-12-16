@@ -7,32 +7,22 @@ import { toast } from "sonner";
 export const useSalesData = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
-    };
-    
-    checkAuth();
-  }, [navigate]);
-
-  useEffect(() => {
-    let isMounted = true;
-
     const fetchData = async () => {
       try {
+        // Check if user is authenticated
         const { data: { session } } = await supabase.auth.getSession();
-        
         if (!session) {
           navigate("/login");
           return;
         }
 
+        setIsLoading(true);
+
+        // Fetch customers and products in parallel
         const [customersResponse, productsResponse] = await Promise.all([
           supabase
             .from('customers')
@@ -44,49 +34,54 @@ export const useSalesData = () => {
             .order('Naziv')
         ]);
 
-        if (isMounted) {
-          if (customersResponse.error) {
-            console.error('Error fetching customers:', customersResponse.error);
-            toast.error("Greška pri učitavanju kupaca");
-          } else {
-            setCustomers(customersResponse.data || []);
-          }
-
-          if (productsResponse.error) {
-            console.error('Error fetching products:', productsResponse.error);
-            toast.error("Greška pri učitavanju proizvoda");
-          } else {
-            const mappedProducts = (productsResponse.data || []).map(product => ({
-              ...product,
-              name: product.Naziv,
-              manufacturer: product.Proizvođač,
-              price: product.Cena,
-              unit: product["Jedinica mere"]
-            }));
-            setProducts(mappedProducts);
-          }
+        if (customersResponse.error) {
+          console.error('Error fetching customers:', customersResponse.error);
+          toast.error("Greška pri učitavanju kupaca");
+          return;
         }
+
+        if (productsResponse.error) {
+          console.error('Error fetching products:', productsResponse.error);
+          toast.error("Greška pri učitavanju proizvoda");
+          return;
+        }
+
+        // Map products data to match the expected format
+        const mappedProducts = productsResponse.data?.map(product => ({
+          id: product.id,
+          name: product.Naziv,
+          manufacturer: product.Proizvođač,
+          price: product.Cena,
+          unit: product["Jedinica mere"]
+        })) || [];
+
+        setCustomers(customersResponse.data || []);
+        setProducts(mappedProducts);
       } catch (error) {
         console.error('Error:', error);
         toast.error("Greška pri učitavanju podataka");
+      } finally {
+        setIsLoading(false);
       }
     };
 
+    // Initial fetch
     fetchData();
 
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
+      if (event === 'SIGNED_OUT') {
         navigate("/login");
-      } else {
+      } else if (event === 'SIGNED_IN') {
         fetchData();
       }
     });
 
+    // Cleanup subscription
     return () => {
-      isMounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
 
-  return { customers, products };
+  return { customers, products, isLoading };
 };
