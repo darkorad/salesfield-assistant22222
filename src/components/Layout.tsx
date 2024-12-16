@@ -18,6 +18,17 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Pirot Kilim Pattern Banner */}
+      <div className="w-full h-6 bg-gradient-to-r from-red-700 via-red-800 to-red-700 relative overflow-hidden">
+        <div className="absolute inset-0 flex">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-12 h-full">
+              <div className="h-full w-full bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_25%,rgba(255,255,255,0.2)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.2)_75%)] bg-[length:8px_8px]"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <nav className="bg-white shadow-sm sticky top-0 z-50 w-full">
         <div className="max-w-full px-2">
           <div className="flex justify-between py-2 items-center">
