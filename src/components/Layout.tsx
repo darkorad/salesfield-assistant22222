@@ -25,7 +25,7 @@ const Layout = () => {
               <Link to="/sales" className="flex items-center">
                 <ShoppingCart className="h-6 w-6 text-primary mr-2" />
                 <span className="font-semibold text-gray-900 text-lg">
-                  Sales Pro
+                  ZIR-MD COMPANY
                 </span>
               </Link>
               <div className="hidden md:flex items-center space-x-2">
