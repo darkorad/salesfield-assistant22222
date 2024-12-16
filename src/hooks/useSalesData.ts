@@ -46,14 +46,19 @@ export const useSalesData = () => {
           return;
         }
 
-        // Map products data to match the expected format
-        const mappedProducts = productsResponse.data?.map(product => ({
+        // Map products data to match the Product type
+        const mappedProducts: Product[] = (productsResponse.data || []).map(product => ({
           id: product.id,
+          user_id: product.user_id,
           name: product.Naziv,
           manufacturer: product.Proizvođač,
           price: product.Cena,
-          unit: product["Jedinica mere"]
-        })) || [];
+          unit: product["Jedinica mere"],
+          Naziv: product.Naziv,
+          Proizvođač: product.Proizvođač,
+          Cena: product.Cena,
+          "Jedinica mere": product["Jedinica mere"]
+        }));
 
         setCustomers(customersResponse.data || []);
         setProducts(mappedProducts);
