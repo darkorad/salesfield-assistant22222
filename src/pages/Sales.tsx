@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 import { SalesFormContainer } from "@/components/sales/SalesFormContainer";
+import { ManufacturerSidebar } from "@/components/sales/ManufacturerSidebar";
 import { Customer, Product } from "@/types";
 
 // Lazy load DailySalesSummary
@@ -46,11 +47,14 @@ const mockProducts: Product[] = [
 
 const Sales = () => {
   return (
-    <div className="container mx-auto py-4 px-4 md:py-8 md:px-8">
-      <Suspense fallback={<LoadingFallback />}>
-        <SalesFormContainer customers={mockCustomers} products={mockProducts} />
-        <DailySalesSummary />
-      </Suspense>
+    <div className="flex min-h-screen">
+      <ManufacturerSidebar products={mockProducts} />
+      <div className="flex-1 container mx-auto py-4 px-4 md:py-8 md:px-8">
+        <Suspense fallback={<LoadingFallback />}>
+          <SalesFormContainer customers={mockCustomers} products={mockProducts} />
+          <DailySalesSummary />
+        </Suspense>
+      </div>
     </div>
   );
 };
