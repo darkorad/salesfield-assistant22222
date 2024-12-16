@@ -87,36 +87,49 @@ const Sales = () => {
     }, 0);
   };
 
-  const handleSubmitOrder = () => {
-    if (!selectedCustomer) {
-      toast.error("Molimo izaberite kupca");
-      return;
+  const handleSubmitOrder = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
+      if (!selectedCustomer) {
+        toast.error("Molimo izaberite kupca");
+        return;
+      }
+      if (orderItems.length === 0) {
+        toast.error("Molimo dodajte bar jedan proizvod");
+        return;
+      }
+
+      const total = calculateTotal(orderItems);
+
+      const newOrder = {
+        id: crypto.randomUUID(),
+        customer: selectedCustomer,
+        items: orderItems,
+        total: total,
+        date: new Date().toISOString(),
+        userId: session.user.id, // Add user ID to the order
+        paymentType: 'cash' as const,
+      };
+
+      const existingSales = localStorage.getItem("sales");
+      const sales = existingSales ? JSON.parse(existingSales) : [];
+      sales.push(newOrder);
+      localStorage.setItem("sales", JSON.stringify(sales));
+
+      setSelectedCustomer(null);
+      setCustomerSearch("");
+      setOrderItems([]);
+      
+      toast.success("Porudžbina je uspešno poslata!");
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      toast.error("Greška pri slanju porudžbine");
     }
-    if (orderItems.length === 0) {
-      toast.error("Molimo dodajte bar jedan proizvod");
-      return;
-    }
-
-    const total = calculateTotal(orderItems);
-
-    const newOrder = {
-      id: crypto.randomUUID(),
-      customer: selectedCustomer,
-      items: orderItems,
-      total: total,
-      date: new Date().toISOString(),
-    };
-
-    const existingSales = localStorage.getItem("sales");
-    const sales = existingSales ? JSON.parse(existingSales) : [];
-    sales.push(newOrder);
-    localStorage.setItem("sales", JSON.stringify(sales));
-
-    setSelectedCustomer(null);
-    setCustomerSearch("");
-    setOrderItems([]);
-    
-    toast.success("Porudžbina je uspešno poslata!");
   };
 
   return (

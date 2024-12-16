@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Order } from "@/types";
 import { SalesTable } from "./SalesTable";
 import { SalesActions } from "./SalesActions";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Contact {
   name: string;
@@ -31,15 +32,28 @@ const DailySalesSummary = () => {
         };
   });
 
-  const loadTodaySales = () => {
-    const sales = localStorage.getItem("sales");
-    if (sales) {
-      const allSales = JSON.parse(sales) as Order[];
-      const today = new Date().toISOString().split("T")[0];
-      const filteredSales = allSales.filter(
-        (sale) => sale.date.split("T")[0] === today
-      );
-      setTodaySales(filteredSales);
+  const loadTodaySales = async () => {
+    try {
+      // Get current user's session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const sales = localStorage.getItem("sales");
+      if (sales) {
+        const allSales = JSON.parse(sales) as Order[];
+        const today = new Date().toISOString().split("T")[0];
+        
+        // Filter sales by both date and user ID
+        const filteredSales = allSales.filter(
+          (sale) => 
+            sale.date.split("T")[0] === today && 
+            sale.userId === session.user.id // Only show sales for current user
+        );
+        
+        setTodaySales(filteredSales);
+      }
+    } catch (error) {
+      console.error("Error loading sales:", error);
     }
   };
 
