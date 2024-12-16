@@ -9,7 +9,6 @@ const Layout = lazy(() => import("@/components/Layout"));
 const Sales = lazy(() => import("@/pages/Sales"));
 const Reports = lazy(() => import("@/pages/Reports"));
 const Settings = lazy(() => import("@/pages/Settings"));
-const Index = lazy(() => import("@/pages/Index"));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -60,7 +59,7 @@ function App() {
           <Suspense fallback={<div>Loading...</div>}>
             <Routes>
               <Route path="/" element={<Layout />}>
-                <Route index element={<Index />} />
+                <Route index element={<Sales />} />
                 <Route path="sales" element={<Sales />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="settings" element={<Settings />} />
