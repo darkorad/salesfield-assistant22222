@@ -36,9 +36,12 @@ export const ExportData = () => {
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Kupci");
-      XLSX.writeFile(workbook, "kupci.xlsx");
+      const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "kupci.csv";
+      link.click();
       
       toast.success("Lista kupaca je uspešno izvezena");
     } catch (error) {
@@ -73,9 +76,12 @@ export const ExportData = () => {
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Proizvodi");
-      XLSX.writeFile(workbook, "cenovnik.xlsx");
+      const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "cenovnik.csv";
+      link.click();
       
       toast.success("Cenovnik je uspešno izvezen");
     } catch (error) {
@@ -87,7 +93,7 @@ export const ExportData = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Izvoz podataka</CardTitle>
+        <CardTitle>Izveštaji i napisi</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button 
@@ -95,14 +101,14 @@ export const ExportData = () => {
           className="w-full sm:w-auto"
         >
           <Download className="mr-2 h-4 w-4" />
-          Izvezi listu kupaca
+          Izvezi listu kupaca (CSV)
         </Button>
         <Button 
           onClick={exportProducts}
           className="w-full sm:w-auto"
         >
           <Download className="mr-2 h-4 w-4" />
-          Izvezi cenovnik
+          Izvezi cenovnik (CSV)
         </Button>
       </CardContent>
     </Card>
