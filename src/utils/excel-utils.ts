@@ -11,16 +11,15 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
       return;
     }
 
-    // First, check if user profile exists
-    const { data: profile, error: profileError } = await supabase
+    // First, ensure profile exists
+    const { data: profile } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', session.user.id)
       .single();
 
-    if (profileError || !profile) {
-      // Create profile if it doesn't exist
-      const { error: insertError } = await supabase
+    if (!profile) {
+      const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: session.user.id,
@@ -28,8 +27,8 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
           role: 'salesperson'
         });
 
-      if (insertError) {
-        console.error('Error creating profile:', insertError);
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
         toast.error("Greška pri kreiranju profila");
         return;
       }
@@ -53,8 +52,6 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
         gps_coordinates: row["GPS Koordinate"] || ""
       }));
 
-      console.log("Inserting customers:", customers);
-
       const { error } = await supabase
         .from('customers')
         .insert(customers);
@@ -74,8 +71,6 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
         "Cena": parseFloat(row["Cena"]) || 0,
         "Jedinica mere": row["Jedinica mere"] || ""
       }));
-
-      console.log("Inserting products:", products);
 
       const { error } = await supabase
         .from('products')
