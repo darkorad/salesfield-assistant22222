@@ -36,10 +36,17 @@ const LoadingSpinner = () => (
 const preloadComponents = () => {
   const componentsToPreload = [Layout, Sales];
   componentsToPreload.forEach(component => {
-    requestIdleCallback?.(() => {
-      // Safely trigger component loading
-      component();
-    }) || setTimeout(() => component(), 1000);
+    const preloadFn = () => {
+      // Trigger component loading by calling the lazy loader
+      component().then(() => {
+        // Component loaded successfully
+        console.log('Component preloaded successfully');
+      }).catch(error => {
+        console.error('Error preloading component:', error);
+      });
+    };
+    
+    requestIdleCallback?.(preloadFn) || setTimeout(preloadFn, 1000);
   });
 };
 
