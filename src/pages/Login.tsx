@@ -3,8 +3,9 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 // Define literal types for the table names to ensure type safety
 type CustomerTableNames = "KupciVeljko" | "Kupci Darko";
@@ -17,10 +18,24 @@ type SourceTables = {
 
 const Login = () => {
   const navigate = useNavigate();
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
+    // Check if user is already logged in
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/sales");
+      }
+    };
+    checkSession();
+
     const handleAuthChange = async (event: string, session: any) => {
+      console.log("Auth state changed:", event, session);
+      
       if (event === 'SIGNED_IN' && session) {
+        setIsSyncing(true);
         try {
           const userEmail = session.user.email;
           let sourceTables: SourceTables = {
@@ -46,9 +61,6 @@ const Login = () => {
               navigate("/sales");
               return;
           }
-
-          // Show loading toast
-          const loadingToast = toast.loading('Syncing data...');
 
           // Sync customers if source table exists
           if (sourceTables.customers) {
@@ -83,10 +95,13 @@ const Login = () => {
               }));
 
               // Smaller batch size for mobile
-              const batchSize = 20;
+              const batchSize = 10;
+              const totalBatches = Math.ceil(transformedCustomers.length / batchSize);
+              
               for (let i = 0; i < transformedCustomers.length; i += batchSize) {
                 const batch = transformedCustomers.slice(i, i + batchSize);
                 await supabase.from('customers').insert(batch);
+                setSyncProgress((i + batchSize) / transformedCustomers.length * 50); // First 50% for customers
               }
             }
           }
@@ -120,21 +135,23 @@ const Login = () => {
               }));
 
               // Smaller batch size for mobile
-              const batchSize = 20;
+              const batchSize = 10;
               for (let i = 0; i < transformedProducts.length; i += batchSize) {
                 const batch = transformedProducts.slice(i, i + batchSize);
                 await supabase.from('products').insert(batch);
+                setSyncProgress(50 + (i + batchSize) / transformedProducts.length * 50); // Last 50% for products
               }
             }
           }
 
-          // Dismiss loading toast and show success
-          toast.dismiss(loadingToast);
           toast.success('Successfully logged in and synced data');
           navigate("/sales");
         } catch (error) {
           console.error('Error syncing data:', error);
           toast.error('Error syncing data');
+        } finally {
+          setIsSyncing(false);
+          setSyncProgress(0);
         }
       }
     };
@@ -155,6 +172,12 @@ const Login = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {isSyncing && (
+            <div className="mb-4 space-y-2">
+              <div className="text-sm text-gray-600 text-center">Syncing data...</div>
+              <Progress value={syncProgress} className="w-full" />
+            </div>
+          )}
           <Auth
             supabaseClient={supabase}
             appearance={{
