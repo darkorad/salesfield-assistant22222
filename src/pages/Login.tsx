@@ -15,18 +15,15 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         try {
-          // Get user email
           const userEmail = session.user.email;
           let sourceTables: SourceTables = {
             customers: null,
             products: null
           };
           
-          // Map email to corresponding tables
           switch(userEmail) {
             case 'zirmd.veljko@gmail.com':
               sourceTables = {
@@ -41,7 +38,6 @@ const Login = () => {
               };
               break;
             default:
-              // For other users, no sync needed
               toast.success('Successfully logged in');
               navigate("/sales");
               return;
@@ -85,13 +81,18 @@ const Login = () => {
 
           // Sync products if source table exists
           if (sourceTables.products) {
+            console.log('Syncing products from:', sourceTables.products);
             const { data: productsData, error: productsError } = await supabase
               .from(sourceTables.products)
               .select('*');
 
-            if (productsError) throw productsError;
+            if (productsError) {
+              console.error('Error fetching products:', productsError);
+              throw productsError;
+            }
 
             if (productsData) {
+              console.log('Products data:', productsData);
               const transformedProducts = productsData.map(product => ({
                 user_id: session.user.id,
                 Naziv: product['Naziv'],
@@ -111,7 +112,10 @@ const Login = () => {
                 .from('products')
                 .insert(transformedProducts);
 
-              if (insertError) throw insertError;
+              if (insertError) {
+                console.error('Error inserting products:', insertError);
+                throw insertError;
+              }
             }
           }
 
