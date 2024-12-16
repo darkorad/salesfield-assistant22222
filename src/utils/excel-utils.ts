@@ -12,13 +12,13 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
     }
 
     // First, ensure profile exists
-    const { data: profile } = await supabase
+    const { data: profiles } = await supabase
       .from('profiles')
       .select('id')
-      .eq('id', session.user.id)
-      .single();
+      .eq('id', session.user.id);
 
-    if (!profile) {
+    // Check if profile exists, create if it doesn't
+    if (!profiles || profiles.length === 0) {
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
