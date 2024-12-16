@@ -6,9 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+// Define literal types for the table names to ensure type safety
+type CustomerTableNames = "KupciVeljko" | "Kupci Darko";
+type ProductTableNames = "CenovnikVeljko";
+
 type SourceTables = {
-  customers: string | null;
-  products: string | null;
+  customers: CustomerTableNames | null;
+  products: ProductTableNames | null;
 };
 
 const Login = () => {
@@ -27,13 +31,13 @@ const Login = () => {
           switch(userEmail) {
             case 'zirmd.veljko@gmail.com':
               sourceTables = {
-                customers: 'KupciVeljko',
-                products: 'CenovnikVeljko'
+                customers: "KupciVeljko",
+                products: "CenovnikVeljko"
               };
               break;
             case 'zirmd.darko@gmail.com':
               sourceTables = {
-                customers: '"Kupci Darko"',  // Note the double quotes around table name with space
+                customers: "Kupci Darko",
                 products: null
               };
               break;
