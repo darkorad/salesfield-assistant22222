@@ -6,6 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+type SourceTables = {
+  customers: "KupciVeljko" | "Kupci Darko" | null;
+  products: "CenovnikVeljko" | null;
+};
+
 const Login = () => {
   const navigate = useNavigate();
 
@@ -16,17 +21,24 @@ const Login = () => {
         try {
           // Get user email
           const userEmail = session.user.email;
-          let sourceCustomersTable = '';
-          let sourceProductsTable = '';
+          let sourceTables: SourceTables = {
+            customers: null,
+            products: null
+          };
           
           // Map email to corresponding tables
           switch(userEmail) {
             case 'zirmd.veljko@gmail.com':
-              sourceCustomersTable = 'KupciVeljko';
-              sourceProductsTable = 'CenovnikVeljko';
+              sourceTables = {
+                customers: 'KupciVeljko',
+                products: 'CenovnikVeljko'
+              };
               break;
             case 'zirmd.darko@gmail.com':
-              sourceCustomersTable = 'Kupci Darko';
+              sourceTables = {
+                customers: 'Kupci Darko',
+                products: null
+              };
               break;
             default:
               // For other users, no sync needed
@@ -36,9 +48,9 @@ const Login = () => {
           }
 
           // Sync customers if source table exists
-          if (sourceCustomersTable) {
+          if (sourceTables.customers) {
             const { data: customersData, error: customersError } = await supabase
-              .from(sourceCustomersTable)
+              .from(sourceTables.customers)
               .select('*');
 
             if (customersError) throw customersError;
@@ -72,9 +84,9 @@ const Login = () => {
           }
 
           // Sync products if source table exists
-          if (sourceProductsTable) {
+          if (sourceTables.products) {
             const { data: productsData, error: productsError } = await supabase
-              .from(sourceProductsTable)
+              .from(sourceTables.products)
               .select('*');
 
             if (productsError) throw productsError;
