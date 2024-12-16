@@ -34,19 +34,29 @@ const LoadingSpinner = () => (
 
 // Preload critical components
 const preloadComponents = () => {
-  const componentsToPreload = [Layout, Sales];
-  componentsToPreload.forEach(component => {
+  // Create an array of import promises
+  const importPromises = [
+    () => import("./components/Layout"),
+    () => import("./pages/Sales")
+  ];
+
+  importPromises.forEach(importFn => {
     const preloadFn = () => {
-      // Trigger component loading by calling the lazy loader
-      component().then(() => {
-        // Component loaded successfully
-        console.log('Component preloaded successfully');
-      }).catch(error => {
-        console.error('Error preloading component:', error);
-      });
+      importFn()
+        .then(() => {
+          console.log('Component preloaded successfully');
+        })
+        .catch(error => {
+          console.error('Error preloading component:', error);
+        });
     };
     
-    requestIdleCallback?.(preloadFn) || setTimeout(preloadFn, 1000);
+    // Use requestIdleCallback if available, otherwise setTimeout
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(preloadFn);
+    } else {
+      setTimeout(preloadFn, 1000);
+    }
   });
 };
 
