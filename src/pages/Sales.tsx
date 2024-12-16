@@ -26,6 +26,18 @@ const Sales = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+        return;
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+
+  useEffect(() => {
     let isMounted = true;
 
     const fetchData = async () => {
@@ -37,17 +49,15 @@ const Sales = () => {
           return;
         }
 
-        // Parallel data fetching
+        // Parallel data fetching with auth headers
         const [customersResponse, productsResponse] = await Promise.all([
           supabase
             .from('customers')
             .select('*')
-            .eq('user_id', session.user.id)
             .order('name'),
           supabase
             .from('products')
             .select('*')
-            .eq('user_id', session.user.id)
             .order('Naziv')
         ]);
 
@@ -81,9 +91,12 @@ const Sales = () => {
 
     fetchData();
 
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
         navigate("/login");
+      } else {
+        fetchData();
       }
     });
 
