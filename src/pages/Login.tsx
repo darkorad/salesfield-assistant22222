@@ -66,7 +66,10 @@ const Login = () => {
                 .delete()
                 .eq('user_id', session.user.id);
 
-              if (deleteError) throw deleteError;
+              if (deleteError) {
+                console.error('Error deleting existing customers:', deleteError);
+                throw deleteError;
+              }
 
               // Transform and insert new customers
               const transformedCustomers = customersData.map(customer => ({
@@ -94,6 +97,8 @@ const Login = () => {
                   throw insertError;
                 }
               }
+              
+              console.log('Successfully synced customers');
             }
           }
 
@@ -116,7 +121,10 @@ const Login = () => {
                 .delete()
                 .eq('user_id', session.user.id);
 
-              if (deleteError) throw deleteError;
+              if (deleteError) {
+                console.error('Error deleting existing products:', deleteError);
+                throw deleteError;
+              }
 
               const transformedProducts = productsData.map(product => ({
                 user_id: session.user.id,
@@ -139,6 +147,8 @@ const Login = () => {
                   throw insertError;
                 }
               }
+              
+              console.log('Successfully synced products');
             }
           }
 
