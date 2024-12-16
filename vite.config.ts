@@ -20,7 +20,9 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-    exclude: ['@supabase/supabase-js']
+    esbuildOptions: {
+      target: 'esnext'
+    }
   },
   build: {
     target: 'esnext',
