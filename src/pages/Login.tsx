@@ -7,8 +7,8 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 type SourceTables = {
-  customers: "KupciVeljko" | "Kupci Darko" | null;
-  products: "CenovnikVeljko" | null;
+  customers: string | null;
+  products: string | null;
 };
 
 const Login = () => {
@@ -33,7 +33,7 @@ const Login = () => {
               break;
             case 'zirmd.darko@gmail.com':
               sourceTables = {
-                customers: 'Kupci Darko',
+                customers: '"Kupci Darko"',  // Note the double quotes around table name with space
                 products: null
               };
               break;
@@ -50,7 +50,10 @@ const Login = () => {
               .from(sourceTables.customers)
               .select('*');
 
-            if (customersError) throw customersError;
+            if (customersError) {
+              console.error('Error fetching customers:', customersError);
+              throw customersError;
+            }
 
             if (customersData) {
               // Delete existing customers for this user
@@ -82,7 +85,10 @@ const Login = () => {
                   .from('customers')
                   .insert(batch);
 
-                if (insertError) throw insertError;
+                if (insertError) {
+                  console.error('Error inserting customers:', insertError);
+                  throw insertError;
+                }
               }
             }
           }
