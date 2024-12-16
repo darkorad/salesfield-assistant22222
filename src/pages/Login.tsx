@@ -126,6 +126,7 @@ const Login = () => {
                 throw deleteError;
               }
 
+              // Transform and insert new products
               const transformedProducts = productsData.map(product => ({
                 user_id: session.user.id,
                 Naziv: product['Naziv'],
