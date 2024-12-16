@@ -12,12 +12,14 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
 
     if (!profiles || profiles.length === 0) {
       // Create profile if it doesn't exist
-      const { data: session } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userEmail = sessionData?.session?.user?.email || 'Unknown';
+      
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
           id: userId,
-          name: session?.user?.email || 'Unknown',
+          name: userEmail,
           role: 'salesperson'
         });
 
