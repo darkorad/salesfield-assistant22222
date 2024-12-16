@@ -1,11 +1,21 @@
-import { useState, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
-import { OrderForm } from "@/components/sales/OrderForm";
-import DailySalesSummary from "@/components/sales/DailySalesSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+
+// Lazy load components
+const OrderForm = lazy(() => import("@/components/sales/OrderForm"));
+const DailySalesSummary = lazy(() => import("@/components/sales/DailySalesSummary"));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+    <div className="h-32 bg-gray-200 rounded"></div>
+  </div>
+);
 
 const Sales = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -16,54 +26,61 @@ const Sales = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/login");
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate("/login");
+          return;
+        }
 
-      // Fetch customers for the logged-in user
-      const { data: customersData, error: customersError } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('name');
+        // Parallel data fetching
+        const [customersResponse, productsResponse] = await Promise.all([
+          supabase
+            .from('customers')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('name'),
+          supabase
+            .from('products')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('Naziv')
+        ]);
 
-      if (customersError) {
-        console.error('Error fetching customers:', customersError);
-        toast.error("Greška pri učitavanju kupaca");
-      } else {
-        setCustomers(customersData);
-      }
+        if (isMounted) {
+          if (customersResponse.error) {
+            console.error('Error fetching customers:', customersResponse.error);
+            toast.error("Greška pri učitavanju kupaca");
+          } else {
+            setCustomers(customersResponse.data || []);
+          }
 
-      // Fetch products for the logged-in user
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('Naziv');
-
-      if (productsError) {
-        console.error('Error fetching products:', productsError);
-        toast.error("Greška pri učitavanju proizvoda");
-      } else {
-        // Map Serbian column names to English properties
-        const mappedProducts = productsData.map(product => ({
-          ...product,
-          name: product.Naziv,
-          manufacturer: product.Proizvođač,
-          price: product.Cena,
-          unit: product["Jedinica mere"]
-        }));
-        setProducts(mappedProducts);
+          if (productsResponse.error) {
+            console.error('Error fetching products:', productsResponse.error);
+            toast.error("Greška pri učitavanju proizvoda");
+          } else {
+            const mappedProducts = (productsResponse.data || []).map(product => ({
+              ...product,
+              name: product.Naziv,
+              manufacturer: product.Proizvođač,
+              price: product.Cena,
+              unit: product["Jedinica mere"]
+            }));
+            setProducts(mappedProducts);
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error("Greška pri učitavanju podataka");
       }
     };
 
     fetchData();
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
         navigate("/login");
@@ -71,6 +88,7 @@ const Sales = () => {
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
@@ -80,14 +98,7 @@ const Sales = () => {
     setCustomerSearch(customer.name);
   };
 
-  const calculateTotal = (items: OrderItem[]) => {
-    return items.reduce((sum, item) => {
-      const unitSize = parseFloat(item.product.unit) || 1;
-      return sum + (item.product.price * item.quantity * unitSize);
-    }, 0);
-  };
-
-  const handleSubmitOrder = async () => {
+  const handleSubmitOrder = async (paymentType: 'cash' | 'invoice') => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
@@ -104,16 +115,19 @@ const Sales = () => {
         return;
       }
 
-      const total = calculateTotal(orderItems);
+      const total = orderItems.reduce((sum, item) => {
+        const unitSize = parseFloat(item.product.unit) || 1;
+        return sum + (item.product.price * item.quantity * unitSize);
+      }, 0);
 
       const newOrder = {
         id: crypto.randomUUID(),
         customer: selectedCustomer,
         items: orderItems,
-        total: total,
+        total,
         date: new Date().toISOString(),
-        userId: session.user.id, // Add user ID to the order
-        paymentType: 'cash' as const,
+        userId: session.user.id,
+        paymentType,
       };
 
       const existingSales = localStorage.getItem("sales");
@@ -134,25 +148,27 @@ const Sales = () => {
 
   return (
     <div className="container mx-auto py-4 px-4 md:py-8 md:px-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Nova porudžbina</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <OrderForm
-            customers={customers}
-            products={products}
-            selectedCustomer={selectedCustomer}
-            customerSearch={customerSearch}
-            orderItems={orderItems}
-            onCustomerSearchChange={setCustomerSearch}
-            onCustomerSelect={handleCustomerSelect}
-            onOrderItemsChange={setOrderItems}
-            onSubmit={handleSubmitOrder}
-          />
-        </CardContent>
-      </Card>
-      <DailySalesSummary />
+      <Suspense fallback={<LoadingFallback />}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Nova porudžbina</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrderForm
+              customers={customers}
+              products={products}
+              selectedCustomer={selectedCustomer}
+              customerSearch={customerSearch}
+              orderItems={orderItems}
+              onCustomerSearchChange={setCustomerSearch}
+              onCustomerSelect={handleCustomerSelect}
+              onOrderItemsChange={setOrderItems}
+              onSubmit={handleSubmitOrder}
+            />
+          </CardContent>
+        </Card>
+        <DailySalesSummary />
+      </Suspense>
     </div>
   );
 };

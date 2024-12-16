@@ -4,9 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Layout from "./components/Layout";
 
 // Lazy load pages with loading boundaries
+const Layout = lazy(() => import("./components/Layout"));
 const Login = lazy(() => import("./pages/Login"));
 const Sales = lazy(() => import("./pages/Sales"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -20,8 +20,9 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 30, // 30 minutes
       retry: 1,
       networkMode: 'online',
-      refetchOnWindowFocus: false, // Disable refetch on window focus for mobile
-      refetchOnReconnect: 'always', // Always refetch on reconnect
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: 'always',
+      cacheTime: 1000 * 60 * 60, // 1 hour
     },
   },
 });
@@ -32,7 +33,21 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// Preload critical components
+const preloadComponents = () => {
+  const componentsToPreload = [Layout, Sales];
+  componentsToPreload.forEach(component => {
+    const preloadComponent = () => {
+      component.preload?.();
+    };
+    requestIdleCallback?.(preloadComponent) || setTimeout(preloadComponent, 1000);
+  });
+};
+
 const App = () => {
+  // Start preloading components when the app mounts
+  preloadComponents();
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

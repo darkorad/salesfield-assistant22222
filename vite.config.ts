@@ -22,12 +22,17 @@ export default defineConfig(({ mode }) => ({
     target: 'esnext',
     minify: 'esbuild',
     cssMinify: true,
+    modulePreload: {
+      polyfill: false
+    },
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-slot', '@radix-ui/react-toast'],
-          'data-vendor': ['@tanstack/react-query', '@supabase/supabase-js']
+          'data-vendor': ['@tanstack/react-query', '@supabase/supabase-js'],
+          'form-vendor': ['react-hook-form', 'zod'],
+          'utils-vendor': ['date-fns', 'xlsx']
         }
       }
     },
@@ -35,6 +40,7 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query']
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    exclude: ['@supabase/supabase-js']
   }
 }));
