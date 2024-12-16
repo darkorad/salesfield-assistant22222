@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderForm } from "./OrderForm";
 import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface SalesFormContainerProps {
   customers: Customer[];
@@ -22,12 +21,6 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
 
   const handleSubmitOrder = async (paymentType: 'cash' | 'invoice') => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        toast.error("Niste prijavljeni");
-        return;
-      }
-
       if (!selectedCustomer) {
         toast.error("Molimo izaberite kupca");
         return;
@@ -48,7 +41,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         items: orderItems,
         total,
         date: new Date().toISOString(),
-        userId: session.user.id,
+        userId: 'temp-user', // Temporary user ID
         paymentType,
       };
 
