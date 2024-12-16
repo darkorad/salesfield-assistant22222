@@ -22,7 +22,6 @@ const queryClient = new QueryClient({
       networkMode: 'online',
       refetchOnWindowFocus: false,
       refetchOnReconnect: 'always',
-      cacheTime: 1000 * 60 * 60, // 1 hour
     },
   },
 });
@@ -37,10 +36,10 @@ const LoadingSpinner = () => (
 const preloadComponents = () => {
   const componentsToPreload = [Layout, Sales];
   componentsToPreload.forEach(component => {
-    const preloadComponent = () => {
-      component.preload?.();
-    };
-    requestIdleCallback?.(preloadComponent) || setTimeout(preloadComponent, 1000);
+    requestIdleCallback?.(() => {
+      // Safely trigger component loading
+      component();
+    }) || setTimeout(() => component(), 1000);
   });
 };
 

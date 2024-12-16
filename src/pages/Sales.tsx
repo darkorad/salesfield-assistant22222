@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 // Lazy load components
-const OrderForm = lazy(() => import("@/components/sales/OrderForm"));
+const OrderForm = lazy(() => import("@/components/sales/OrderForm").then(module => ({ default: module.OrderForm })));
 const DailySalesSummary = lazy(() => import("@/components/sales/DailySalesSummary"));
 
 // Loading fallback component
