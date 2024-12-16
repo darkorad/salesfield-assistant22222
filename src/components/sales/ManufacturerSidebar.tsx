@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 interface ManufacturerSidebarProps {
   products: Product[];
@@ -17,6 +17,11 @@ export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
 
   // Get products for selected manufacturer
   const manufacturerProducts = products.filter(p => p.manufacturer === selectedManufacturer);
+
+  const handleManufacturerClick = (manufacturer: string) => {
+    setSelectedManufacturer(manufacturer);
+    // We don't call setIsCollapsed here anymore
+  };
 
   return (
     <>
@@ -50,7 +55,7 @@ export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
                   key={manufacturer}
                   variant={selectedManufacturer === manufacturer ? "default" : "ghost"}
                   className="w-full justify-start"
-                  onClick={() => setSelectedManufacturer(manufacturer)}
+                  onClick={() => handleManufacturerClick(manufacturer)}
                 >
                   {manufacturer}
                 </Button>
