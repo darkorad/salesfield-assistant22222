@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      CenovnikVeljko: {
+        Row: {
+          Cena: number
+          created_at: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+        }
+        Insert: {
+          Cena: number
+          created_at?: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+        }
+        Update: {
+          Cena?: number
+          created_at?: string
+          "Jedinica mere"?: string
+          Naziv?: string
+          Proizvođač?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string
@@ -93,6 +117,39 @@ export type Database = {
         Relationships: []
       }
       "Kupci Veljko": {
+        Row: {
+          Adresa: string
+          "GPS Koordinate": string | null
+          Grad: string
+          "Naziv kupca": string
+          "PDV Obveznik": string
+          PIB: string
+          "Šifra kupca": number
+          Telefon: string
+        }
+        Insert: {
+          Adresa: string
+          "GPS Koordinate"?: string | null
+          Grad: string
+          "Naziv kupca": string
+          "PDV Obveznik": string
+          PIB: string
+          "Šifra kupca": number
+          Telefon: string
+        }
+        Update: {
+          Adresa?: string
+          "GPS Koordinate"?: string | null
+          Grad?: string
+          "Naziv kupca"?: string
+          "PDV Obveznik"?: string
+          PIB?: string
+          "Šifra kupca"?: number
+          Telefon?: string
+        }
+        Relationships: []
+      }
+      KupciVeljko: {
         Row: {
           Adresa: string
           "GPS Koordinate": string | null
