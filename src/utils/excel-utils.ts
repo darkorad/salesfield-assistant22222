@@ -11,57 +11,56 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
       return;
     }
 
-    // First, ensure profile exists
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', session.user.id);
-
-    // Check if profile exists, create if it doesn't
-    if (!profiles || profiles.length === 0) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: session.user.id,
-          name: session.user.email || 'Unknown',
-          role: 'salesperson'
-        });
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        toast.error("Greška pri kreiranju profila");
-        return;
-      }
-    }
-
     const workbook = XLSX.read(data, { type: "binary" });
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
     if (type === "customers") {
-      const customers = jsonData.map((row: any) => ({
-        user_id: session.user.id,
-        code: row["Šifra kupca"]?.toString() || "",
-        name: row["Naziv kupca"] || "",
-        address: row["Adresa"] || "",
-        city: row["Grad"] || "",
-        phone: row["Telefon"] || "",
-        pib: row["PIB"] || "",
-        is_vat_registered: row["PDV Obveznik"]?.toUpperCase() === "DA",
-        gps_coordinates: row["GPS Koordinate"] || ""
-      }));
+      for (const row of jsonData) {
+        const customerData = {
+          user_id: session.user.id,
+          code: row["Šifra kupca"]?.toString() || "",
+          name: row["Naziv kupca"] || "",
+          address: row["Adresa"] || "",
+          city: row["Grad"] || "",
+          phone: row["Telefon"] || "",
+          pib: row["PIB"] || "",
+          is_vat_registered: row["PDV Obveznik"]?.toUpperCase() === "DA",
+          gps_coordinates: row["GPS Koordinate"] || ""
+        };
 
-      const { error } = await supabase
-        .from('customers')
-        .insert(customers);
+        // Check if customer already exists
+        const { data: existingCustomer } = await supabase
+          .from('customers')
+          .select()
+          .eq('user_id', session.user.id)
+          .eq('code', customerData.code)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error inserting customers:', error);
-        toast.error("Greška pri uvozu kupaca");
-        return;
+        if (existingCustomer) {
+          // Update existing customer
+          const { error: updateError } = await supabase
+            .from('customers')
+            .update(customerData)
+            .eq('id', existingCustomer.id);
+
+          if (updateError) {
+            console.error('Error updating customer:', updateError);
+            toast.error(`Greška pri ažuriranju kupca ${customerData.name}`);
+          }
+        } else {
+          // Insert new customer
+          const { error: insertError } = await supabase
+            .from('customers')
+            .insert(customerData);
+
+          if (insertError) {
+            console.error('Error inserting customer:', insertError);
+            toast.error(`Greška pri dodavanju kupca ${customerData.name}`);
+          }
+        }
       }
-
       toast.success("Lista kupaca je uspešno učitana");
     } else if (type === "products") {
       const products = jsonData.map((row: any) => ({
