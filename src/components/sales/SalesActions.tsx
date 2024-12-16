@@ -101,14 +101,11 @@ export const SalesActions = ({ contacts, sales, onOrdersSent }: SalesActionsProp
     
     const today = new Date().toLocaleDateString("sr-RS");
     
-    // Generate Excel file as base64
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' });
+    // Generate Excel file
+    XLSX.writeFile(workbook, `dnevni-izvestaj-${today}.xlsx`);
     
-    // Create data URI for the Excel file
-    const dataUri = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${excelBuffer}`;
-    
-    // Create mailto link with subject and attachment
-    const mailtoLink = `mailto:${contacts.email}?subject=Dnevni izveštaj prodaje - ${today}&body=U prilogu je dnevni izveštaj prodaje.&attachment=${encodeURIComponent(dataUri)}`;
+    // Create mailto link with subject (without attachment as it's already downloaded)
+    const mailtoLink = `mailto:${contacts.email}?subject=Dnevni izveštaj prodaje - ${today}&body=U prilogu je dnevni izveštaj prodaje.`;
     window.location.href = mailtoLink;
     
     // Mark orders as sent
