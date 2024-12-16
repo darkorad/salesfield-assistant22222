@@ -19,20 +19,22 @@ export const useDataSync = (onComplete: () => void) => {
     
     setIsSyncing(true);
     try {
-      const userEmail = session.user.email;
+      const { data: { user } } = await supabase.auth.getUser();
+      const username = user?.user_metadata?.username || '';
+      
       let sourceTables: SourceTables = {
         customers: null,
         products: null
       };
       
-      switch(userEmail) {
-        case 'zirmd.veljko@gmail.com':
+      switch(username) {
+        case 'veljko':
           sourceTables = {
             customers: "KupciVeljko",
             products: "CenovnikVeljko"
           };
           break;
-        case 'zirmd.darko@gmail.com':
+        case 'darko':
           sourceTables = {
             customers: "Kupci Darko",
             products: null

@@ -20,6 +20,18 @@ export const AuthForm = () => {
       providers={[]}
       view="sign_in"
       showLinks={false}
+      localization={{
+        variables: {
+          sign_in: {
+            email_label: 'Username',
+            email_input_placeholder: 'Enter your username',
+          },
+          sign_up: {
+            email_label: 'Username',
+            email_input_placeholder: 'Enter your username',
+          },
+        },
+      }}
       redirectTo={window.location.origin}
     />
   );
