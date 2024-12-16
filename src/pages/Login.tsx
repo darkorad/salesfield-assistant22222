@@ -45,6 +45,7 @@ const Login = () => {
 
           // Sync customers if source table exists
           if (sourceTables.customers) {
+            console.log('Syncing customers from:', sourceTables.customers);
             const { data: customersData, error: customersError } = await supabase
               .from(sourceTables.customers)
               .select('*');
