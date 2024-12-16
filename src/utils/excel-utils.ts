@@ -4,6 +4,31 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const processExcelFile = async (data: any, type: "customers" | "products", userId: string) => {
   try {
+    // First check if profile exists
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (profileError || !profile) {
+      // Create profile if it doesn't exist
+      const { data: session } = await supabase.auth.getSession();
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          name: session.session?.user.email || 'Unknown',
+          role: 'salesperson'
+        });
+
+      if (insertError) {
+        console.error('Error creating profile:', insertError);
+        toast.error("Greška pri kreiranju profila");
+        return;
+      }
+    }
+
     const workbook = XLSX.read(data, { type: "binary" });
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
