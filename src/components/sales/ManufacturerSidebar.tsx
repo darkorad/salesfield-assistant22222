@@ -9,7 +9,7 @@ interface ManufacturerSidebarProps {
 }
 
 export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(null);
 
   // Get unique manufacturers
@@ -19,18 +19,29 @@ export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
   const manufacturerProducts = products.filter(p => p.manufacturer === selectedManufacturer);
 
   return (
-    <div className={`relative bg-secondary border-r transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-64'}`}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -right-4 top-4 z-10"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-      >
-        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </Button>
+    <>
+      {/* Touch-sensitive area */}
+      <div 
+        className={`fixed top-0 left-0 w-4 h-full z-20 cursor-pointer ${isCollapsed ? 'bg-primary/5 hover:bg-primary/10' : ''}`}
+        onClick={() => setIsCollapsed(false)}
+      />
 
-      <ScrollArea className="h-screen p-4">
-        {!isCollapsed && (
+      <div 
+        className={`fixed top-0 left-0 h-full bg-secondary border-r shadow-lg transition-transform duration-300 transform ${
+          isCollapsed ? '-translate-x-full' : 'translate-x-0'
+        } z-30`}
+        style={{ width: '280px' }}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute -right-4 top-4 z-10"
+          onClick={() => setIsCollapsed(true)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+
+        <ScrollArea className="h-screen p-4">
           <div className="space-y-4">
             <h2 className="font-semibold text-lg mb-4">Proizvođači</h2>
             <div className="space-y-1">
@@ -65,8 +76,8 @@ export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
               </div>
             )}
           </div>
-        )}
-      </ScrollArea>
-    </div>
+        </ScrollArea>
+      </div>
+    </>
   );
 };
