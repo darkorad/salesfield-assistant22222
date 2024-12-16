@@ -18,7 +18,6 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
 
     if (type === "customers") {
       const customers = jsonData.map((row: any) => ({
-        id: crypto.randomUUID(),
         user_id: session.user.id,
         code: row["Šifra kupca"]?.toString() || "",
         name: row["Naziv kupca"] || "",
@@ -26,9 +25,11 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
         city: row["Grad"] || "",
         phone: row["Telefon"] || "",
         pib: row["PIB"] || "",
-        is_vat_registered: row["PDV Obveznik"] === "DA",
-        gps_coordinates: row["GPS Koordinate"] || "",
+        is_vat_registered: row["PDV Obveznik"]?.toUpperCase() === "DA",
+        gps_coordinates: row["GPS Koordinate"] || ""
       }));
+
+      console.log("Inserting customers:", customers);
 
       const { error } = await supabase
         .from('customers')
@@ -43,15 +44,14 @@ export const processExcelFile = async (data: any, type: "customers" | "products"
       toast.success("Lista kupaca je uspešno učitana");
     } else if (type === "products") {
       const products = jsonData.map((row: any) => ({
-        id: crypto.randomUUID(),
         user_id: session.user.id,
-        Naziv: row["Naziv"] || "",
-        Proizvođač: row["Proizvođač"] || "",
-        Cena: parseFloat(row["Cena"]) || 0,
-        "Jedinica mere": row["Jedinica mere"] || "",
+        "Naziv": row["Naziv"] || "",
+        "Proizvođač": row["Proizvođač"] || "",
+        "Cena": parseFloat(row["Cena"]) || 0,
+        "Jedinica mere": row["Jedinica mere"] || ""
       }));
 
-      console.log("Mapped products:", products);
+      console.log("Inserting products:", products);
 
       const { error } = await supabase
         .from('products')
