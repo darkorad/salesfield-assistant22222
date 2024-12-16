@@ -123,17 +123,6 @@ const Login = () => {
         }
       }
     });
-
-    // Also listen for auth errors
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') {
-        toast.error('Authentication failed');
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return (
@@ -159,7 +148,6 @@ const Login = () => {
               },
             }}
             providers={[]}
-            redirectTo={`${window.location.origin}/sales`}
           />
         </CardContent>
       </Card>
