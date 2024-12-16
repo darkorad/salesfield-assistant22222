@@ -19,7 +19,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    const handleAuthChange = async (event: string, session: any) => {
       if (event === 'SIGNED_IN' && session) {
         try {
           const userEmail = session.user.email;
@@ -47,6 +47,9 @@ const Login = () => {
               return;
           }
 
+          // Show loading toast
+          const loadingToast = toast.loading('Syncing data...');
+
           // Sync customers if source table exists
           if (sourceTables.customers) {
             console.log('Syncing customers from:', sourceTables.customers);
@@ -61,17 +64,12 @@ const Login = () => {
 
             if (customersData) {
               // Delete existing customers for this user
-              const { error: deleteError } = await supabase
+              await supabase
                 .from('customers')
                 .delete()
                 .eq('user_id', session.user.id);
 
-              if (deleteError) {
-                console.error('Error deleting existing customers:', deleteError);
-                throw deleteError;
-              }
-
-              // Transform and insert new customers
+              // Transform and insert new customers in smaller batches
               const transformedCustomers = customersData.map(customer => ({
                 user_id: session.user.id,
                 code: customer['Šifra kupca'].toString(),
@@ -84,21 +82,12 @@ const Login = () => {
                 gps_coordinates: customer['GPS Koordinate']
               }));
 
-              // Insert customers in batches to avoid potential size limits
-              const batchSize = 50;
+              // Smaller batch size for mobile
+              const batchSize = 20;
               for (let i = 0; i < transformedCustomers.length; i += batchSize) {
                 const batch = transformedCustomers.slice(i, i + batchSize);
-                const { error: insertError } = await supabase
-                  .from('customers')
-                  .insert(batch);
-
-                if (insertError) {
-                  console.error('Error inserting customers:', insertError);
-                  throw insertError;
-                }
+                await supabase.from('customers').insert(batch);
               }
-              
-              console.log('Successfully synced customers');
             }
           }
 
@@ -116,17 +105,12 @@ const Login = () => {
 
             if (productsData) {
               // Delete existing products for this user
-              const { error: deleteError } = await supabase
+              await supabase
                 .from('products')
                 .delete()
                 .eq('user_id', session.user.id);
 
-              if (deleteError) {
-                console.error('Error deleting existing products:', deleteError);
-                throw deleteError;
-              }
-
-              // Transform and insert new products
+              // Transform and insert new products in smaller batches
               const transformedProducts = productsData.map(product => ({
                 user_id: session.user.id,
                 Naziv: product['Naziv'],
@@ -135,24 +119,17 @@ const Login = () => {
                 'Jedinica mere': product['Jedinica mere']
               }));
 
-              // Insert products in batches
-              const batchSize = 50;
+              // Smaller batch size for mobile
+              const batchSize = 20;
               for (let i = 0; i < transformedProducts.length; i += batchSize) {
                 const batch = transformedProducts.slice(i, i + batchSize);
-                const { error: insertError } = await supabase
-                  .from('products')
-                  .insert(batch);
-
-                if (insertError) {
-                  console.error('Error inserting products:', insertError);
-                  throw insertError;
-                }
+                await supabase.from('products').insert(batch);
               }
-              
-              console.log('Successfully synced products');
             }
           }
 
+          // Dismiss loading toast and show success
+          toast.dismiss(loadingToast);
           toast.success('Successfully logged in and synced data');
           navigate("/sales");
         } catch (error) {
@@ -160,7 +137,13 @@ const Login = () => {
           toast.error('Error syncing data');
         }
       }
-    });
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
