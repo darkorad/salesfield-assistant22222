@@ -9,6 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: localStorage
+    storage: localStorage,
+    debug: true // Adding debug mode to help identify any auth issues
   }
 })

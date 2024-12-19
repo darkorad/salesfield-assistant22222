@@ -21,6 +21,7 @@ export const AuthForm = () => {
       redirectTo={`${window.location.origin}/login`}
       showLinks={true}
       view="sign_in"
+      magicLink={false}
       localization={{
         variables: {
           sign_in: {
