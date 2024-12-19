@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 // Lazy load components
 const Layout = lazy(() => import("@/components/Layout"));
+const Login = lazy(() => import("@/pages/Login"));
 const Sales = lazy(() => import("@/pages/Sales"));
 const Reports = lazy(() => import("@/pages/Reports"));
 const Settings = lazy(() => import("@/pages/Settings"));
@@ -26,6 +27,7 @@ const queryClient = new QueryClient({
 const preloadComponents = () => {
   const importPromises = [
     () => import("@/components/Layout"),
+    () => import("@/pages/Login"),
     () => import("@/pages/Sales")
   ];
 
@@ -58,6 +60,7 @@ function App() {
         <BrowserRouter>
           <Suspense fallback={<div>Loading...</div>}>
             <Routes>
+              <Route path="/login" element={<Login />} />
               <Route path="/" element={<Layout />}>
                 <Route index element={<Sales />} />
                 <Route path="sales" element={<Sales />} />
