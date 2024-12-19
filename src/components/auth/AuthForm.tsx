@@ -29,14 +29,7 @@ export const AuthForm = () => {
             password_label: 'Password',
             password_input_placeholder: 'Enter your password',
             button_label: 'Sign in',
-          },
-          sign_up: {
-            email_label: 'Email',
-            email_input_placeholder: 'Enter your email',
-            password_label: 'Password',
-            password_input_placeholder: 'Enter your password',
-            button_label: 'Sign up',
-          },
+          }
         },
       }}
     />
