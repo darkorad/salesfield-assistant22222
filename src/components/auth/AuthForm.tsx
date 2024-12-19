@@ -18,24 +18,16 @@ export const AuthForm = () => {
         },
       }}
       providers={[]}
-      view="sign_in"
-      showLinks={false}
       redirectTo={window.location.origin}
+      showLinks={false}
       localization={{
         variables: {
           sign_in: {
-            email_label: 'Username',
-            email_input_placeholder: 'Enter your username',
+            email_label: 'Email',
+            email_input_placeholder: 'Enter your email',
             password_label: 'Password',
             password_input_placeholder: 'Enter your password',
             button_label: 'Sign in',
-          },
-          sign_up: {
-            email_label: 'Username',
-            email_input_placeholder: 'Enter your username',
-            password_label: 'Password',
-            password_input_placeholder: 'Enter your password',
-            button_label: 'Sign up',
           },
         },
       }}
