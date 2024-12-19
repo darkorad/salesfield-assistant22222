@@ -11,21 +11,35 @@ const Login = () => {
   const { syncData, isSyncing, syncProgress } = useDataSync(() => navigate("/sales"));
 
   useEffect(() => {
+    let subscription: { data: { subscription: { unsubscribe: () => void } } };
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/sales");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          navigate("/sales");
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
       }
     };
+
+    const setupAuthListener = async () => {
+      subscription = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          await syncData(session);
+        }
+      });
+    };
+
     checkSession();
+    setupAuthListener();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        await syncData(session);
+    return () => {
+      if (subscription?.data?.subscription) {
+        subscription.data.subscription.unsubscribe();
       }
-    });
-
-    return () => subscription.unsubscribe();
+    };
   }, [navigate, syncData]);
 
   return (
