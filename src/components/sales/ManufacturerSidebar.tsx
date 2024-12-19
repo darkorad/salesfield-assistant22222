@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ interface ManufacturerSidebarProps {
 export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Get unique manufacturers
   const manufacturers = Array.from(new Set(products.map(p => p.manufacturer))).sort();
@@ -20,17 +21,46 @@ export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
 
   const handleManufacturerClick = (manufacturer: string) => {
     setSelectedManufacturer(manufacturer);
-    // We don't call setIsCollapsed here anymore
   };
+
+  // Handle touch start
+  const handleTouchStart = (e: TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  // Handle touch end
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (touchStartX === null) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = touchEndX - touchStartX;
+    const swipeThreshold = 50; // minimum swipe distance
+
+    // If starting from left edge (< 20px) and swiping right
+    if (touchStartX < 20 && deltaX > swipeThreshold) {
+      setIsCollapsed(false);
+    }
+    // If swiping left from anywhere
+    else if (deltaX < -swipeThreshold) {
+      setIsCollapsed(true);
+    }
+
+    setTouchStartX(null);
+  };
+
+  // Add and remove touch event listeners
+  useEffect(() => {
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [touchStartX]); // Only re-run if touchStartX changes
 
   return (
     <>
-      {/* Touch-sensitive area */}
-      <div 
-        className={`fixed top-0 left-0 w-4 h-full z-20 cursor-pointer ${isCollapsed ? 'bg-primary/5 hover:bg-primary/10' : ''}`}
-        onClick={() => setIsCollapsed(false)}
-      />
-
       <div 
         className={`fixed top-0 left-0 h-full bg-secondary border-r shadow-lg transition-transform duration-300 transform ${
           isCollapsed ? '-translate-x-full' : 'translate-x-0'
