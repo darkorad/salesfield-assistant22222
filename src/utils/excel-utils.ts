@@ -33,15 +33,6 @@ const ensureUserProfile = async (userId: string) => {
 
 const processCustomers = async (jsonData: any[], userId: string) => {
   try {
-    const { error: deleteError } = await supabase
-      .from('customers')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      throw new Error(`Error deleting existing customers: ${deleteError.message}`);
-    }
-
     for (const row of jsonData) {
       const customerData = {
         user_id: userId,
@@ -55,12 +46,15 @@ const processCustomers = async (jsonData: any[], userId: string) => {
         gps_coordinates: row["GPS Koordinate"] || ""
       };
 
-      const { error: insertError } = await supabase
+      const { error: upsertError } = await supabase
         .from('customers')
-        .insert(customerData);
+        .upsert(customerData, {
+          onConflict: 'user_id,code',
+          ignoreDuplicates: false
+        });
 
-      if (insertError) {
-        throw new Error(`Error inserting customer ${customerData.name}: ${insertError.message}`);
+      if (upsertError) {
+        throw new Error(`Error upserting customer ${customerData.name}: ${upsertError.message}`);
       }
     }
 
