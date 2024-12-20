@@ -11,7 +11,11 @@ const Login = () => {
   const { syncData, isSyncing, syncProgress } = useDataSync(() => navigate("/sales"));
 
   useEffect(() => {
-    let subscription: { data: { subscription: { unsubscribe: () => void } } };
+    const subscription = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        await syncData(session);
+      }
+    });
 
     const checkSession = async () => {
       try {
@@ -24,21 +28,10 @@ const Login = () => {
       }
     };
 
-    const setupAuthListener = async () => {
-      subscription = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          await syncData(session);
-        }
-      });
-    };
-
     checkSession();
-    setupAuthListener();
 
     return () => {
-      if (subscription?.data?.subscription) {
-        subscription.data.subscription.unsubscribe();
-      }
+      subscription.data?.subscription?.unsubscribe();
     };
   }, [navigate, syncData]);
 
