@@ -22,13 +22,17 @@ export const useSalesData = () => {
 
         setIsLoading(true);
 
-        // Fetch customers and products in parallel
-        const [customersResponse, productsResponse] = await Promise.all([
+        // Fetch customers from both tables in parallel
+        const [customersResponse, kupciDarkoResponse, productsResponse] = await Promise.all([
           supabase
             .from('customers')
             .select('*')
             .eq('user_id', session.user.id)
             .order('name'),
+          supabase
+            .from('Kupci Darko')
+            .select('*')
+            .order('Naziv kupca'),
           supabase
             .from('products')
             .select('*')
@@ -42,11 +46,37 @@ export const useSalesData = () => {
           return;
         }
 
+        if (kupciDarkoResponse.error) {
+          console.error('Error fetching Kupci Darko:', kupciDarkoResponse.error);
+          toast.error("Greška pri učitavanju Kupci Darko");
+          return;
+        }
+
         if (productsResponse.error) {
           console.error('Error fetching products:', productsResponse.error);
           toast.error("Greška pri učitavanju proizvoda");
           return;
         }
+
+        // Map Kupci Darko data to match Customer type
+        const kupciDarkoCustomers: Customer[] = (kupciDarkoResponse.data || []).map(kupac => ({
+          id: kupac["Šifra kupca"].toString(),
+          user_id: session.user.id,
+          code: kupac["Šifra kupca"].toString(),
+          name: kupac["Naziv kupca"],
+          address: kupac.Adresa,
+          city: kupac.Grad,
+          phone: kupac.Telefon,
+          pib: kupac.PIB,
+          is_vat_registered: kupac["PDV Obveznik"] === "DA",
+          gps_coordinates: kupac["GPS Koordinate"] || null
+        }));
+
+        // Combine customers from both tables
+        const allCustomers = [
+          ...(customersResponse.data || []),
+          ...kupciDarkoCustomers
+        ];
 
         // Map products data to match the Product type
         const mappedProducts: Product[] = (productsResponse.data || []).map(product => ({
@@ -62,7 +92,7 @@ export const useSalesData = () => {
           "Jedinica mere": product["Jedinica mere"]
         }));
 
-        setCustomers(customersResponse.data || []);
+        setCustomers(allCustomers);
         setProducts(mappedProducts);
       } catch (error) {
         console.error('Error:', error);
