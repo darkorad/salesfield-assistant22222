@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,10 +6,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, BarChart3, Settings, ShoppingCart } from "lucide-react";
+import { Menu, BarChart3, Settings, ShoppingCart, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Layout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/login");
+      toast.success("Uspešno ste se odjavili");
+    } catch (error) {
+      toast.error("Greška prilikom odjavljivanja");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,28 +65,42 @@ const Layout = () => {
                 </Link>
               </div>
             </div>
-            <div className="md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/reports" className="w-full cursor-pointer">
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      Izveštaji
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings" className="w-full cursor-pointer">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Podešavanja
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                className="text-sm hidden md:flex"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Odjava
+              </Button>
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to="/reports" className="w-full cursor-pointer">
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Izveštaji
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="w-full cursor-pointer">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Podešavanja
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Odjava
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
