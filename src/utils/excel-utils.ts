@@ -46,15 +46,23 @@ const processCustomers = async (jsonData: any[], userId: string) => {
         gps_coordinates: row["GPS Koordinate"] || ""
       };
 
-      const { error: upsertError } = await supabase
+      // Store in both tables for backward compatibility
+      const { error: customersError } = await supabase
         .from('customers')
         .upsert(customerData, {
           onConflict: 'user_id,code',
           ignoreDuplicates: false
         });
 
-      if (upsertError) {
-        throw new Error(`Error upserting customer ${customerData.name}: ${upsertError.message}`);
+      const { error: importedCustomersError } = await supabase
+        .from('imported_customers')
+        .upsert(customerData, {
+          onConflict: 'user_id,code',
+          ignoreDuplicates: false
+        });
+
+      if (customersError || importedCustomersError) {
+        throw new Error(`Error upserting customer ${customerData.name}`);
       }
     }
 
@@ -68,6 +76,7 @@ const processCustomers = async (jsonData: any[], userId: string) => {
 
 const processProducts = async (jsonData: any[], userId: string) => {
   try {
+    // Delete existing products for this user
     const { error: deleteError } = await supabase
       .from('products')
       .delete()
@@ -85,12 +94,29 @@ const processProducts = async (jsonData: any[], userId: string) => {
       "Jedinica mere": row["Jedinica mere"] || ""
     }));
 
-    const { error: insertError } = await supabase
+    // Store in products table
+    const { error: productsError } = await supabase
       .from('products')
       .insert(products);
 
-    if (insertError) {
-      throw new Error(`Error inserting products: ${insertError.message}`);
+    // Store in imported_products table
+    const importedProducts = products.map(product => ({
+      user_id: userId,
+      name: product["Naziv"],
+      manufacturer: product["Proizvođač"],
+      price: product["Cena"],
+      unit: product["Jedinica mere"]
+    }));
+
+    const { error: importedProductsError } = await supabase
+      .from('imported_products')
+      .upsert(importedProducts, {
+        onConflict: 'user_id,name,manufacturer',
+        ignoreDuplicates: false
+      });
+
+    if (productsError || importedProductsError) {
+      throw new Error(`Error inserting products`);
     }
 
     localStorage.setItem(`lastProductsImport_${userId}`, new Date().toISOString());

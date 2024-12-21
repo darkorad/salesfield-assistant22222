@@ -83,6 +83,78 @@ export type Database = {
           },
         ]
       }
+      imported_customers: {
+        Row: {
+          address: string
+          city: string
+          code: string
+          created_at: string
+          gps_coordinates: string | null
+          id: string
+          is_vat_registered: boolean | null
+          name: string
+          phone: string | null
+          pib: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          city: string
+          code: string
+          created_at?: string
+          gps_coordinates?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name: string
+          phone?: string | null
+          pib: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          code?: string
+          created_at?: string
+          gps_coordinates?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name?: string
+          phone?: string | null
+          pib?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      imported_products: {
+        Row: {
+          created_at: string
+          id: string
+          manufacturer: string
+          name: string
+          price: number
+          unit: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manufacturer: string
+          name: string
+          price: number
+          unit: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manufacturer?: string
+          name?: string
+          price?: number
+          unit?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       "Kupci Darko": {
         Row: {
           Adresa: string
