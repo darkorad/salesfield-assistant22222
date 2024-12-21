@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderForm } from "./OrderForm";
 import { Customer, Product, OrderItem } from "@/types";
@@ -14,7 +14,14 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
   const [customerSearch, setCustomerSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
+  console.log("SalesFormContainer - Received customers:", customers);
+
+  useEffect(() => {
+    console.log("SalesFormContainer - Selected customer:", selectedCustomer);
+  }, [selectedCustomer]);
+
   const handleCustomerSelect = (customer: Customer) => {
+    console.log("SalesFormContainer - Handling customer selection:", customer);
     setSelectedCustomer(customer);
     setCustomerSearch(customer.name);
   };

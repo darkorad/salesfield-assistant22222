@@ -22,11 +22,15 @@ export const CustomerSelect = ({
   onCustomerSearchChange,
   onCustomerSelect,
 }: CustomerSelectProps) => {
+  console.log("CustomerSelect - Received customers:", customers);
+  console.log("CustomerSelect - Current search:", customerSearch);
+
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
   const handleCustomerSelect = (customer: Customer) => {
+    console.log("CustomerSelect - Selected customer:", customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
   };
@@ -63,7 +67,7 @@ export const CustomerSelect = ({
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[300px] bg-white max-h-[400px] overflow-y-auto">
+          <DropdownMenuContent className="w-[300px] bg-white max-h-[400px] overflow-y-auto z-50">
             {customers.map((customer) => (
               <DropdownMenuItem
                 key={customer.id}
