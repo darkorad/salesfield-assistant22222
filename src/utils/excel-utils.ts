@@ -50,15 +50,13 @@ const processCustomers = async (jsonData: any[], userId: string) => {
       const { error: customersError } = await supabase
         .from('customers')
         .upsert(customerData, {
-          onConflict: 'user_id,code',
-          ignoreDuplicates: false
+          onConflict: 'user_id,code'
         });
 
       const { error: importedCustomersError } = await supabase
         .from('imported_customers')
         .upsert(customerData, {
-          onConflict: 'user_id,code',
-          ignoreDuplicates: false
+          onConflict: 'user_id,code'
         });
 
       if (customersError || importedCustomersError) {
@@ -76,28 +74,28 @@ const processCustomers = async (jsonData: any[], userId: string) => {
 
 const processProducts = async (jsonData: any[], userId: string) => {
   try {
-    // Delete existing products for this user
-    const { error: deleteError } = await supabase
-      .from('products')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      throw new Error(`Error deleting existing products: ${deleteError.message}`);
+    // First, collect all products and deduplicate them
+    const productsMap = new Map();
+    
+    for (const row of jsonData) {
+      const key = `${row["Naziv"]}_${row["Proizvođač"]}`;
+      productsMap.set(key, {
+        user_id: userId,
+        "Naziv": row["Naziv"] || "",
+        "Proizvođač": row["Proizvođač"] || "",
+        "Cena": parseFloat(row["Cena"]) || 0,
+        "Jedinica mere": row["Jedinica mere"] || ""
+      });
     }
 
-    const products = jsonData.map((row: any) => ({
-      user_id: userId,
-      "Naziv": row["Naziv"] || "",
-      "Proizvođač": row["Proizvođač"] || "",
-      "Cena": parseFloat(row["Cena"]) || 0,
-      "Jedinica mere": row["Jedinica mere"] || ""
-    }));
+    const products = Array.from(productsMap.values());
 
     // Store in products table
     const { error: productsError } = await supabase
       .from('products')
-      .insert(products);
+      .upsert(products, {
+        onConflict: 'user_id,Naziv,Proizvođač'
+      });
 
     // Store in imported_products table
     const importedProducts = products.map(product => ({
@@ -111,11 +109,12 @@ const processProducts = async (jsonData: any[], userId: string) => {
     const { error: importedProductsError } = await supabase
       .from('imported_products')
       .upsert(importedProducts, {
-        onConflict: 'user_id,name,manufacturer',
-        ignoreDuplicates: false
+        onConflict: 'user_id,name,manufacturer'
       });
 
     if (productsError || importedProductsError) {
+      console.error('Products error:', productsError);
+      console.error('Imported products error:', importedProductsError);
       throw new Error(`Error inserting products`);
     }
 
