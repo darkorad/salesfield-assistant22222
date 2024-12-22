@@ -18,9 +18,12 @@ export const ProductSelect = ({
 }: ProductSelectProps) => {
   const [productSearch, setProductSearch] = useState("");
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(productSearch.toLowerCase())
-  );
+  const filteredProducts = products.filter((product) => {
+    // Use the Naziv field which is guaranteed to exist based on the database schema
+    const searchTerm = productSearch.toLowerCase();
+    const productName = product.Naziv?.toLowerCase() || "";
+    return productName.includes(searchTerm);
+  });
 
   const handleAddProduct = (product: Product) => {
     const existingItemIndex = orderItems.findIndex(
@@ -49,7 +52,7 @@ export const ProductSelect = ({
 
   const calculateItemTotal = (product: Product, quantity: number) => {
     const unitSize = parseFloat(product.unit) || 1;
-    return product.price * quantity * unitSize;
+    return product.Cena * quantity * unitSize;
   };
 
   return (
@@ -84,9 +87,9 @@ export const ProductSelect = ({
                   className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
                   onClick={() => handleAddProduct(product)}
                 >
-                  <span>{product.name}</span>
+                  <span>{product.Naziv}</span>
                   <span className="text-sm text-gray-500">
-                    {product.price} RSD/{product.unit}
+                    {product.Cena} RSD/{product["Jedinica mere"]}
                   </span>
                 </div>
               ))}
@@ -101,9 +104,9 @@ export const ProductSelect = ({
               className="flex flex-col md:flex-row gap-2 p-3 border rounded-md bg-gray-50"
             >
               <div className="flex-1">
-                <p className="font-medium">{item.product.name}</p>
+                <p className="font-medium">{item.product.Naziv}</p>
                 <p className="text-sm text-gray-500">
-                  {item.product.manufacturer} - {item.product.price} RSD/{item.product.unit}
+                  {item.product.Proizvođač} - {item.product.Cena} RSD/{item.product["Jedinica mere"]}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -117,7 +120,7 @@ export const ProductSelect = ({
                   className="w-20"
                 />
                 <span className="whitespace-nowrap text-sm text-gray-600">
-                  {item.product.unit}
+                  {item.product["Jedinica mere"]}
                 </span>
                 <span className="w-24 text-right">
                   {calculateItemTotal(item.product, item.quantity)} RSD
