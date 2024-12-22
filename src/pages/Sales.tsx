@@ -1,7 +1,7 @@
 import { Suspense, lazy } from "react";
 import { SalesFormContainer } from "@/components/sales/SalesFormContainer";
 import { ManufacturerSidebar } from "@/components/sales/ManufacturerSidebar";
-import { Customer, Product } from "@/types";
+import { useSalesData } from "@/hooks/useSalesData";
 
 // Lazy load DailySalesSummary
 const DailySalesSummary = lazy(() => import("@/components/sales/DailySalesSummary"));
@@ -14,44 +14,19 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Mock data
-const mockCustomers: Customer[] = [
-  {
-    id: "1",
-    user_id: "1",
-    code: "001",
-    name: "Test Kupac",
-    address: "Test Adresa 1",
-    city: "Beograd",
-    phone: "123-456-789",
-    pib: "123456789",
-    is_vat_registered: true,
-    gps_coordinates: "44.787197,20.457273"
-  }
-];
-
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    user_id: "1",
-    name: "Test Proizvod",
-    manufacturer: "Test Proizvođač",
-    price: 100,
-    unit: "kom",
-    Naziv: "Test Proizvod",
-    Proizvođač: "Test Proizvođač",
-    Cena: 100,
-    "Jedinica mere": "kom"
-  }
-];
-
 const Sales = () => {
+  const { customers, products, isLoading } = useSalesData();
+
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+
   return (
     <div className="flex min-h-screen">
-      <ManufacturerSidebar products={mockProducts} />
+      <ManufacturerSidebar products={products} />
       <div className="flex-1 container mx-auto py-4 px-4 md:py-8 md:px-8">
         <Suspense fallback={<LoadingFallback />}>
-          <SalesFormContainer customers={mockCustomers} products={mockProducts} />
+          <SalesFormContainer customers={customers} products={products} />
           <DailySalesSummary />
         </Suspense>
       </div>
