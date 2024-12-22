@@ -7,7 +7,7 @@ interface ProductSearchResultsProps {
 
 export const ProductSearchResults = ({ products, onSelect }: ProductSearchResultsProps) => {
   if (products.length === 0) {
-    return <div className="p-4 text-gray-500">No products found</div>;
+    return <div className="p-4 text-gray-500">Nema pronađenih proizvoda</div>;
   }
 
   return (

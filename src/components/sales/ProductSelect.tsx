@@ -24,6 +24,7 @@ export const ProductSelect = ({
 
   const filteredProducts = products.filter((product) => {
     const searchTerm = productSearch.toLowerCase();
+    // Use the correct field name "Naziv" instead of "name"
     const productName = product.Naziv?.toLowerCase() || "";
     return productName.includes(searchTerm);
   });
