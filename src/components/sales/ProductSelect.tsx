@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Product, OrderItem, Customer } from "@/types";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { ProductSearchResults } from "./ProductSearchResults";
+import { OrderItemCard } from "./OrderItemCard";
 
 interface ProductSelectProps {
   products: Product[];
@@ -18,14 +19,17 @@ export const ProductSelect = ({
 }: ProductSelectProps) => {
   const [productSearch, setProductSearch] = useState("");
 
+  console.log("ProductSelect - Products:", products);
+  console.log("ProductSelect - Search term:", productSearch);
+
   const filteredProducts = products.filter((product) => {
-    // Use the Naziv field which is guaranteed to exist based on the database schema
     const searchTerm = productSearch.toLowerCase();
     const productName = product.Naziv?.toLowerCase() || "";
     return productName.includes(searchTerm);
   });
 
   const handleAddProduct = (product: Product) => {
+    console.log("Adding product:", product);
     const existingItemIndex = orderItems.findIndex(
       (item) => item.product.id === product.id
     );
@@ -40,19 +44,14 @@ export const ProductSelect = ({
     setProductSearch("");
   };
 
-  const handleRemoveItem = (index: number) => {
-    onOrderItemsChange(orderItems.filter((_, i) => i !== index));
-  };
-
   const handleQuantityChange = (index: number, newQuantity: number) => {
     const newItems = [...orderItems];
     newItems[index].quantity = Math.max(1, newQuantity);
     onOrderItemsChange(newItems);
   };
 
-  const calculateItemTotal = (product: Product, quantity: number) => {
-    const unitSize = parseFloat(product.unit) || 1;
-    return product.Cena * quantity * unitSize;
+  const handleRemoveItem = (index: number) => {
+    onOrderItemsChange(orderItems.filter((_, i) => i !== index));
   };
 
   return (
@@ -80,60 +79,21 @@ export const ProductSelect = ({
             className="w-full"
           />
           {productSearch && (
-            <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
-                  onClick={() => handleAddProduct(product)}
-                >
-                  <span>{product.Naziv}</span>
-                  <span className="text-sm text-gray-500">
-                    {product.Cena} RSD/{product["Jedinica mere"]}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <ProductSearchResults
+              products={filteredProducts}
+              onSelect={handleAddProduct}
+            />
           )}
         </div>
 
         <div className="space-y-2 mt-4">
           {orderItems.map((item, index) => (
-            <div
-              key={index}
-              className="flex flex-col md:flex-row gap-2 p-3 border rounded-md bg-gray-50"
-            >
-              <div className="flex-1">
-                <p className="font-medium">{item.product.Naziv}</p>
-                <p className="text-sm text-gray-500">
-                  {item.product.Proizvođač} - {item.product.Cena} RSD/{item.product["Jedinica mere"]}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) =>
-                    handleQuantityChange(index, parseInt(e.target.value) || 1)
-                  }
-                  className="w-20"
-                />
-                <span className="whitespace-nowrap text-sm text-gray-600">
-                  {item.product["Jedinica mere"]}
-                </span>
-                <span className="w-24 text-right">
-                  {calculateItemTotal(item.product, item.quantity)} RSD
-                </span>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleRemoveItem(index)}
-                >
-                  ×
-                </Button>
-              </div>
-            </div>
+            <OrderItemCard
+              key={item.product.id}
+              item={item}
+              onQuantityChange={(quantity) => handleQuantityChange(index, quantity)}
+              onRemove={() => handleRemoveItem(index)}
+            />
           ))}
         </div>
       </div>
