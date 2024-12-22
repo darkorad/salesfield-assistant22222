@@ -18,8 +18,11 @@ export const ProductSearchResults = ({ products, onSelect }: ProductSearchResult
           className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
           onClick={() => onSelect(product)}
         >
-          <span>{product.Naziv}</span>
-          <span className="text-sm text-gray-500">
+          <div className="flex flex-col">
+            <span className="font-medium">{product.Naziv}</span>
+            <span className="text-sm text-gray-500">{product.Proizvođač}</span>
+          </div>
+          <span className="text-sm font-medium">
             {product.Cena} RSD/{product["Jedinica mere"]}
           </span>
         </div>

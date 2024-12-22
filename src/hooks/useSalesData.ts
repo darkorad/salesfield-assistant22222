@@ -34,6 +34,7 @@ export const useSalesData = () => {
             .from('products')
             .select('*')
             .eq('user_id', session.user.id)
+            .not('Naziv', 'eq', '') // Filter out empty products
         ]);
 
         if (customersResponse.error) {
