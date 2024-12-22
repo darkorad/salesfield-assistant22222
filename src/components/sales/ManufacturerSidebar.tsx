@@ -14,10 +14,10 @@ export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Get unique manufacturers
-  const manufacturers = Array.from(new Set(products.map(p => p.manufacturer))).sort();
+  const manufacturers = Array.from(new Set(products.map(p => p.Proizvođač))).sort();
 
   // Get products for selected manufacturer
-  const manufacturerProducts = products.filter(p => p.manufacturer === selectedManufacturer);
+  const manufacturerProducts = products.filter(p => p.Proizvođač === selectedManufacturer);
 
   const handleManufacturerClick = (manufacturer: string) => {
     setSelectedManufacturer(manufacturer);
@@ -101,9 +101,9 @@ export const ManufacturerSidebar = ({ products }: ManufacturerSidebarProps) => {
                       key={product.id}
                       className="p-2 text-sm bg-background rounded-md"
                     >
-                      <p className="font-medium">{product.name}</p>
+                      <p className="font-medium">{product.Naziv}</p>
                       <p className="text-muted-foreground">
-                        {product.price} RSD/{product.unit}
+                        {product.Cena} RSD/{product["Jedinica mere"]}
                       </p>
                     </div>
                   ))}

@@ -19,11 +19,11 @@ export const generateSalesReport = (sales: Order[]) => {
     // Add items
     sale.items.forEach((item) => {
       salesData.push([
-        item.product.name,
-        item.product.manufacturer,
-        `${item.quantity} ${item.product.unit}`,
-        `${item.product.price} RSD`,
-        `${item.product.price * item.quantity} RSD`
+        item.product.Naziv,
+        item.product.Proizvođač,
+        `${item.quantity} ${item.product["Jedinica mere"]}`,
+        `${item.product.Cena} RSD`,
+        `${item.product.Cena * item.quantity} RSD`
       ]);
     });
     

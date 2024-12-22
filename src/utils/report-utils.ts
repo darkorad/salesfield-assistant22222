@@ -24,7 +24,7 @@ const formatSaleRecord = (sale: Order): SaleRecord => ({
   'Kupac': sale.customer.name,
   'Ukupno (RSD)': sale.total,
   'Broj stavki': sale.items.length,
-  'Stavke': sale.items.map(item => `${item.product.name} (${item.quantity})`).join(', ')
+  'Stavke': sale.items.map(item => `${item.product.Naziv} (${item.quantity})`).join(', ')
 });
 
 const getCurrentUserSales = () => {
@@ -44,7 +44,7 @@ const exportToExcel = (data: any[], sheetName: string, fileName: string, sentSal
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   
-  // Add red background style for sent sales
+  // Add red background style for sent sales rows
   const redStyle = { fill: { fgColor: { rgb: "FFFF0000" } } };
   
   // Apply styles to sent sales rows
@@ -87,7 +87,7 @@ export const generateDailyReport = (previewOnly: boolean = false) => {
       'Ukupno (RSD)': sale.total,
       'Broj stavki': sale.items.length,
       'Stavke': sale.items.map(item => 
-        `${item.product.name} (${item.quantity} ${item.product.unit})`
+        `${item.product.Naziv} (${item.quantity} ${item.product["Jedinica mere"]})`
       ).join(', '),
       'Status': sale.sent ? 'Poslato' : 'Nije poslato'
     }));
@@ -154,15 +154,15 @@ export const generateProductReport = (previewOnly: boolean = false) => {
         const key = item.product.id;
         if (!productSummary.has(key)) {
           productSummary.set(key, {
-            'Proizvod': item.product.name,
-            'Proizvođač': item.product.manufacturer,
+            'Proizvod': item.product.Naziv,
+            'Proizvođač': item.product.Proizvođač,
             'Ukupna količina': 0,
             'Ukupna vrednost (RSD)': 0
           });
         }
         const summary = productSummary.get(key)!;
         summary['Ukupna količina'] += item.quantity;
-        summary['Ukupna vrednost (RSD)'] += item.quantity * item.product.price;
+        summary['Ukupna vrednost (RSD)'] += item.quantity * item.product.Cena;
       });
     });
 

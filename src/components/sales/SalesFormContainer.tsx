@@ -38,8 +38,8 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
       }
 
       const total = orderItems.reduce((sum, item) => {
-        const unitSize = parseFloat(item.product.unit) || 1;
-        return sum + (item.product.price * item.quantity * unitSize);
+        const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
+        return sum + (item.product.Cena * item.quantity * unitSize);
       }, 0);
 
       const newOrder = {
