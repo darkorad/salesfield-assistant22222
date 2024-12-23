@@ -21,38 +21,52 @@ export const ProductSelect = ({
 
   console.log("ProductSelect - Products:", products);
   console.log("ProductSelect - Search term:", productSearch);
+  console.log("ProductSelect - Current order items:", orderItems);
 
   const filteredProducts = products.filter((product) => {
     const searchTerm = productSearch.toLowerCase();
-    // Use the correct field name "Naziv" instead of "name"
     const productName = product.Naziv?.toLowerCase() || "";
     return productName.includes(searchTerm);
   });
 
   const handleAddProduct = (product: Product) => {
     console.log("Adding product:", product);
+    console.log("Current order items:", orderItems);
+    
     const existingItemIndex = orderItems.findIndex(
-      (item) => item.product.id === product.id
+      (item) => item.product.Naziv === product.Naziv
     );
 
     if (existingItemIndex !== -1) {
+      // Create a new array with the updated quantity
       const newItems = [...orderItems];
-      newItems[existingItemIndex].quantity += 1;
+      newItems[existingItemIndex] = {
+        ...newItems[existingItemIndex],
+        quantity: newItems[existingItemIndex].quantity + 1
+      };
+      console.log("Updating existing item. New items:", newItems);
       onOrderItemsChange(newItems);
     } else {
-      onOrderItemsChange([...orderItems, { product, quantity: 1 }]);
+      // Add new product with quantity 1
+      const newItems = [...orderItems, { product, quantity: 1 }];
+      console.log("Adding new item. New items:", newItems);
+      onOrderItemsChange(newItems);
     }
     setProductSearch("");
   };
 
   const handleQuantityChange = (index: number, newQuantity: number) => {
     const newItems = [...orderItems];
-    newItems[index].quantity = Math.max(1, newQuantity);
+    newItems[index] = {
+      ...newItems[index],
+      quantity: Math.max(1, newQuantity)
+    };
     onOrderItemsChange(newItems);
   };
 
   const handleRemoveItem = (index: number) => {
-    onOrderItemsChange(orderItems.filter((_, i) => i !== index));
+    const newItems = orderItems.filter((_, i) => i !== index);
+    onOrderItemsChange(newItems);
   };
 
   return (
@@ -90,7 +104,7 @@ export const ProductSelect = ({
         <div className="space-y-2 mt-4">
           {orderItems.map((item, index) => (
             <OrderItemCard
-              key={item.product.id}
+              key={`${item.product.Naziv}-${index}`}
               item={item}
               onQuantityChange={(quantity) => handleQuantityChange(index, quantity)}
               onRemove={() => handleRemoveItem(index)}
