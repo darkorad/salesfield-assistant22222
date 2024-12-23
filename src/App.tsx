@@ -34,13 +34,27 @@ function App() {
         
         if (error) {
           console.error("Auth error:", error);
+          setIsAuthenticated(false);
+          return;
+        }
+
+        if (!session) {
+          setIsAuthenticated(false);
+          return;
+        }
+
+        // Verify the session is still valid
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error("User verification error:", userError);
           await supabase.auth.signOut();
           setIsAuthenticated(false);
           toast.error("Sesija je istekla. Molimo prijavite se ponovo.");
           return;
         }
 
-        setIsAuthenticated(!!session);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error("Session check error:", error);
         setIsAuthenticated(false);
@@ -54,13 +68,15 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, !!session);
       
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         setIsAuthenticated(false);
         queryClient.clear();
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Clear any local storage if needed
+        localStorage.removeItem("sales");
+      } else if (event === 'SIGNED_IN') {
         setIsAuthenticated(true);
-      } else if (event === 'INITIAL_SESSION') {
-        setIsAuthenticated(!!session);
+      } else if (event === 'TOKEN_REFRESHED') {
+        setIsAuthenticated(true);
       }
     });
 
