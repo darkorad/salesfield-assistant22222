@@ -24,36 +24,58 @@ export const useSalesData = () => {
         setIsLoading(true);
         console.log("Fetching data for user:", session.user.id);
 
-        // Fetch customers and products in parallel
-        const [customersResponse, productsResponse] = await Promise.all([
-          supabase
-            .from('customers')
-            .select('*')
-            .eq('user_id', session.user.id),
-          supabase
-            .from('products')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .not('Naziv', 'eq', '') // Filter out empty products
-        ]);
+        // Get user email
+        const userEmail = session.user.email;
+        console.log("User email:", userEmail);
 
-        if (customersResponse.error) {
-          console.error('Error fetching customers:', customersResponse.error);
+        // Fetch customers
+        const { data: customersData, error: customersError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('user_id', session.user.id);
+
+        if (customersError) {
+          console.error('Error fetching customers:', customersError);
           toast.error("Greška pri učitavanju kupaca");
           return;
         }
 
-        if (productsResponse.error) {
-          console.error('Error fetching products:', productsResponse.error);
+        // Fetch products based on user email
+        let productsData;
+        let productsError;
+
+        if (userEmail === 'zirmd.darko@gmail.com') {
+          console.log("Fetching products from products_darko table");
+          const response = await supabase
+            .from('products_darko')
+            .select('*')
+            .not('Naziv', 'eq', '');
+          
+          productsData = response.data;
+          productsError = response.error;
+        } else {
+          console.log("Fetching products from regular products table");
+          const response = await supabase
+            .from('products')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .not('Naziv', 'eq', '');
+          
+          productsData = response.data;
+          productsError = response.error;
+        }
+
+        if (productsError) {
+          console.error('Error fetching products:', productsError);
           toast.error("Greška pri učitavanju proizvoda");
           return;
         }
 
-        console.log("Fetched customers:", customersResponse.data);
-        console.log("Fetched products:", productsResponse.data);
+        console.log("Fetched customers:", customersData);
+        console.log("Fetched products:", productsData);
 
-        setCustomers(customersResponse.data || []);
-        setProducts(productsResponse.data || []);
+        setCustomers(customersData || []);
+        setProducts(productsData || []);
       } catch (error) {
         console.error('Error:', error);
         toast.error("Greška pri učitavanju podataka");

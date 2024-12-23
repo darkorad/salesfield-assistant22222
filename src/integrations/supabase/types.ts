@@ -258,6 +258,30 @@ export type Database = {
           },
         ]
       }
+      products_darko: {
+        Row: {
+          Cena: number
+          created_at: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+        }
+        Insert: {
+          Cena: number
+          created_at?: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+        }
+        Update: {
+          Cena?: number
+          created_at?: string
+          "Jedinica mere"?: string
+          Naziv?: string
+          Proizvođač?: string
+        }
+        Relationships: []
+      }
       ProductsVeljko: {
         Row: {
           created_at: string
