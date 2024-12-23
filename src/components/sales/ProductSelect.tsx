@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Product, OrderItem, Customer } from "@/types";
-import { Input } from "@/components/ui/input";
+import { ProductSearchInput } from "./ProductSearchInput";
 import { ProductSearchResults } from "./ProductSearchResults";
-import { OrderItemCard } from "./OrderItemCard";
+import { CustomerInfoCard } from "./CustomerInfoCard";
+import { OrderItemsList } from "./OrderItemsList";
 
 interface ProductSelectProps {
   products: Product[];
@@ -19,10 +20,6 @@ export const ProductSelect = ({
 }: ProductSelectProps) => {
   const [productSearch, setProductSearch] = useState("");
 
-  console.log("ProductSelect - Products:", products);
-  console.log("ProductSelect - Search term:", productSearch);
-  console.log("ProductSelect - Current order items:", orderItems);
-
   const filteredProducts = products.filter((product) => {
     const searchTerm = productSearch.toLowerCase();
     const productName = product.Naziv?.toLowerCase() || "";
@@ -30,26 +27,19 @@ export const ProductSelect = ({
   });
 
   const handleAddProduct = (product: Product) => {
-    console.log("Adding product:", product);
-    console.log("Current order items:", orderItems);
-    
     const existingItemIndex = orderItems.findIndex(
       (item) => item.product.Naziv === product.Naziv
     );
 
     if (existingItemIndex !== -1) {
-      // Create a new array with the updated quantity
       const newItems = [...orderItems];
       newItems[existingItemIndex] = {
         ...newItems[existingItemIndex],
         quantity: newItems[existingItemIndex].quantity + 1
       };
-      console.log("Updating existing item. New items:", newItems);
       onOrderItemsChange(newItems);
     } else {
-      // Add new product with quantity 1
       const newItems = [...orderItems, { product, quantity: 1 }];
-      console.log("Adding new item. New items:", newItems);
       onOrderItemsChange(newItems);
     }
     setProductSearch("");
@@ -74,24 +64,13 @@ export const ProductSelect = ({
       <div className="space-y-2">
         <h2 className="text-lg font-semibold mb-4">Proizvodi</h2>
         
-        <div className="bg-gray-50 p-4 rounded-md mb-4">
-          <h3 className="font-medium text-gray-700 mb-2">Izabrani kupac:</h3>
-          <div className="text-sm">
-            <p><span className="font-medium">Ime:</span> {selectedCustomer.name}</p>
-            <p><span className="font-medium">Adresa:</span> {selectedCustomer.address}</p>
-            {selectedCustomer.phone && (
-              <p><span className="font-medium">Telefon:</span> {selectedCustomer.phone}</p>
-            )}
-          </div>
-        </div>
+        <CustomerInfoCard customer={selectedCustomer} />
 
         <label className="text-sm font-medium">Izbor artikala</label>
         <div className="relative">
-          <Input
+          <ProductSearchInput 
             value={productSearch}
-            onChange={(e) => setProductSearch(e.target.value)}
-            placeholder="Pretraži proizvod..."
-            className="w-full"
+            onChange={setProductSearch}
           />
           {productSearch && (
             <ProductSearchResults
@@ -101,16 +80,11 @@ export const ProductSelect = ({
           )}
         </div>
 
-        <div className="space-y-2 mt-4">
-          {orderItems.map((item, index) => (
-            <OrderItemCard
-              key={`${item.product.Naziv}-${index}`}
-              item={item}
-              onQuantityChange={(quantity) => handleQuantityChange(index, quantity)}
-              onRemove={() => handleRemoveItem(index)}
-            />
-          ))}
-        </div>
+        <OrderItemsList
+          items={orderItems}
+          onQuantityChange={handleQuantityChange}
+          onRemoveItem={handleRemoveItem}
+        />
       </div>
     </div>
   );
