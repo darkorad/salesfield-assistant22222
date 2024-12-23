@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import Layout from "@/components/Layout";
 import Sales from "@/pages/Sales";
-import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -93,7 +92,6 @@ function App() {
             >
               <Route index element={<Index />} />
               <Route path="/sales" element={<Sales />} />
-              <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
           </Routes>

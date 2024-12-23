@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, BarChart3, Settings, ShoppingCart, LogOut } from "lucide-react";
+import { Menu, Settings, ShoppingCart, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -45,15 +45,6 @@ const Layout = () => {
                     Prodaja
                   </Button>
                 </Link>
-                <Link to="/reports">
-                  <Button
-                    variant={location.pathname === "/reports" ? "default" : "ghost"}
-                    className="text-sm"
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Izveštaji
-                  </Button>
-                </Link>
                 <Link to="/settings">
                   <Button
                     variant={location.pathname === "/settings" ? "default" : "ghost"}
@@ -82,12 +73,6 @@ const Layout = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                      <Link to="/reports" className="w-full cursor-pointer">
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Izveštaji
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/settings" className="w-full cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />
