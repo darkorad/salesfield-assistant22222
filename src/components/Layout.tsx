@@ -16,20 +16,25 @@ const Layout = () => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // First clear all local storage
+      localStorage.clear();
       
-      // Clear any local storage data
-      localStorage.removeItem("sales");
-      localStorage.removeItem("sentOrders");
+      // Then attempt to sign out
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Logout error:", error);
+        // Even if there's an error, we'll navigate to login
+        navigate("/login");
+        return;
+      }
       
       navigate("/login");
       toast.success("Uspešno ste se odjavili");
     } catch (error) {
       console.error("Logout error:", error);
-      toast.error("Greška prilikom odjavljivanja");
       // Force navigation to login even if there's an error
       navigate("/login");
+      toast.error("Greška prilikom odjavljivanja");
     }
   };
 
