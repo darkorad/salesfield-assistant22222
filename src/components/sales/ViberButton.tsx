@@ -19,15 +19,22 @@ export const ViberButton = ({ contact, sales, onOrdersSent }: ViberButtonProps) 
       return;
     }
 
+    // Create formatted message for each sale
+    const formattedMessage = sales.map(sale => {
+      const itemsList = sale.items
+        .map(item => `${item.product.Naziv} - ${item.quantity} ${item.product["Jedinica mere"]}`)
+        .join('\n');
+
+      return `Kupac: ${sale.customer.name}\n` +
+             `Adresa: ${sale.customer.address}, ${sale.customer.city}\n` +
+             `\nArtikli:\n${itemsList}\n` +
+             `\nUkupno: ${sale.total} RSD\n` +
+             `Način plaćanja: ${sale.paymentType === 'cash' ? 'Gotovina' : 'Račun'}\n` +
+             '------------------------';
+    }).join('\n\n');
+
     // Create viber message URL
-    const message = encodeURIComponent(`Dnevni izveštaj prodaje:\n${sales
-      .map(
-        (sale) =>
-          `${sale.customer.name}: ${sale.total} RSD (${sale.items.length} stavki)`
-      )
-      .join("\n")}`);
-    
-    // Open Viber with pre-filled message
+    const message = encodeURIComponent(formattedMessage);
     window.open(`viber://forward?text=${message}`);
     
     // Mark orders as sent
