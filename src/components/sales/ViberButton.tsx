@@ -38,9 +38,9 @@ export const ViberButton = ({ contact, sales, onOrdersSent }: ViberButtonProps) 
     // Make sure the number starts with the country code
     const phoneNumber = formattedNumber.startsWith('+') ? formattedNumber : `+${formattedNumber}`;
     
-    // Create viber message URL with the properly formatted number
+    // Create viber message URL with the properly formatted number and message
     const message = encodeURIComponent(formattedMessage);
-    const viberUrl = `viber://chat?number=${encodeURIComponent(phoneNumber)}&text=${message}`;
+    const viberUrl = `viber://send?number=${phoneNumber}&text=${message}`;
     
     window.open(viberUrl);
     
