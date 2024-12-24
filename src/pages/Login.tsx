@@ -33,13 +33,17 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight">Prijava</h2>
+          <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">
+            ŽIR-MD COMPANY
+          </h1>
+          <h2 className="text-2xl font-bold tracking-tight">Prijava</h2>
           <p className="mt-2 text-sm text-gray-600">
             Prijavite se da biste pristupili aplikaciji
           </p>
         </div>
         <Auth
           supabaseClient={supabase}
+          providers={[]}
           appearance={{
             theme: ThemeSupa,
             className: {
