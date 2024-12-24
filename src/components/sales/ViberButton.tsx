@@ -32,9 +32,17 @@ export const ViberButton = ({ contact, sales, onOrdersSent }: ViberButtonProps) 
              `${sale.paymentType === 'cash' ? 'Gotovina' : 'Račun'}`;
     }).join('\n\n-------------------\n\n');
 
-    // Create viber message URL with the contact's number
+    // Format the phone number by removing any spaces, dashes, or other characters
+    const formattedNumber = contact.viber.replace(/[\s\-\(\)]/g, '');
+    
+    // Make sure the number starts with the country code
+    const phoneNumber = formattedNumber.startsWith('+') ? formattedNumber : `+${formattedNumber}`;
+    
+    // Create viber message URL with the properly formatted number
     const message = encodeURIComponent(formattedMessage);
-    window.open(`viber://send?number=${encodeURIComponent(contact.viber)}&text=${message}`);
+    const viberUrl = `viber://chat?number=${encodeURIComponent(phoneNumber)}&text=${message}`;
+    
+    window.open(viberUrl);
     
     // Mark orders as sent
     const sentOrderIds = sales.map(sale => sale.id);
