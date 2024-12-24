@@ -25,17 +25,16 @@ export const ViberButton = ({ contact, sales, onOrdersSent }: ViberButtonProps) 
         .map(item => `${item.product.Naziv} - ${item.quantity} ${item.product["Jedinica mere"]}`)
         .join('\n');
 
-      return `Kupac: ${sale.customer.name}\n` +
-             `Adresa: ${sale.customer.address}, ${sale.customer.city}\n` +
-             `\nArtikli:\n${itemsList}\n` +
-             `\nUkupno: ${sale.total} RSD\n` +
-             `Način plaćanja: ${sale.paymentType === 'cash' ? 'Gotovina' : 'Račun'}\n` +
-             '------------------------';
-    }).join('\n\n');
+      return `${sale.customer.name}\n` +
+             `${sale.customer.address}, ${sale.customer.city}\n` +
+             `${itemsList}\n` +
+             `${sale.total} RSD\n` +
+             `${sale.paymentType === 'cash' ? 'Gotovina' : 'Račun'}`;
+    }).join('\n\n-------------------\n\n');
 
-    // Create viber message URL
+    // Create viber message URL with the contact's number
     const message = encodeURIComponent(formattedMessage);
-    window.open(`viber://forward?text=${message}`);
+    window.open(`viber://send?number=${encodeURIComponent(contact.viber)}&text=${message}`);
     
     // Mark orders as sent
     const sentOrderIds = sales.map(sale => sale.id);
