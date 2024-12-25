@@ -1,7 +1,7 @@
 import { FileImport } from "@/components/settings/FileImport";
 import { ContactSettings } from "@/components/settings/ContactSettings";
 import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
-import { ExportData } from "@/components/settings/ExportData";
+import { Reports } from "@/components/settings/Reports";
 
 const Settings = () => {
   return (
@@ -12,7 +12,7 @@ const Settings = () => {
         </div>
         <ContactSettings />
         <FileImport />
-        <ExportData />
+        <Reports />
       </div>
     </div>
   );

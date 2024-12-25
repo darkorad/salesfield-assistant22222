@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PreviewTable } from "../reports/PreviewTable";
-import { ExportButtons } from "../reports/ExportButtons";
 import { SalesReportButtons } from "../reports/SalesReportButtons";
 
 export const Reports = () => {
@@ -21,7 +20,6 @@ export const Reports = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <SalesReportButtons onPreview={handlePreview} />
-        <ExportButtons />
         <PreviewTable type={previewData.type} data={previewData.data} />
       </CardContent>
     </Card>

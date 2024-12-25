@@ -14,52 +14,14 @@ export const SalesReportButtons = ({ onPreview }: SalesReportButtonsProps) => {
     }
   };
 
-  const handlePreviewMonthly = () => {
-    const data = generateMonthlyReport(true);
-    if (data) {
-      onPreview('monthly', data);
-    }
-  };
-
-  const handlePreviewProducts = () => {
-    const data = generateProductReport(true);
-    if (data) {
-      onPreview('products', data);
-    }
-  };
-
   return (
     <>
       <div className="space-y-2">
         <Button
           className="w-full py-6 text-lg font-medium"
-          onClick={() => generateDailyReport()}
-        >
-          Izvezi dnevni izveštaj prodaje
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full py-4"
-          onClick={handlePreviewDaily}
-        >
-          <Eye className="mr-2 h-5 w-5" />
-          Prikaži dnevni izveštaj
-        </Button>
-      </div>
-      <div className="space-y-2">
-        <Button
-          className="w-full py-6 text-lg font-medium"
           onClick={() => generateMonthlyReport()}
         >
-          Izvezi mesečni izveštaj prodaje
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full py-4"
-          onClick={handlePreviewMonthly}
-        >
-          <Eye className="mr-2 h-5 w-5" />
-          Prikaži mesečni izveštaj
+          Izvezi mesečnu prodaju
         </Button>
       </div>
       <div className="space-y-2">
@@ -67,15 +29,17 @@ export const SalesReportButtons = ({ onPreview }: SalesReportButtonsProps) => {
           className="w-full py-6 text-lg font-medium"
           onClick={() => generateProductReport()}
         >
-          Izvezi mesečni pregled proizvoda
+          Izvezi prodaju po artiklima
         </Button>
+      </div>
+      <div className="space-y-2">
         <Button
           variant="outline"
           className="w-full py-4"
-          onClick={handlePreviewProducts}
+          onClick={handlePreviewDaily}
         >
           <Eye className="mr-2 h-5 w-5" />
-          Prikaži pregled proizvoda
+          Prikaži dnevnu prodaju
         </Button>
       </div>
     </>

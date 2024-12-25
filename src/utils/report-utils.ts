@@ -40,26 +40,9 @@ const getSalesForPeriod = (startDate: string): Order[] => {
   return sales.filter((sale: Order) => sale.date.startsWith(startDate));
 };
 
-const exportToExcel = (data: any[], sheetName: string, fileName: string, sentSales: string[] = []) => {
+const exportToExcel = (data: any[], sheetName: string, fileName: string) => {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
-  
-  // Add red background style for sent sales rows
-  const redStyle = { fill: { fgColor: { rgb: "FFFF0000" } } };
-  
-  // Apply styles to sent sales rows
-  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1000');
-  for (let R = range.s.r + 1; R <= range.e.r; R++) {
-    const saleId = data[R - 1].id;
-    if (sentSales.includes(saleId)) {
-      for (let C = range.s.c; C <= range.e.c; C++) {
-        const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!ws[cell_ref]) ws[cell_ref] = { v: '' };
-        ws[cell_ref].s = redStyle;
-      }
-    }
-  }
-
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
   XLSX.writeFile(wb, fileName);
 };
@@ -75,35 +58,10 @@ export const generateDailyReport = (previewOnly: boolean = false) => {
       return null;
     }
 
-    if (previewOnly) {
-      return todaySales;
-    }
-
-    const formattedSales = todaySales.map(sale => ({
-      id: sale.id,
-      'Šifra kupca': sale.customer.code || '',
-      'Kupac': sale.customer.name,
-      'Adresa': `${sale.customer.address}, ${sale.customer.city}`,
-      'Ukupno (RSD)': sale.total,
-      'Broj stavki': sale.items.length,
-      'Stavke': sale.items.map(item => 
-        `${item.product.Naziv} (${item.quantity} ${item.product["Jedinica mere"]})`
-      ).join(', '),
-      'Status': sale.sent ? 'Poslato' : 'Nije poslato'
-    }));
-
-    const sentSalesIds = todaySales.filter(sale => sale.sent).map(sale => sale.id);
-    
-    exportToExcel(
-      formattedSales,
-      "Dnevni izveštaj",
-      `dnevni-izvestaj-${dateStr}.xlsx`,
-      sentSalesIds
-    );
-    
-    toast.success("Dnevni izveštaj je uspešno izvezen");
+    const formattedSales = todaySales.map(formatSaleRecord);
+    return formattedSales;
   } catch (error) {
-    toast.error("Greška pri izvozu dnevnog izveštaja");
+    toast.error("Greška pri generisanju dnevnog izveštaja");
     console.error(error);
     return null;
   }
@@ -121,11 +79,20 @@ export const generateMonthlyReport = (previewOnly: boolean = false) => {
       return null;
     }
 
-    if (previewOnly) {
-      return monthlySales;
-    }
+    const uniqueCustomers = new Set(monthlySales.map(sale => sale.customer.id));
+    const totalItems = monthlySales.reduce((sum, sale) => sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+    const totalAmount = monthlySales.reduce((sum, sale) => sum + sale.total, 0);
 
     const formattedSales = monthlySales.map(formatSaleRecord);
+    formattedSales.push({
+      'Datum': '---',
+      'Vreme': '---',
+      'Kupac': 'UKUPNO',
+      'Ukupno (RSD)': totalAmount,
+      'Broj stavki': totalItems,
+      'Stavke': `Aktivnih kupaca: ${uniqueCustomers.size}`
+    } as SaleRecord);
+
     exportToExcel(formattedSales, "Mesečni izveštaj", `mesecni-izvestaj-${year}-${month}.xlsx`);
     toast.success("Mesečni izveštaj je uspešno izvezen");
   } catch (error) {
@@ -167,11 +134,6 @@ export const generateProductReport = (previewOnly: boolean = false) => {
     });
 
     const summaryArray = Array.from(productSummary.values());
-
-    if (previewOnly) {
-      return summaryArray;
-    }
-
     exportToExcel(
       summaryArray,
       "Pregled proizvoda",
