@@ -8,6 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { OrderHistory } from "./OrderHistory";
 import { useState } from "react";
 
@@ -68,14 +74,23 @@ export const CustomerSelect = ({
           )}
         </div>
         {selectedCustomer && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setShowHistory(true)}
-            className="flex-shrink-0"
-          >
-            <History className="h-4 w-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowHistory(true)}
+                  className="flex-shrink-0"
+                >
+                  <History className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Istorija naručivanja</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
