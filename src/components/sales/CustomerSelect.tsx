@@ -1,13 +1,15 @@
 import { Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, History } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { OrderHistory } from "./OrderHistory";
+import { useState } from "react";
 
 interface CustomerSelectProps {
   customers: Customer[];
@@ -22,6 +24,9 @@ export const CustomerSelect = ({
   onCustomerSearchChange,
   onCustomerSelect,
 }: CustomerSelectProps) => {
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+
   console.log("CustomerSelect - Received customers:", customers);
   console.log("CustomerSelect - Current search:", customerSearch);
 
@@ -31,6 +36,7 @@ export const CustomerSelect = ({
 
   const handleCustomerSelect = (customer: Customer) => {
     console.log("CustomerSelect - Selected customer:", customer);
+    setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
   };
@@ -61,6 +67,16 @@ export const CustomerSelect = ({
             </div>
           )}
         </div>
+        {selectedCustomer && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowHistory(true)}
+            className="flex-shrink-0"
+          >
+            <History className="h-4 w-4" />
+          </Button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
@@ -81,6 +97,13 @@ export const CustomerSelect = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {showHistory && selectedCustomer && (
+        <OrderHistory 
+          customer={selectedCustomer} 
+          open={showHistory} 
+          onOpenChange={setShowHistory}
+        />
+      )}
     </div>
   );
 };
