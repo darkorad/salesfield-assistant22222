@@ -1,5 +1,4 @@
 import { FileImport } from "@/components/settings/FileImport";
-import { Reports } from "@/components/settings/Reports";
 import { ContactSettings } from "@/components/settings/ContactSettings";
 import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
 import { ExportData } from "@/components/settings/ExportData";
@@ -14,7 +13,6 @@ const Settings = () => {
         <ContactSettings />
         <FileImport />
         <ExportData />
-        <Reports />
       </div>
     </div>
   );
