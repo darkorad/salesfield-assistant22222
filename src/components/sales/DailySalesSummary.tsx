@@ -49,6 +49,7 @@ const DailySalesSummary = () => {
           date,
           items,
           payment_type,
+          user_id,
           customers (
             id,
             name,
@@ -78,7 +79,8 @@ const DailySalesSummary = () => {
         items: sale.items,
         total: sale.total,
         date: sale.date,
-        paymentType: sale.payment_type
+        paymentType: sale.payment_type,
+        userId: sale.user_id // Add userId to match Order type
       })) || [];
 
       setTodaySales(formattedSales);
