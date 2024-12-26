@@ -35,14 +35,6 @@ function App() {
         if (error) {
           console.error("Auth error:", error);
           setIsAuthenticated(false);
-          // Try to refresh the session
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError || !refreshData.session) {
-            console.error("Session refresh failed:", refreshError);
-            await supabase.auth.signOut();
-            return;
-          }
-          setIsAuthenticated(true);
           return;
         }
 
@@ -51,7 +43,20 @@ function App() {
           return;
         }
 
-        setIsAuthenticated(true);
+        // Try to refresh the session immediately if it exists
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error("Session refresh failed:", refreshError);
+          setIsAuthenticated(false);
+          await supabase.auth.signOut();
+          return;
+        }
+
+        if (refreshData.session) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
       } catch (error) {
         console.error("Session check error:", error);
         setIsAuthenticated(false);
@@ -73,7 +78,6 @@ function App() {
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setIsAuthenticated(true);
       } else if (!session) {
-        // Handle any case where the session is lost
         setIsAuthenticated(false);
         await supabase.auth.signOut();
       }
@@ -82,15 +86,20 @@ function App() {
     // Set up periodic session refresh
     const refreshInterval = setInterval(async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (session && !error) {
-        const { data, error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-          console.error("Session refresh failed:", refreshError);
-          setIsAuthenticated(false);
-          await supabase.auth.signOut();
-        }
+      if (!session || error) {
+        console.error("Session check failed:", error);
+        setIsAuthenticated(false);
+        await supabase.auth.signOut();
+        return;
       }
-    }, 1000 * 60 * 10); // Refresh every 10 minutes
+
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !refreshData.session) {
+        console.error("Session refresh failed:", refreshError);
+        setIsAuthenticated(false);
+        await supabase.auth.signOut();
+      }
+    }, 1000 * 60 * 4); // Refresh every 4 minutes to be safe
 
     return () => {
       subscription.unsubscribe();
