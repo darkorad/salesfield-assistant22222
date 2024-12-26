@@ -68,11 +68,12 @@ function App() {
       if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         queryClient.clear();
-        localStorage.clear(); // Clear all local storage
-        window.location.href = '/login'; // Force a full page reload to clear all state
+        localStorage.clear();
+        window.location.href = '/login';
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setIsAuthenticated(true);
-      } else if (event === 'USER_DELETED') {
+      } else if (!session) {
+        // Handle any case where the session is lost
         setIsAuthenticated(false);
         await supabase.auth.signOut();
       }
