@@ -32,7 +32,8 @@ export const useDailySales = () => {
             pib,
             is_vat_registered,
             code,
-            user_id
+            user_id,
+            gps_coordinates
           )
         `)
         .eq('user_id', user.id)
