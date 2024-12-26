@@ -23,7 +23,7 @@ export const useDailySales = () => {
           items,
           payment_type,
           user_id,
-          customers (
+          customer:customers (
             id,
             name,
             address,
@@ -51,16 +51,16 @@ export const useDailySales = () => {
       const formattedSales: Order[] = sales?.map(sale => ({
         id: sale.id,
         customer: {
-          id: sale.customers.id,
-          user_id: sale.customers.user_id,
-          code: sale.customers.code,
-          name: sale.customers.name,
-          address: sale.customers.address,
-          city: sale.customers.city,
-          phone: sale.customers.phone || '',
-          pib: sale.customers.pib,
-          is_vat_registered: sale.customers.is_vat_registered,
-          gps_coordinates: sale.customers.gps_coordinates || ''
+          id: sale.customer.id,
+          user_id: sale.customer.user_id,
+          code: sale.customer.code,
+          name: sale.customer.name,
+          address: sale.customer.address,
+          city: sale.customer.city,
+          phone: sale.customer.phone || '',
+          pib: sale.customer.pib,
+          is_vat_registered: sale.customer.is_vat_registered,
+          gps_coordinates: sale.customer.gps_coordinates || ''
         },
         items: sale.items,
         total: sale.total,
