@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Order } from "@/types";
 import { SalesTable } from "./SalesTable";
 import { SalesActions } from "./SalesActions";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Contact {
   name: string;
@@ -31,31 +33,64 @@ const DailySalesSummary = () => {
         };
   });
 
-  const loadTodaySales = () => {
+  const loadTodaySales = async () => {
     try {
-      const sales = localStorage.getItem("sales");
-      if (sales) {
-        const allSales = JSON.parse(sales) as Order[];
-        const today = new Date().toISOString().split("T")[0];
-        console.log("Loading sales for date:", today);
-        console.log("All sales:", allSales);
-        
-        const filteredSales = allSales.filter((sale) => {
-          const saleDate = new Date(sale.date).toISOString().split("T")[0];
-          return saleDate === today;
-        });
-        
-        console.log("Filtered sales for today:", filteredSales);
-        setTodaySales(filteredSales);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: sales, error } = await supabase
+        .from('sales')
+        .select(`
+          id,
+          total,
+          date,
+          items,
+          payment_type,
+          customers (
+            id,
+            name,
+            address,
+            city,
+            phone,
+            pib,
+            is_vat_registered,
+            code
+          )
+        `)
+        .eq('user_id', user.id)
+        .gte('date', today.toISOString())
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error("Error loading sales:", error);
+        toast.error("Greška pri učitavanju prodaje");
+        return;
       }
+
+      console.log("Loaded sales:", sales);
+      
+      const formattedSales = sales?.map(sale => ({
+        id: sale.id,
+        customer: sale.customers,
+        items: sale.items,
+        total: sale.total,
+        date: sale.date,
+        paymentType: sale.payment_type
+      })) || [];
+
+      setTodaySales(formattedSales);
     } catch (error) {
       console.error("Error loading sales:", error);
+      toast.error("Greška pri učitavanju prodaje");
     }
   };
 
   useEffect(() => {
     loadTodaySales();
-    const interval = setInterval(loadTodaySales, 2000);
+    const interval = setInterval(loadTodaySales, 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -64,9 +99,6 @@ const DailySalesSummary = () => {
     setSentOrderIds(updatedSentOrders);
     localStorage.setItem("sentOrders", JSON.stringify(updatedSentOrders));
   };
-
-  // Calculate total for all sales, not just unsent ones
-  const totalSales = todaySales.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
     <Card className="mt-4 md:mt-8">
@@ -80,7 +112,9 @@ const DailySalesSummary = () => {
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
                 <span className="font-medium text-lg">Ukupno za danas:</span>
-                <span className="font-bold text-lg">{totalSales} RSD</span>
+                <span className="font-bold text-lg">
+                  {todaySales.reduce((sum, sale) => sum + sale.total, 0)} RSD
+                </span>
               </div>
             </div>
           )}
