@@ -8,26 +8,58 @@ import { toast } from "sonner";
 import { GPSCoordinatesInput } from "./GPSCoordinatesInput";
 import { VATStatusSelect } from "./VATStatusSelect";
 import { CustomerFormData, initialCustomerFormData } from "./types";
+import { supabase } from "@/integrations/supabase/client";
 
 export const AddCustomerDialog = () => {
   const [open, setOpen] = useState(false);
   const [customer, setCustomer] = useState<CustomerFormData>(initialCustomerFormData);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-    const newCustomer = {
-      id: crypto.randomUUID(),
-      ...customer
-    };
-    
-    customers.push(newCustomer);
-    localStorage.setItem("customers", JSON.stringify(customers));
-    
-    toast.success("Kupac je uspešno dodat");
-    setOpen(false);
-    setCustomer(initialCustomerFormData);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
+      // Get the latest customer code
+      const { data: customers } = await supabase
+        .from('customers')
+        .select('code')
+        .order('code', { ascending: false })
+        .limit(1);
+
+      // Generate new code by incrementing the latest one
+      const latestCode = customers && customers[0] ? parseInt(customers[0].code) : 0;
+      const newCode = (latestCode + 1).toString();
+
+      const newCustomer = {
+        user_id: session.user.id,
+        code: newCode,
+        name: customer.name,
+        address: customer.address,
+        city: customer.city,
+        phone: customer.phone,
+        pib: customer.pib,
+        is_vat_registered: customer.isVatRegistered,
+        gps_coordinates: customer.gpsCoordinates
+      };
+
+      const { error } = await supabase
+        .from('customers')
+        .insert(newCustomer);
+
+      if (error) throw error;
+
+      toast.success("Kupac je uspešno dodat");
+      setOpen(false);
+      setCustomer(initialCustomerFormData);
+    } catch (error) {
+      console.error('Error adding customer:', error);
+      toast.error("Greška pri dodavanju kupca");
+    }
   };
 
   const handleInputChange = (field: keyof CustomerFormData) => (
