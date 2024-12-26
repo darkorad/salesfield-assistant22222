@@ -35,6 +35,14 @@ function App() {
         if (error) {
           console.error("Auth error:", error);
           setIsAuthenticated(false);
+          // Try to refresh the session
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshData.session) {
+            console.error("Session refresh failed:", refreshError);
+            await supabase.auth.signOut();
+            return;
+          }
+          setIsAuthenticated(true);
           return;
         }
 
@@ -61,13 +69,31 @@ function App() {
         setIsAuthenticated(false);
         queryClient.clear();
         localStorage.clear(); // Clear all local storage
+        window.location.href = '/login'; // Force a full page reload to clear all state
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setIsAuthenticated(true);
+      } else if (event === 'USER_DELETED') {
+        setIsAuthenticated(false);
+        await supabase.auth.signOut();
       }
     });
 
+    // Set up periodic session refresh
+    const refreshInterval = setInterval(async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (session && !error) {
+        const { data, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error("Session refresh failed:", refreshError);
+          setIsAuthenticated(false);
+          await supabase.auth.signOut();
+        }
+      }
+    }, 1000 * 60 * 10); // Refresh every 10 minutes
+
     return () => {
       subscription.unsubscribe();
+      clearInterval(refreshInterval);
     };
   }, []);
 
