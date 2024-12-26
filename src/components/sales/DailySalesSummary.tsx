@@ -75,7 +75,6 @@ const DailySalesSummary = () => {
       console.log("Loaded sales:", sales);
       
       const formattedSales: Order[] = sales?.map(sale => {
-        // Ensure customer data is properly formatted as a Customer type
         const customer: Customer = {
           id: sale.customers.id,
           user_id: sale.customers.user_id,
@@ -91,7 +90,7 @@ const DailySalesSummary = () => {
 
         return {
           id: sale.id,
-          customer: customer,
+          customer,
           items: sale.items,
           total: sale.total,
           date: sale.date,
