@@ -69,7 +69,8 @@ export const useDailySales = () => {
 
       console.log("Loaded sales:", sales);
       
-      const formattedSales: Order[] = (sales as SaleResponse[] || []).map(sale => ({
+      // Ensure sales is an array and cast each sale to SaleResponse
+      const formattedSales: Order[] = (Array.isArray(sales) ? sales : []).map((sale: any) => ({
         id: sale.id,
         customer: {
           id: sale.customer.id,
