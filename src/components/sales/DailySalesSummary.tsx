@@ -1,22 +1,14 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Order, Customer } from "@/types";
 import { SalesTable } from "./SalesTable";
 import { SalesActions } from "./SalesActions";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-interface Contact {
-  name: string;
-  viber: string;
-}
+import { useDailySales } from "@/hooks/useDailySales";
+import { useSentOrders } from "@/hooks/useSentOrders";
+import { useState } from "react";
+import { Contact } from "@/types";
 
 const DailySalesSummary = () => {
-  const [todaySales, setTodaySales] = useState<Order[]>([]);
-  const [sentOrderIds, setSentOrderIds] = useState<string[]>(() => {
-    const saved = localStorage.getItem("sentOrders");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { todaySales } = useDailySales();
+  const { sentOrderIds, handleOrdersSent } = useSentOrders();
   const [contacts, setContacts] = useState<{
     email: string;
     contacts: Contact[];
@@ -32,91 +24,6 @@ const DailySalesSummary = () => {
           ],
         };
   });
-
-  const loadTodaySales = async () => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: sales, error } = await supabase
-        .from('sales')
-        .select(`
-          id,
-          total,
-          date,
-          items,
-          payment_type,
-          user_id,
-          customers (
-            id,
-            name,
-            address,
-            city,
-            phone,
-            pib,
-            is_vat_registered,
-            code,
-            user_id
-          )
-        `)
-        .eq('user_id', user.id)
-        .gte('date', today.toISOString())
-        .order('date', { ascending: false });
-
-      if (error) {
-        console.error("Error loading sales:", error);
-        toast.error("Greška pri učitavanju prodaje");
-        return;
-      }
-
-      console.log("Loaded sales:", sales);
-      
-      const formattedSales: Order[] = sales?.map(sale => {
-        const customer: Customer = {
-          id: sale.customers.id,
-          user_id: sale.customers.user_id,
-          code: sale.customers.code,
-          name: sale.customers.name,
-          address: sale.customers.address,
-          city: sale.customers.city,
-          phone: sale.customers.phone || '',
-          pib: sale.customers.pib,
-          is_vat_registered: sale.customers.is_vat_registered,
-          gps_coordinates: sale.customers.gps_coordinates || ''
-        };
-
-        return {
-          id: sale.id,
-          customer,
-          items: sale.items,
-          total: sale.total,
-          date: sale.date,
-          paymentType: sale.payment_type,
-          userId: sale.user_id
-        };
-      }) || [];
-
-      setTodaySales(formattedSales);
-    } catch (error) {
-      console.error("Error loading sales:", error);
-      toast.error("Greška pri učitavanju prodaje");
-    }
-  };
-
-  useEffect(() => {
-    loadTodaySales();
-    const interval = setInterval(loadTodaySales, 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleOrdersSent = (newSentOrderIds: string[]) => {
-    const updatedSentOrders = [...sentOrderIds, ...newSentOrderIds];
-    setSentOrderIds(updatedSentOrders);
-    localStorage.setItem("sentOrders", JSON.stringify(updatedSentOrders));
-  };
 
   return (
     <Card className="mt-4 md:mt-8">
