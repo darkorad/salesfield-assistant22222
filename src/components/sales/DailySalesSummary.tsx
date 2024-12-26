@@ -37,11 +37,15 @@ const DailySalesSummary = () => {
       if (sales) {
         const allSales = JSON.parse(sales) as Order[];
         const today = new Date().toISOString().split("T")[0];
+        console.log("Loading sales for date:", today);
+        console.log("All sales:", allSales);
         
-        const filteredSales = allSales.filter(
-          (sale) => sale.date.split("T")[0] === today
-        );
+        const filteredSales = allSales.filter((sale) => {
+          const saleDate = new Date(sale.date).toISOString().split("T")[0];
+          return saleDate === today;
+        });
         
+        console.log("Filtered sales for today:", filteredSales);
         setTodaySales(filteredSales);
       }
     } catch (error) {
@@ -61,8 +65,8 @@ const DailySalesSummary = () => {
     localStorage.setItem("sentOrders", JSON.stringify(updatedSentOrders));
   };
 
-  const unsentSales = todaySales.filter(sale => !sentOrderIds.includes(sale.id));
-  const totalSales = unsentSales.reduce((sum, sale) => sum + sale.total, 0);
+  // Calculate total for all sales, not just unsent ones
+  const totalSales = todaySales.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
     <Card className="mt-4 md:mt-8">
@@ -82,7 +86,7 @@ const DailySalesSummary = () => {
           )}
           <SalesActions 
             contacts={contacts} 
-            sales={unsentSales}
+            sales={todaySales.filter(sale => !sentOrderIds.includes(sale.id))}
             onOrdersSent={handleOrdersSent} 
           />
         </div>
