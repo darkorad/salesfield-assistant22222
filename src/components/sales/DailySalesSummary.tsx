@@ -58,7 +58,8 @@ const DailySalesSummary = () => {
             phone,
             pib,
             is_vat_registered,
-            code
+            code,
+            user_id
           )
         `)
         .eq('user_id', user.id)
@@ -73,15 +74,15 @@ const DailySalesSummary = () => {
 
       console.log("Loaded sales:", sales);
       
-      const formattedSales = sales?.map(sale => ({
+      const formattedSales: Order[] = (sales?.map(sale => ({
         id: sale.id,
-        customer: sale.customers,
+        customer: sale.customers, // customers is already a single object from the join
         items: sale.items,
         total: sale.total,
         date: sale.date,
         paymentType: sale.payment_type,
-        userId: sale.user_id // Add userId to match Order type
-      })) || [];
+        userId: sale.user_id
+      })) || []);
 
       setTodaySales(formattedSales);
     } catch (error) {
