@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Order } from "@/types";
+import { Order, Customer } from "@/types";
 import { SalesTable } from "./SalesTable";
 import { SalesActions } from "./SalesActions";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,15 +74,31 @@ const DailySalesSummary = () => {
 
       console.log("Loaded sales:", sales);
       
-      const formattedSales: Order[] = (sales?.map(sale => ({
-        id: sale.id,
-        customer: sale.customers, // customers is already a single object from the join
-        items: sale.items,
-        total: sale.total,
-        date: sale.date,
-        paymentType: sale.payment_type,
-        userId: sale.user_id
-      })) || []);
+      const formattedSales: Order[] = sales?.map(sale => {
+        // Ensure customer data is properly formatted as a Customer type
+        const customer: Customer = {
+          id: sale.customers.id,
+          user_id: sale.customers.user_id,
+          code: sale.customers.code,
+          name: sale.customers.name,
+          address: sale.customers.address,
+          city: sale.customers.city,
+          phone: sale.customers.phone || '',
+          pib: sale.customers.pib,
+          is_vat_registered: sale.customers.is_vat_registered,
+          gps_coordinates: sale.customers.gps_coordinates || ''
+        };
+
+        return {
+          id: sale.id,
+          customer: customer,
+          items: sale.items,
+          total: sale.total,
+          date: sale.date,
+          paymentType: sale.payment_type,
+          userId: sale.user_id
+        };
+      }) || [];
 
       setTodaySales(formattedSales);
     } catch (error) {
