@@ -1,7 +1,28 @@
 import { useState, useEffect } from "react";
-import { Order, Customer } from "@/types";
+import { Order } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+interface SaleResponse {
+  id: string;
+  total: number;
+  date: string;
+  items: any[];
+  payment_type: 'cash' | 'invoice';
+  user_id: string;
+  customer: {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    phone: string | null;
+    pib: string;
+    is_vat_registered: boolean;
+    code: string;
+    user_id: string;
+    gps_coordinates: string | null;
+  };
+}
 
 export const useDailySales = () => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
@@ -48,7 +69,7 @@ export const useDailySales = () => {
 
       console.log("Loaded sales:", sales);
       
-      const formattedSales: Order[] = sales?.map(sale => ({
+      const formattedSales: Order[] = (sales as SaleResponse[] || []).map(sale => ({
         id: sale.id,
         customer: {
           id: sale.customer.id,
@@ -67,7 +88,7 @@ export const useDailySales = () => {
         date: sale.date,
         paymentType: sale.payment_type,
         userId: sale.user_id
-      })) || [];
+      }));
 
       setTodaySales(formattedSales);
     } catch (error) {
