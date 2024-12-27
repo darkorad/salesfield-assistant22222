@@ -3,45 +3,75 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    const checkSession = async () => {
+  const checkSession = useCallback(async () => {
+    try {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
         console.error("Session check error:", error);
+        return false;
       }
+      return !!session;
+    } catch (error) {
+      console.error("Session check error:", error);
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      const hasSession = await checkSession();
+      if (!mounted) return;
       
-      if (session) {
-        navigate("/sales");
+      setIsAuthenticated(hasSession);
+      setAuthChecked(true);
+      
+      if (hasSession) {
+        navigate("/sales", { replace: true });
       }
-      
-      setIsLoading(false);
     };
 
-    checkSession();
+    initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      
+      if (!mounted) return;
+
       if (event === "SIGNED_IN" && session) {
-        navigate("/sales");
+        setIsAuthenticated(true);
+        navigate("/sales", { replace: true });
+      } else if (event === "SIGNED_OUT") {
+        setIsAuthenticated(false);
       }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, checkSession]);
 
-  if (isLoading) {
+  // Show loading state only during initial auth check
+  if (!authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Don't render login form if already authenticated
+  if (isAuthenticated) {
+    return null;
   }
 
   return (
