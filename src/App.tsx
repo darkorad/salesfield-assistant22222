@@ -7,11 +7,8 @@ import Sales from "@/pages/Sales";
 import Settings from "@/pages/Settings";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
-import { useEffect, useState } from "react";
-import { supabase } from "./integrations/supabase/client";
-import { toast } from "sonner";
+import { useAuthManager } from "@/hooks/useAuthManager";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -24,88 +21,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Auth error:", error);
-          setIsAuthenticated(false);
-          return;
-        }
-
-        if (!session) {
-          setIsAuthenticated(false);
-          return;
-        }
-
-        // Try to refresh the session immediately if it exists
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-          console.error("Session refresh failed:", refreshError);
-          setIsAuthenticated(false);
-          await supabase.auth.signOut();
-          return;
-        }
-
-        if (refreshData.session) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error("Session check error:", error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, !!session);
-      
-      if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false);
-        queryClient.clear();
-        localStorage.clear();
-        window.location.href = '/login';
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setIsAuthenticated(true);
-      } else if (!session) {
-        setIsAuthenticated(false);
-        await supabase.auth.signOut();
-      }
-    });
-
-    // Set up periodic session refresh
-    const refreshInterval = setInterval(async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (!session || error) {
-        console.error("Session check failed:", error);
-        setIsAuthenticated(false);
-        await supabase.auth.signOut();
-        return;
-      }
-
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError || !refreshData.session) {
-        console.error("Session refresh failed:", refreshError);
-        setIsAuthenticated(false);
-        await supabase.auth.signOut();
-      }
-    }, 1000 * 60 * 4); // Refresh every 4 minutes to be safe
-
-    return () => {
-      subscription.unsubscribe();
-      clearInterval(refreshInterval);
-    };
-  }, []);
+  const { isAuthenticated, isLoading } = useAuthManager();
 
   if (isLoading) {
     return (
