@@ -10,27 +10,20 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Session check error:", error);
-          setIsLoading(false);
-          return;
-        }
-        
-        if (session) {
-          navigate("/sales");
-        } else {
-          setIsLoading(false);
-        }
-      } catch (error) {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
         console.error("Session check error:", error);
-        setIsLoading(false);
       }
+      
+      if (session) {
+        navigate("/sales");
+      }
+      
+      setIsLoading(false);
     };
 
-    checkUser();
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
