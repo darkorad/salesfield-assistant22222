@@ -3,37 +3,21 @@ import { Order } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface SaleResponse {
-  id: string;
-  total: number;
-  date: string;
-  items: any[];
-  payment_type: 'cash' | 'invoice';
-  user_id: string;
-  customer: {
-    id: string;
-    name: string;
-    address: string;
-    city: string;
-    phone: string | null;
-    pib: string;
-    is_vat_registered: boolean;
-    code: string;
-    user_id: string;
-    gps_coordinates: string | null;
-  };
-}
-
 export const useDailySales = () => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadTodaySales = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log("No authenticated user found");
+        setIsLoading(false);
+        return;
+      }
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
 
       const { data: sales, error } = await supabase
         .from('sales')
@@ -69,7 +53,6 @@ export const useDailySales = () => {
 
       console.log("Loaded sales:", sales);
       
-      // Ensure sales is an array and cast each sale to SaleResponse
       const formattedSales: Order[] = (Array.isArray(sales) ? sales : []).map((sale: any) => ({
         id: sale.id,
         customer: {
@@ -95,14 +78,48 @@ export const useDailySales = () => {
     } catch (error) {
       console.error("Error loading sales:", error);
       toast.error("Greška pri učitavanju prodaje");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadTodaySales();
-    const interval = setInterval(loadTodaySales, 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
+    const setupSalesSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Initial load
+      await loadTodaySales();
+
+      // Subscribe to changes
+      const channel = supabase
+        .channel('sales_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'sales',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            loadTodaySales();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        channel.unsubscribe();
+      };
+    };
+
+    setupSalesSubscription();
+
+    // Cleanup subscription on unmount
+    return () => {
+      // Cleanup is handled in setupSalesSubscription
+    };
   }, []);
 
-  return { todaySales };
+  return { todaySales, isLoading };
 };
