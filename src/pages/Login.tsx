@@ -3,27 +3,25 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
-  const hasCheckedSession = useRef(false);
 
   useEffect(() => {
-    if (!hasCheckedSession.current) {
-      hasCheckedSession.current = true;
-      
-      // One-time session check on mount
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          navigate("/sales", { replace: true });
-        }
-      });
-    }
+    // Simple one-time redirect if already authenticated
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/sales", { replace: true });
+      }
+    };
+    
+    checkSession();
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+    // Only listen for successful sign-ins
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
         navigate("/sales", { replace: true });
       }
     });
@@ -34,51 +32,49 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 bg-gray-50">
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-6 space-y-6 bg-white">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">
-              ŽIR-MD COMPANY
-            </h1>
-            <h2 className="text-2xl font-bold tracking-tight">Prijava</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Prijavite se da biste pristupili aplikaciji
-            </p>
-          </div>
-          <Auth
-            supabaseClient={supabase}
-            providers={[]}
-            appearance={{
-              theme: ThemeSupa,
-              className: {
-                container: 'space-y-4',
-                button: 'w-full px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded',
-                input: 'w-full px-3 py-2 border rounded',
-                label: 'block text-sm font-medium text-gray-700'
+    <div className="absolute inset-0 bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-6 space-y-6 bg-white shadow-sm">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">
+            ŽIR-MD COMPANY
+          </h1>
+          <h2 className="text-2xl font-bold tracking-tight">Prijava</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Prijavite se da biste pristupili aplikaciji
+          </p>
+        </div>
+        <Auth
+          supabaseClient={supabase}
+          providers={[]}
+          appearance={{
+            theme: ThemeSupa,
+            className: {
+              container: 'space-y-4',
+              button: 'w-full px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded',
+              input: 'w-full px-3 py-2 border rounded',
+              label: 'block text-sm font-medium text-gray-700'
+            }
+          }}
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: 'Email adresa',
+                password_label: 'Lozinka',
+                button_label: 'Prijava',
+                loading_button_label: 'Prijavljivanje...',
+                link_text: 'Već imate nalog? Prijavite se'
+              },
+              sign_up: {
+                email_label: 'Email adresa',
+                password_label: 'Lozinka',
+                button_label: 'Registracija',
+                loading_button_label: 'Registracija u toku...',
+                link_text: 'Nemate nalog? Registrujte se'
               }
-            }}
-            localization={{
-              variables: {
-                sign_in: {
-                  email_label: 'Email adresa',
-                  password_label: 'Lozinka',
-                  button_label: 'Prijava',
-                  loading_button_label: 'Prijavljivanje...',
-                  link_text: 'Već imate nalog? Prijavite se'
-                },
-                sign_up: {
-                  email_label: 'Email adresa',
-                  password_label: 'Lozinka',
-                  button_label: 'Registracija',
-                  loading_button_label: 'Registracija u toku...',
-                  link_text: 'Nemate nalog? Registrujte se'
-                }
-              }
-            }}
-          />
-        </Card>
-      </div>
+            }
+          }}
+        />
+      </Card>
     </div>
   );
 };
