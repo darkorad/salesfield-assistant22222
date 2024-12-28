@@ -3,65 +3,59 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const checkSession = useCallback(async () => {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Session check error:", error);
-        return false;
-      }
-      return !!session;
-    } catch (error) {
-      console.error("Session check error:", error);
-      return false;
-    }
-  }, []);
 
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
-      const hasSession = await checkSession();
-      if (!mounted) return;
-      
-      setIsAuthenticated(hasSession);
-      setAuthChecked(true);
-      
-      if (hasSession) {
-        navigate("/sales", { replace: true });
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (session) {
+          setIsAuthenticated(true);
+          navigate("/sales", { replace: true });
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+      } finally {
+        if (mounted) {
+          setIsInitializing(false);
+        }
       }
     };
 
-    initializeAuth();
+    // Initial session check
+    checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
-      
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
-      if (event === "SIGNED_IN" && session) {
+      if (event === 'SIGNED_IN' && session) {
         setIsAuthenticated(true);
         navigate("/sales", { replace: true });
-      } else if (event === "SIGNED_OUT") {
+      } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
       }
     });
 
+    // Cleanup
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, checkSession]);
+  }, [navigate]);
 
   // Show loading state only during initial auth check
-  if (!authChecked) {
+  if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
