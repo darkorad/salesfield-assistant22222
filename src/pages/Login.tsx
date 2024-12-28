@@ -3,69 +3,49 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
+    if (initialized.current) return;
+    initialized.current = true;
 
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
         if (session) {
-          setIsAuthenticated(true);
           navigate("/sales", { replace: true });
         }
       } catch (error) {
         console.error("Session check error:", error);
       } finally {
-        if (mounted) {
-          setIsInitializing(false);
-        }
+        setIsLoading(false);
       }
     };
 
-    // Initial session check
     checkSession();
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-
       if (event === 'SIGNED_IN' && session) {
-        setIsAuthenticated(true);
         navigate("/sales", { replace: true });
-      } else if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false);
       }
     });
 
-    // Cleanup
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
 
-  // Show loading state only during initial auth check
-  if (isInitializing) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  // Don't render login form if already authenticated
-  if (isAuthenticated) {
-    return null;
   }
 
   return (
