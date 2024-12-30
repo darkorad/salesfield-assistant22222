@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Order } from "@/types";
 import { SalesTable } from "./SalesTable";
 import { SalesActions } from "./SalesActions";
+import { SyncDataButton } from "./SyncDataButton";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Contact {
@@ -75,8 +76,9 @@ const DailySalesSummary = () => {
 
   return (
     <Card className="mt-4 md:mt-6">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg md:text-xl">Današnje porudžbine</CardTitle>
+        <SyncDataButton onSyncComplete={loadTodaySales} />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
