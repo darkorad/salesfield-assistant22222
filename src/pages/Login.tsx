@@ -36,21 +36,28 @@ const Login = () => {
 
   if (isLoading) {
     return (
-      <div className="absolute inset-0 bg-gray-50 flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">Loading...</div>
+      <div className="absolute inset-0 bg-[#F1F0FB] flex items-center justify-center">
+        <div className="animate-pulse text-[#403E43]">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="absolute inset-0 bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6 space-y-6 bg-white shadow-sm">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">
+    <div 
+      className="absolute inset-0 flex items-center justify-center p-4"
+      style={{
+        background: "linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)"
+      }}
+    >
+      <Card className="w-full max-w-md p-8 space-y-6 bg-white/90 backdrop-blur-sm shadow-lg border-0">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-[#1A1F2C] mb-2">
             ŽIR-MD COMPANY
           </h1>
-          <h2 className="text-2xl font-bold tracking-tight">Prijava</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <h2 className="text-2xl font-bold tracking-tight text-[#403E43]">
+            Prijava
+          </h2>
+          <p className="mt-2 text-sm text-[#8E9196]">
             Prijavite se da biste pristupili aplikaciji
           </p>
         </div>
@@ -59,11 +66,30 @@ const Login = () => {
           providers={[]}
           appearance={{
             theme: ThemeSupa,
+            style: {
+              button: {
+                background: '#1A1F2C',
+                color: 'white',
+                borderRadius: '6px',
+                padding: '10px 15px',
+                height: '44px',
+              },
+              input: {
+                background: 'white',
+                borderRadius: '6px',
+                padding: '10px 15px',
+                height: '44px',
+              },
+              label: {
+                color: '#403E43',
+                marginBottom: '4px',
+              }
+            },
             className: {
               container: 'space-y-4',
-              button: 'w-full px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded',
-              input: 'w-full px-3 py-2 border rounded',
-              label: 'block text-sm font-medium text-gray-700'
+              button: 'w-full font-medium hover:bg-[#2A2F3C] transition-colors',
+              input: 'w-full border-[#E5DEFF] focus:border-[#9b87f5]',
+              label: 'block text-sm font-medium'
             }
           }}
           localization={{
