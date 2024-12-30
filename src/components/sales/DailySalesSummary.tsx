@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Order } from "@/types";
 import { SalesTable } from "./SalesTable";
 import { SalesActions } from "./SalesActions";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Contact {
   name: string;
@@ -31,19 +32,27 @@ const DailySalesSummary = () => {
         };
   });
 
-  const loadTodaySales = () => {
+  const loadTodaySales = async () => {
     try {
-      const sales = localStorage.getItem("sales");
-      if (sales) {
-        const allSales = JSON.parse(sales) as Order[];
-        const today = new Date().toISOString().split("T")[0];
-        
-        const filteredSales = allSales.filter(
-          (sale) => sale.date.split("T")[0] === today
-        );
-        
-        setTodaySales(filteredSales);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data: salesData, error } = await supabase
+        .from('sales')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .gte('date', today.toISOString())
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error("Error loading sales:", error);
+        return;
       }
+
+      setTodaySales(salesData || []);
     } catch (error) {
       console.error("Error loading sales:", error);
     }
@@ -51,7 +60,7 @@ const DailySalesSummary = () => {
 
   useEffect(() => {
     loadTodaySales();
-    const interval = setInterval(loadTodaySales, 2000);
+    const interval = setInterval(loadTodaySales, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -65,18 +74,22 @@ const DailySalesSummary = () => {
   const totalSales = unsentSales.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
-    <Card className="mt-4 md:mt-8">
+    <Card className="mt-4 md:mt-6">
       <CardHeader>
-        <CardTitle>Današnje porudžbine</CardTitle>
+        <CardTitle className="text-lg md:text-xl">Današnje porudžbine</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <SalesTable sales={todaySales} sentOrderIds={sentOrderIds} />
+          <div className="overflow-x-auto -mx-4 md:mx-0">
+            <div className="min-w-full inline-block align-middle">
+              <SalesTable sales={todaySales} sentOrderIds={sentOrderIds} />
+            </div>
+          </div>
           {todaySales.length > 0 && (
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
-                <span className="font-medium text-lg">Ukupno za danas:</span>
-                <span className="font-bold text-lg">{totalSales} RSD</span>
+                <span className="text-sm md:text-base font-medium">Ukupno za danas:</span>
+                <span className="font-bold text-base md:text-lg">{totalSales} RSD</span>
               </div>
             </div>
           )}
