@@ -7,8 +7,11 @@ import Sales from "@/pages/Sales";
 import Settings from "@/pages/Settings";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
-import { useAuthManager } from "@/hooks/useAuthManager";
+import { useEffect, useState } from "react";
+import { supabase } from "./integrations/supabase/client";
+import { toast } from "sonner";
 
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,7 +24,52 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { isAuthenticated, isLoading } = useAuthManager();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Auth error:", error);
+          setIsAuthenticated(false);
+          return;
+        }
+
+        if (!session) {
+          setIsAuthenticated(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Session check error:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, !!session);
+      
+      if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+        queryClient.clear();
+        localStorage.clear(); // Clear all local storage
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setIsAuthenticated(true);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   if (isLoading) {
     return (

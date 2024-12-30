@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderForm } from "./OrderForm";
 import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface SalesFormContainerProps {
   customers: Customer[];
@@ -15,11 +14,17 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
   const [customerSearch, setCustomerSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
-  console.log("SalesFormContainer - Selected customer:", selectedCustomer);
+  console.log("SalesFormContainer - Received customers:", customers);
 
   useEffect(() => {
-    console.log("SalesFormContainer - Order items:", orderItems);
-  }, [orderItems]);
+    console.log("SalesFormContainer - Selected customer:", selectedCustomer);
+  }, [selectedCustomer]);
+
+  const handleCustomerSelect = (customer: Customer) => {
+    console.log("SalesFormContainer - Handling customer selection:", customer);
+    setSelectedCustomer(customer);
+    setCustomerSearch(customer.name);
+  };
 
   const handleSubmitOrder = async (paymentType: 'cash' | 'invoice') => {
     try {
@@ -37,30 +42,24 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         return sum + (item.product.Cena * item.quantity * unitSize);
       }, 0);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Niste prijavljeni");
-        return;
-      }
-
       const newOrder = {
-        user_id: user.id,
-        customer_id: selectedCustomer.id,
+        id: crypto.randomUUID(),
+        customer: selectedCustomer,
         items: orderItems,
         total,
-        payment_type: paymentType,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        paymentType,
       };
 
-      const { error } = await supabase
-        .from('sales')
-        .insert(newOrder);
-
-      if (error) {
-        console.error("Error saving order:", error);
-        toast.error("Greška pri čuvanju porudžbine");
-        return;
-      }
+      // Get existing sales from localStorage
+      const existingSales = localStorage.getItem("sales");
+      const sales = existingSales ? JSON.parse(existingSales) : [];
+      
+      // Add new order
+      sales.push(newOrder);
+      
+      // Save back to localStorage
+      localStorage.setItem("sales", JSON.stringify(sales));
 
       // Reset form
       setSelectedCustomer(null);
@@ -87,7 +86,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
           customerSearch={customerSearch}
           orderItems={orderItems}
           onCustomerSearchChange={setCustomerSearch}
-          onCustomerSelect={setSelectedCustomer}
+          onCustomerSelect={handleCustomerSelect}
           onOrderItemsChange={setOrderItems}
           onSubmit={handleSubmitOrder}
         />
