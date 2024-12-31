@@ -38,20 +38,22 @@ const DailySalesSummary = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Set the start of today in the local timezone
+      // Get today's date at start of day in local timezone
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Convert to ISO string for Supabase query
-      const todayISOString = today.toISOString();
+      // Get tomorrow's date at start of day in local timezone
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-      console.log("Fetching sales from:", todayISOString);
+      console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
 
       const { data: salesData, error } = await supabase
         .from('sales')
         .select('*, customer:customers(*)')
         .eq('user_id', session.user.id)
-        .gte('date', todayISOString)
+        .gte('date', today.toISOString())
+        .lt('date', tomorrow.toISOString())
         .order('date', { ascending: false });
 
       if (error) {
