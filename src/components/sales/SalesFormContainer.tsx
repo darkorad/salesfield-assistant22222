@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderForm } from "./OrderForm";
 import { Customer, Product, OrderItem } from "@/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SalesFormContainerProps {
   customers: Customer[];
@@ -37,29 +38,34 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         return;
       }
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
       const total = orderItems.reduce((sum, item) => {
         const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
         return sum + (item.product.Cena * item.quantity * unitSize);
       }, 0);
 
-      const newOrder = {
-        id: crypto.randomUUID(),
-        customer: selectedCustomer,
-        items: orderItems,
-        total,
-        date: new Date().toISOString(),
-        paymentType,
-      };
+      const { data, error } = await supabase
+        .from('sales')
+        .insert([{
+          user_id: session.user.id,
+          customer_id: selectedCustomer.id,
+          items: orderItems,
+          total,
+          payment_type: paymentType,
+          date: new Date().toISOString()
+        }])
+        .select();
 
-      // Get existing sales from localStorage
-      const existingSales = localStorage.getItem("sales");
-      const sales = existingSales ? JSON.parse(existingSales) : [];
-      
-      // Add new order
-      sales.push(newOrder);
-      
-      // Save back to localStorage
-      localStorage.setItem("sales", JSON.stringify(sales));
+      if (error) {
+        console.error("Error submitting order:", error);
+        toast.error("Greška pri slanju porudžbine");
+        return;
+      }
 
       // Reset form
       setSelectedCustomer(null);
