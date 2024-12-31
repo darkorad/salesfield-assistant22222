@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Settings, ShoppingCart, LogOut } from "lucide-react";
+import { Menu, Settings, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -45,7 +45,11 @@ const Layout = () => {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-4">
               <Link to="/sales" className="flex items-center">
-                <ShoppingCart className="h-6 w-6 text-primary mr-2" />
+                <img 
+                  src="/lovable-uploads/46d09936-801a-49ed-b585-95bccf81c0c8.png" 
+                  alt="ŽIR-MD COMPANY Logo" 
+                  className="h-8 w-auto mr-2"
+                />
                 <span className="font-semibold text-gray-900 text-lg">
                   ZIR-MD COMPANY
                 </span>
