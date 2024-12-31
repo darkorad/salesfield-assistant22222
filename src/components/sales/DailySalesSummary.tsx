@@ -38,14 +38,20 @@ const DailySalesSummary = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Set the start of today in the local timezone
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      // Convert to ISO string for Supabase query
+      const todayISOString = today.toISOString();
+
+      console.log("Fetching sales from:", todayISOString);
+
       const { data: salesData, error } = await supabase
         .from('sales')
-        .select('*')
+        .select('*, customer:customers(*)')
         .eq('user_id', session.user.id)
-        .gte('date', today.toISOString())
+        .gte('date', todayISOString)
         .order('date', { ascending: false });
 
       if (error) {
@@ -53,6 +59,7 @@ const DailySalesSummary = () => {
         return;
       }
 
+      console.log("Fetched sales data:", salesData);
       setTodaySales(salesData || []);
     } catch (error) {
       console.error("Error loading sales:", error);
