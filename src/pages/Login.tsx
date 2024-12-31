@@ -30,27 +30,57 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md p-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">
-            ŽIR-MD COMPANY
-          </h1>
-          <h2 className="text-2xl font-bold tracking-tight">Prijava</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Prijavite se da biste pristupili aplikaciji
-          </p>
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+      style={{
+        background: "linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)"
+      }}
+    >
+      <Card className="w-full max-w-md p-8 space-y-8 shadow-xl bg-white/90 backdrop-blur-sm">
+        <div className="text-center space-y-6">
+          <div className="flex flex-col items-center">
+            <img 
+              src="/lovable-uploads/46d09936-801a-49ed-b585-95bccf81c0c8.png" 
+              alt="ŽIR-MD COMPANY Logo" 
+              className="h-16 w-auto mb-4"
+            />
+            <h1 className="text-3xl font-bold tracking-tight text-primary">
+              ŽIR-MD COMPANY
+            </h1>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+              Prijava
+            </h2>
+            <p className="text-sm text-gray-600">
+              Prijavite se da biste pristupili aplikaciji
+            </p>
+          </div>
         </div>
         <Auth
           supabaseClient={supabase}
           providers={[]}
           appearance={{
             theme: ThemeSupa,
+            style: {
+              button: {
+                background: '#1A1F2C',
+                color: 'white',
+                borderRadius: '8px',
+              },
+              input: {
+                borderRadius: '8px',
+                border: '1px solid #E2E8F0',
+              },
+              anchor: {
+                color: '#1A1F2C',
+              },
+            },
             className: {
               container: 'space-y-4',
-              button: 'w-full px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded',
-              input: 'w-full px-3 py-2 border rounded',
-              label: 'block text-sm font-medium text-gray-700'
+              button: 'w-full px-4 py-2 hover:bg-primary/90 transition-colors duration-200',
+              input: 'w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200',
+              label: 'block text-sm font-medium text-gray-700 mb-1'
             }
           }}
           localization={{
