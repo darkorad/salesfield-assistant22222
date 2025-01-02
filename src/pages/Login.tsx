@@ -38,11 +38,11 @@ const Login = () => {
     >
       <Card className="w-full max-w-md p-8 space-y-8 shadow-xl bg-white/90 backdrop-blur-sm">
         <div className="text-center space-y-6">
-          <div className="flex flex-col items-center animate-fade-in">
+          <div className="flex flex-col items-center animate-[fade-in_0.3s_ease-out]">
             <img 
               src="/lovable-uploads/46d09936-801a-49ed-b585-95bccf81c0c8.png" 
               alt="ŽIR-MD COMPANY Logo" 
-              className="h-24 w-auto mb-4 animate-scale-in"
+              className="h-32 w-auto mb-4 animate-[scale-in_0.2s_ease-out]"
             />
             <h1 className="text-3xl font-bold tracking-tight text-primary">
               ŽIR-MD COMPANY
