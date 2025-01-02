@@ -42,15 +42,15 @@ const Layout = () => {
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 w-full">
         <div className="max-w-full px-4">
-          <div className="flex justify-between h-16 items-center">
+          <div className="flex justify-between h-20 items-center">
             <div className="flex items-center space-x-4">
               <Link to="/sales" className="flex items-center">
                 <img 
                   src="/lovable-uploads/46d09936-801a-49ed-b585-95bccf81c0c8.png" 
                   alt="ŽIR-MD COMPANY Logo" 
-                  className="h-8 w-auto mr-2"
+                  className="h-16 w-auto mr-2 animate-[scale-in_0.2s_ease-out]"
                 />
-                <span className="font-semibold text-gray-900 text-lg">
+                <span className="font-semibold text-gray-900 text-xl">
                   ZIR-MD COMPANY
                 </span>
               </Link>
