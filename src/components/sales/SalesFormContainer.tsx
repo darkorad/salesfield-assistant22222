@@ -41,7 +41,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         customer_id: selectedCustomer!.id,
         items: items,
         total: calculateTotal(items),
-        payment_type: paymentType,
+        payment_type: items[0].paymentType, // Use the payment type from the items
         date: new Date().toISOString()
       }])
       .select();
@@ -71,7 +71,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
 
       // Submit orders based on split
       if (cashItems.length > 0 && invoiceItems.length > 0) {
-        // Submit both orders
+        // Submit both orders with their respective payment types
         await submitSplitOrders(cashItems, 'cash');
         await submitSplitOrders(invoiceItems, 'invoice');
         toast.success("Porudžbine su uspešno poslate!");
