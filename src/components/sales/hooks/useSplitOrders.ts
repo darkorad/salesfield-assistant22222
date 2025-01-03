@@ -19,19 +19,30 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
       throw new Error("Authentication or customer selection required");
     }
 
+    const orderItems = note 
+      ? items.map(item => ({ ...item })).concat([{ 
+          product: { 
+            Naziv: 'Napomena',
+            Proizvođač: '',
+            Cena: 0,
+            "Jedinica mere": '',
+            id: '0',
+            user_id: session.user.id
+          },
+          quantity: 0,
+          paymentType,
+          note
+        }])
+      : items;
+
     const orderData = {
       user_id: session.user.id,
       customer_id: selectedCustomer.id,
-      items: items,
+      items: orderItems,
       total: calculateTotal(items),
       payment_type: paymentType,
       date: new Date().toISOString()
     };
-
-    // Add note to order data if provided
-    if (note) {
-      orderData.items = [...items, { note }];
-    }
 
     const { data, error } = await supabase
       .from('sales')

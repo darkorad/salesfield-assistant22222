@@ -12,4 +12,5 @@ export interface OrderItem {
   product: Product;
   quantity: number;
   paymentType: 'cash' | 'invoice';
+  note?: string;
 }
