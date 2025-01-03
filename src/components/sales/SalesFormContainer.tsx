@@ -16,6 +16,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   const handleCustomerSelect = (customer: Customer) => {
+    console.log("Selected customer:", customer); // Debug log
     setSelectedCustomer(customer);
     setCustomerSearch(customer.name);
   };

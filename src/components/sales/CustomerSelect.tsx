@@ -26,8 +26,8 @@ export const CustomerSelect = ({
   );
 
   const handleCustomerSelect = (customer: Customer) => {
+    console.log("Selecting customer in CustomerSelect:", customer); // Debug log
     onCustomerSelect(customer);
-    onCustomerSearchChange(customer.name);
   };
 
   const selectedCustomer = customers.find(c => c.name === customerSearch);
