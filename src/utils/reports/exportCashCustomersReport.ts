@@ -39,76 +39,116 @@ export const exportCashCustomersReport = async () => {
       return;
     }
 
-    // Group sales by customer
-    const customerSales = salesData.reduce((acc, sale) => {
-      if (!acc[sale.customer.id]) {
-        acc[sale.customer.id] = {
-          customer: sale.customer,
-          sales: []
-        };
-      }
-      acc[sale.customer.id].sales.push(sale);
-      return acc;
-    }, {});
-
     // Create workbook
     const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([]);  // Start with empty worksheet
 
-    // Process each customer
-    Object.values(customerSales).forEach((customerData: any) => {
-      const customer = customerData.customer;
-      const sales = customerData.sales;
+    // Set column widths for both sides
+    ws['!cols'] = [
+      { wch: 35 }, // Article name (left)
+      { wch: 10 }, // Quantity (left)
+      { wch: 12 }, // Unit (left)
+      { wch: 12 }, // Price (left)
+      { wch: 12 }, // Total (left)
+      { wch: 2 },  // Spacing
+      { wch: 35 }, // Article name (right)
+      { wch: 10 }, // Quantity (right)
+      { wch: 12 }, // Unit (right)
+      { wch: 12 }, // Price (right)
+      { wch: 12 }, // Total (right)
+    ];
 
-      // Prepare customer data
-      const customerInfo = [
-        [`Kupac: ${customer.name}`],
-        [`Adresa: ${customer.address}`],
-        [`Telefon: ${customer.phone || ''}`],
-        [],  // Empty row for spacing
-        ['Artikal', 'Količina', 'Jedinica mere', 'Cena', 'Ukupno']
+    let rowIndex = 0;
+
+    // Process each sale
+    salesData.forEach((sale) => {
+      const customer = sale.customer;
+      
+      // Headers for both sides
+      const headers = [
+        [`Kupac: ${customer.name}`, '', '', '', '', '', `Kupac: ${customer.name}`],
+        [`Adresa: ${customer.address}`, '', '', '', '', '', `Adresa: ${customer.address}`],
+        [`Telefon: ${customer.phone || ''}`, '', '', '', '', '', `Telefon: ${customer.phone || ''}`],
+        [''], // Empty row
+        ['Artikal', 'Količina', 'Jed. mere', 'Cena', 'Ukupno', '', 'Artikal', 'Količina', 'Jed. mere', 'Cena', 'Ukupno']
       ];
 
-      // Add all items from all sales
-      const items = sales.flatMap(sale => 
-        sale.items.map(item => [
-          item.product.Naziv,
-          item.quantity,
-          item.product["Jedinica mere"],
-          item.product.Cena,
-          item.quantity * item.product.Cena
-        ])
-      );
+      // Add headers to worksheet
+      headers.forEach((row, index) => {
+        XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
+      });
 
-      // Add empty rows to fill the page (approximately 20 rows per page)
+      // Style the headers
+      for (let i = rowIndex; i < rowIndex + 5; i++) {
+        for (let j = 0; j < 11; j++) {
+          const cell = XLSX.utils.encode_cell({ r: i, c: j });
+          if (!ws[cell]) continue;
+          
+          ws[cell].s = {
+            font: { bold: true, sz: 12 },
+            alignment: { vertical: 'center', horizontal: 'left' },
+            border: {
+              top: { style: 'thin' },
+              bottom: { style: 'thin' },
+              left: { style: 'thin' },
+              right: { style: 'thin' }
+            }
+          };
+        }
+      }
+
+      rowIndex += 5;
+
+      // Process items
+      const items = sale.items.map(item => [
+        item.product.Naziv,
+        item.quantity,
+        item.product["Jedinica mere"],
+        item.product.Cena,
+        item.quantity * item.product.Cena
+      ]);
+
+      // Add empty rows to fill the page (approximately 15 rows per page)
       while (items.length < 15) {
         items.push(['', '', '', '', '']);
       }
 
-      // Combine customer info with items
-      const sheetData = [...customerInfo, ...items];
+      // Add items to both sides of the worksheet
+      items.forEach((item, index) => {
+        const row = [...item, '', ...item];
+        XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
 
-      // Create worksheet
-      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        // Style the cells
+        for (let j = 0; j < 11; j++) {
+          const cell = XLSX.utils.encode_cell({ r: rowIndex + index, c: j });
+          if (!ws[cell]) continue;
 
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 40 }, // Article name
-        { wch: 10 }, // Quantity
-        { wch: 15 }, // Unit
-        { wch: 15 }, // Price
-        { wch: 15 }, // Total
-      ];
+          ws[cell].s = {
+            font: { sz: 11 },
+            alignment: { vertical: 'center', horizontal: 'left' },
+            border: {
+              top: { style: 'thin' },
+              bottom: { style: 'thin' },
+              left: { style: 'thin' },
+              right: { style: 'thin' }
+            }
+          };
+        }
+      });
 
-      // Set print settings for landscape A4
-      ws['!print'] = {
-        orientation: 'landscape',
-        paper: 9, // A4
-        scale: 1
-      };
-
-      // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, `Kupac - ${customer.name}`);
+      rowIndex += 20; // Add extra spacing between customers
     });
+
+    // Set print settings for landscape A4
+    ws['!print'] = {
+      orientation: 'landscape',
+      paper: 9, // A4
+      scale: 1,
+      fitToPage: true
+    };
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Kupci za gotovinu');
 
     // Save workbook
     XLSX.writeFile(wb, `kupci-gotovina-${today.toISOString().split('T')[0]}.xlsx`);
