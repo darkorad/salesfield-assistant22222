@@ -29,9 +29,9 @@ export const OrderItemCard = ({
 
   return (
     <div className="flex flex-col md:flex-row gap-2 p-3 border rounded-md bg-gray-50">
-      <div className="flex-1">
-        <p className="font-medium">{item.product.Naziv}</p>
-        <p className="text-sm text-gray-500">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{item.product.Naziv}</p>
+        <p className="text-xs text-gray-500 truncate">
           {item.product.Proizvođač} - <span className="text-xs">{item.product.Cena} RSD/{item.product["Jedinica mere"]}</span>
         </p>
       </div>
@@ -44,7 +44,7 @@ export const OrderItemCard = ({
           onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
           className="w-16 text-sm"
         />
-        <span className="whitespace-nowrap text-sm text-gray-600">
+        <span className="whitespace-nowrap text-xs text-gray-600">
           {item.product["Jedinica mere"]}
         </span>
         <Select
