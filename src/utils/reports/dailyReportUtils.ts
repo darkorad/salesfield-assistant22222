@@ -1,5 +1,6 @@
 import { Order } from "@/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface DailySaleRecord {
   'Kupac': string;
@@ -8,7 +9,7 @@ export interface DailySaleRecord {
   'Ukupno (RSD)': number;
 }
 
-export const generateDailyReport = () => {
+export const generateDailyReport = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
