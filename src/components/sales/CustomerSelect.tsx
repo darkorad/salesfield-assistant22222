@@ -19,7 +19,6 @@ export const CustomerSelect = ({
   onCustomerSearchChange,
   onCustomerSelect,
 }: CustomerSelectProps) => {
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
   const filteredCustomers = customers.filter((customer) =>
@@ -27,10 +26,11 @@ export const CustomerSelect = ({
   );
 
   const handleCustomerSelect = (customer: Customer) => {
-    setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
   };
+
+  const selectedCustomer = customers.find(c => c.name === customerSearch);
 
   return (
     <div className="space-y-2 w-full">
@@ -41,7 +41,7 @@ export const CustomerSelect = ({
             placeholder="Pretraži kupca..."
             value={customerSearch}
             onChange={(e) => onCustomerSearchChange(e.target.value)}
-            className={`w-full ${selectedCustomer ? 'bg-selected hover:bg-selected-hover' : ''}`}
+            className={`w-full ${selectedCustomer ? 'bg-blue-50 hover:bg-blue-100' : ''}`}
           />
           {customerSearch && 
            !customers.find(c => c.name === customerSearch) && 

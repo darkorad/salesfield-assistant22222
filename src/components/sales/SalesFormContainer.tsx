@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderForm } from "./OrderForm";
 import { Customer, Product, OrderItem } from "@/types";
@@ -54,18 +54,14 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         }])
         .select();
 
-      if (error) {
-        console.error("Error submitting order:", error);
-        toast.error("Greška pri slanju porudžbine");
-        return;
-      }
+      if (error) throw error;
 
-      // Reset form
+      toast.success("Porudžbina je uspešno poslata!");
+      
+      // Reset form after successful submission
       setSelectedCustomer(null);
       setCustomerSearch("");
       setOrderItems([]);
-      
-      toast.success("Porudžbina je uspešno poslata!");
     } catch (error) {
       console.error("Error submitting order:", error);
       toast.error("Greška pri slanju porudžbine");
