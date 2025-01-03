@@ -32,16 +32,17 @@ export const OrderItemCard = ({
       <div className="flex-1">
         <p className="font-medium">{item.product.Naziv}</p>
         <p className="text-sm text-gray-500">
-          {item.product.Proizvođač} - {item.product.Cena} RSD/{item.product["Jedinica mere"]}
+          {item.product.Proizvođač} - <span className="text-xs">{item.product.Cena} RSD/{item.product["Jedinica mere"]}</span>
         </p>
       </div>
       <div className="flex items-center gap-2">
         <Input
           type="number"
           min="1"
+          max="100"
           value={item.quantity}
           onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
-          className="w-20"
+          className="w-16 text-sm"
         />
         <span className="whitespace-nowrap text-sm text-gray-600">
           {item.product["Jedinica mere"]}
@@ -58,7 +59,7 @@ export const OrderItemCard = ({
             <SelectItem value="cash">Gotovina</SelectItem>
           </SelectContent>
         </Select>
-        <span className="w-24 text-right">
+        <span className="w-24 text-right text-sm">
           {calculateItemTotal(item.quantity)} RSD
         </span>
         <Button
