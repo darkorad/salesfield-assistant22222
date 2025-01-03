@@ -21,38 +21,38 @@ export const SalesReportButtons = ({ onPreview }: SalesReportButtonsProps) => {
     <>
       <div className="space-y-2">
         <Button
-          className="w-full py-6 text-lg font-medium"
+          className="w-full py-4 text-base"
           onClick={() => exportMonthlySalesReport()}
         >
-          <FileSpreadsheet className="mr-2 h-5 w-5" />
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
           Izvezi mesečnu prodaju
         </Button>
       </div>
       <div className="space-y-2">
         <Button
-          className="w-full py-6 text-lg font-medium"
+          className="w-full py-4 text-base"
           onClick={() => exportDailySalesReport()}
         >
-          <FileSpreadsheet className="mr-2 h-5 w-5" />
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
           Izvezi dnevnu prodaju
         </Button>
       </div>
       <div className="space-y-2">
         <Button
-          className="w-full py-6 text-lg font-medium"
+          className="w-full py-4 text-base"
           onClick={() => exportCashCustomersReport()}
         >
-          <FileSpreadsheet className="mr-2 h-5 w-5" />
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
           Izvezi kupce za gotovinu
         </Button>
       </div>
       <div className="space-y-2">
         <Button
           variant="outline"
-          className="w-full py-4"
+          className="w-full py-3 text-base"
           onClick={handlePreviewDaily}
         >
-          <Eye className="mr-2 h-5 w-5" />
+          <Eye className="mr-2 h-4 w-4" />
           Prikaži dnevnu prodaju
         </Button>
       </div>

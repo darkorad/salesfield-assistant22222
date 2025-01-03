@@ -70,19 +70,19 @@ export const ExportButtons = () => {
     <>
       <div className="space-y-2">
         <Button
-          className="w-full py-6 text-lg font-medium"
+          className="w-full py-4 text-base"
           onClick={handleExportBuyers}
         >
-          <FileSpreadsheet className="mr-2 h-5 w-5" />
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
           Izvezi listu kupaca
         </Button>
       </div>
       <div className="space-y-2">
         <Button
-          className="w-full py-6 text-lg font-medium"
+          className="w-full py-4 text-base"
           onClick={handleExportPrices}
         >
-          <FileSpreadsheet className="mr-2 h-5 w-5" />
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
           Izvezi cenovnik
         </Button>
       </div>
