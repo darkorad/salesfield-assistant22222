@@ -47,25 +47,6 @@ export const OrderForm = ({
 
       {selectedCustomer && (
         <div className="space-y-4">
-          <div className="flex flex-col md:flex-row justify-between gap-4 items-start">
-            <h3 className="text-lg font-semibold">Proizvodi</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Način Plaćanja:</span>
-              <Select 
-                value={selectedPaymentType} 
-                onValueChange={(value) => setSelectedPaymentType(value as 'cash' | 'invoice')}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Način plaćanja" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="invoice">Račun</SelectItem>
-                  <SelectItem value="cash">Gotovina</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <ProductSelect
             products={products}
             orderItems={orderItems}
