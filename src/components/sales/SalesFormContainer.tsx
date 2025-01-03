@@ -1,8 +1,9 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderForm } from "./OrderForm";
-import { Customer, Product, OrderItem } from "@/types";
+import { Customer, Product } from "@/types";
 import { useSplitOrders } from "./hooks/useSplitOrders";
+import { useOrderState } from "@/hooks/useOrderState";
+import { OrderSummary } from "./OrderSummary";
 
 interface SalesFormContainerProps {
   customers: Customer[];
@@ -10,23 +11,22 @@ interface SalesFormContainerProps {
 }
 
 export const SalesFormContainer = ({ customers, products }: SalesFormContainerProps) => {
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const {
+    selectedCustomer,
+    customerSearch,
+    orderItems,
+    setCustomerSearch,
+    setOrderItems,
+    handleCustomerSelect,
+    resetOrder
+  } = useOrderState();
 
   const { handleSubmitOrder, isSubmitting } = useSplitOrders(selectedCustomer);
-
-  const handleCustomerSelect = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setCustomerSearch(customer.name);
-  };
 
   const handleSubmit = async () => {
     const success = await handleSubmitOrder(orderItems);
     if (success) {
-      setSelectedCustomer(null);
-      setCustomerSearch("");
-      setOrderItems([]);
+      resetOrder();
     }
   };
 
@@ -48,6 +48,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
         />
+        {orderItems.length > 0 && <OrderSummary orderItems={orderItems} />}
       </CardContent>
     </Card>
   );
