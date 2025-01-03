@@ -1,15 +1,7 @@
-import { useState } from "react";
 import { Customer, Product, OrderItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CustomerSelect } from "./CustomerSelect";
 import { ProductSelect } from "./ProductSelect";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface OrderFormProps {
   customers: Customer[];
@@ -17,10 +9,11 @@ interface OrderFormProps {
   selectedCustomer: Customer | null;
   customerSearch: string;
   orderItems: OrderItem[];
+  isSubmitting: boolean;
   onCustomerSearchChange: (value: string) => void;
   onCustomerSelect: (customer: Customer) => void;
   onOrderItemsChange: (items: OrderItem[]) => void;
-  onSubmit: (paymentType: 'cash' | 'invoice') => void;
+  onSubmit: () => void;
 }
 
 export const OrderForm = ({
@@ -29,13 +22,12 @@ export const OrderForm = ({
   selectedCustomer,
   customerSearch,
   orderItems,
+  isSubmitting,
   onCustomerSearchChange,
   onCustomerSelect,
   onOrderItemsChange,
   onSubmit,
 }: OrderFormProps) => {
-  const [selectedPaymentType, setSelectedPaymentType] = useState<'cash' | 'invoice'>('invoice');
-
   return (
     <div className="space-y-12">
       <CustomerSelect
@@ -58,11 +50,11 @@ export const OrderForm = ({
 
       <div className="flex justify-end">
         <Button 
-          onClick={() => onSubmit(selectedPaymentType)}
+          onClick={onSubmit}
           className="w-full md:w-auto"
-          disabled={!selectedCustomer || orderItems.length === 0}
+          disabled={!selectedCustomer || orderItems.length === 0 || isSubmitting}
         >
-          Pošalji porudžbinu
+          {isSubmitting ? "Slanje..." : "Pošalji porudžbinu"}
         </Button>
       </div>
     </div>
