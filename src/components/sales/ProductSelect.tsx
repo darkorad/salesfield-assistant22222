@@ -1,9 +1,10 @@
 import { Product, OrderItem, Customer } from "@/types";
-import { ProductSearchInput } from "./ProductSearchInput";
-import { ProductSearchResults } from "./ProductSearchResults";
+import { Input } from "@/components/ui/input";
 import { CustomerInfoCard } from "./CustomerInfoCard";
 import { OrderItemsList } from "./OrderItemsList";
-import { useProductSearch } from "./hooks/useProductSearch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProductSelectProps {
   products: Product[];
@@ -18,9 +19,7 @@ export const ProductSelect = ({
   selectedCustomer,
   onOrderItemsChange,
 }: ProductSelectProps) => {
-  const { productSearch, setProductSearch, filteredProducts } = useProductSearch(products);
-
-  const handleAddProduct = (product: Product) => {
+  const handleAddProduct = (product: Product, quantity: number, paymentType: 'cash' | 'invoice') => {
     const existingItemIndex = orderItems.findIndex(
       (item) => item.product.Naziv === product.Naziv
     );
@@ -29,19 +28,18 @@ export const ProductSelect = ({
       const newItems = [...orderItems];
       newItems[existingItemIndex] = {
         ...newItems[existingItemIndex],
-        quantity: newItems[existingItemIndex].quantity + 1,
+        quantity: quantity,
+        paymentType: paymentType
       };
       onOrderItemsChange(newItems);
     } else {
-      // Create a new order item with default payment type as 'invoice'
       const newItem: OrderItem = {
         product,
-        quantity: 1,
-        paymentType: 'invoice' as const
+        quantity,
+        paymentType
       };
       onOrderItemsChange([...orderItems, newItem]);
     }
-    setProductSearch("");
   };
 
   const handleQuantityChange = (index: number, newQuantity: number) => {
@@ -69,30 +67,79 @@ export const ProductSelect = ({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <CustomerInfoCard customer={selectedCustomer} />
+      <CustomerInfoCard customer={selectedCustomer} />
 
-        <label className="text-sm font-medium">Izbor artikala</label>
-        <div className="relative">
-          <ProductSearchInput 
-            value={productSearch}
-            onChange={setProductSearch}
-          />
-          {productSearch && (
-            <ProductSearchResults
-              products={filteredProducts}
-              onSelect={handleAddProduct}
-            />
-          )}
+      <ScrollArea className="h-[600px] pr-4">
+        <div className="space-y-4">
+          {products.map((product) => {
+            const existingItem = orderItems.find(item => item.product.Naziv === product.Naziv);
+            return (
+              <div
+                key={product.id}
+                className="p-4 border rounded-lg bg-white shadow-sm"
+              >
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <p className="font-medium">{product.Naziv}</p>
+                    <p className="text-sm text-gray-500">
+                      {product.Proizvođač} - {product.Cena} RSD/{product["Jedinica mere"]}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={existingItem?.quantity || 1}
+                      onChange={(e) => {
+                        const quantity = parseInt(e.target.value) || 1;
+                        handleAddProduct(
+                          product,
+                          quantity,
+                          existingItem?.paymentType || 'invoice'
+                        );
+                      }}
+                      className="w-24"
+                    />
+                    <span className="text-sm text-gray-600">
+                      {product["Jedinica mere"]}
+                    </span>
+                    <Select
+                      value={existingItem?.paymentType || 'invoice'}
+                      onValueChange={(value: 'cash' | 'invoice') => {
+                        handleAddProduct(
+                          product,
+                          existingItem?.quantity || 1,
+                          value
+                        );
+                      }}
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Način plaćanja" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="invoice">Račun</SelectItem>
+                        <SelectItem value="cash">Gotovina</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </ScrollArea>
 
-        <OrderItemsList
-          items={orderItems}
-          onQuantityChange={handleQuantityChange}
-          onPaymentTypeChange={handlePaymentTypeChange}
-          onRemoveItem={handleRemoveItem}
-        />
-      </div>
+      {orderItems.length > 0 && (
+        <div className="mt-4">
+          <h3 className="font-medium mb-2">Izabrani artikli:</h3>
+          <OrderItemsList
+            items={orderItems}
+            onQuantityChange={handleQuantityChange}
+            onPaymentTypeChange={handlePaymentTypeChange}
+            onRemoveItem={handleRemoveItem}
+          />
+        </div>
+      )}
     </div>
   );
 };

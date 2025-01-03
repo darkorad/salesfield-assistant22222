@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ManufacturerSidebar } from "@/components/sales/ManufacturerSidebar";
 import { CustomerSelect } from "@/components/sales/CustomerSelect";
 import { OrderForm } from "@/components/sales/OrderForm";
 import { useSalesData } from "@/hooks/useSalesData";
@@ -39,8 +38,7 @@ const SalesManufacturer = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <ManufacturerSidebar products={products} />
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="flex-1 p-2 md:p-6 max-w-full">
         <Card className="w-full max-w-5xl mx-auto">
           <CardHeader>
