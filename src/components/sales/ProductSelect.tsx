@@ -46,22 +46,22 @@ export const ProductSelect = ({
       <CustomerInfoCard customer={selectedCustomer} />
 
       <ScrollArea className="h-[600px] pr-4">
-        <div className="space-y-0.5">
+        <div className="space-y-2">
           {products.map((product, index) => {
             const existingItem = orderItems.find(item => item.product.Naziv === product.Naziv);
             return (
               <div
                 key={product.id}
-                className={`p-4 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}
+                className={`p-3 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}
               >
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="flex-1 text-left">
                     <p className="font-medium">{product.Naziv}</p>
                     <p className="text-sm text-gray-500">
                       {product.Proizvođač} - {product.Cena} RSD/{product["Jedinica mere"]}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Input
                       type="number"
                       min="1"
