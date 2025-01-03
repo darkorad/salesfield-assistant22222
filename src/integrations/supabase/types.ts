@@ -393,6 +393,7 @@ export type Database = {
           date: string | null
           id: string
           items: Json
+          manufacturer: string | null
           payment_type: string
           total: number
           user_id: string | null
@@ -403,6 +404,7 @@ export type Database = {
           date?: string | null
           id?: string
           items: Json
+          manufacturer?: string | null
           payment_type: string
           total: number
           user_id?: string | null
@@ -413,6 +415,7 @@ export type Database = {
           date?: string | null
           id?: string
           items?: Json
+          manufacturer?: string | null
           payment_type?: string
           total?: number
           user_id?: string | null
