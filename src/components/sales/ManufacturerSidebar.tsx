@@ -12,9 +12,9 @@ interface ManufacturerSidebarProps {
 }
 
 export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerSidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(null);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [paymentType, setPaymentType] = useState<'invoice' | 'cash'>('invoice');
 
   // Get unique manufacturers
   const manufacturers = Array.from(new Set(products.map(p => p.Proizvođač))).sort();
@@ -32,115 +32,80 @@ export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerS
     }
   };
 
-  // Handle touch start
-  const handleTouchStart = (e: TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
-
-  // Handle touch end
-  const handleTouchEnd = (e: TouchEvent) => {
-    if (touchStartX === null) return;
-
-    const touchEndX = e.changedTouches[0].clientX;
-    const deltaX = touchEndX - touchStartX;
-    const swipeThreshold = 50;
-
-    if (touchStartX < 20 && deltaX > swipeThreshold) {
-      setIsCollapsed(false);
-    } else if (deltaX < -swipeThreshold) {
-      setIsCollapsed(true);
-    }
-
-    setTouchStartX(null);
-  };
-
-  useEffect(() => {
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [touchStartX]);
-
   return (
-    <div 
-      className={`fixed top-0 left-0 h-full bg-secondary border-r shadow-lg transition-transform duration-300 transform ${
-        isCollapsed ? '-translate-x-full' : 'translate-x-0'
-      } z-30`}
-      style={{ width: '280px' }}
-    >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -right-4 top-4 z-10"
-        onClick={() => setIsCollapsed(true)}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
+    <div className="mt-4 border rounded-lg p-4 bg-white shadow-sm">
+      <h3 className="font-semibold mb-4">Izbor artikala po proizvođaču</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
+          <h4 className="font-medium mb-2">Proizvođači</h4>
+          <ScrollArea className="h-[300px]">
+            <div className="space-y-1">
+              {manufacturers.map((manufacturer) => (
+                <Button
+                  key={manufacturer}
+                  variant={selectedManufacturer === manufacturer ? "default" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => handleManufacturerClick(manufacturer)}
+                >
+                  {manufacturer}
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
 
-      <ScrollArea className="h-screen p-4">
-        <div className="space-y-4">
-          <h2 className="font-semibold text-lg mb-4">Proizvođači</h2>
-          <div className="space-y-1">
-            {manufacturers.map((manufacturer) => (
-              <Button
-                key={manufacturer}
-                variant={selectedManufacturer === manufacturer ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => handleManufacturerClick(manufacturer)}
-              >
-                {manufacturer}
-              </Button>
-            ))}
-          </div>
-
-          {selectedManufacturer && (
-            <div className="mt-8">
-              <h3 className="font-semibold mb-2">Proizvodi:</h3>
+        {selectedManufacturer && (
+          <div className="col-span-2">
+            <h4 className="font-medium mb-2">Proizvodi:</h4>
+            <ScrollArea className="h-[300px]">
               <div className="space-y-2">
                 {manufacturerProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="p-2 text-sm bg-background rounded-md flex flex-col gap-2"
+                    className="p-3 border rounded-md bg-gray-50"
                   >
-                    <div>
-                      <p className="font-medium">{product.Naziv}</p>
-                      <p className="text-muted-foreground">
-                        {product.Cena} RSD/{product["Jedinica mere"]}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        min="1"
-                        defaultValue="1"
-                        className="w-20"
-                      />
-                      <Select defaultValue="invoice">
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue placeholder="Način plaćanja" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="invoice">Račun</SelectItem>
-                          <SelectItem value="cash">Gotovina</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        size="sm"
-                        onClick={() => handleProductSelect(product)}
-                      >
-                        Dodaj
-                      </Button>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-medium">{product.Naziv}</p>
+                        <p className="text-sm text-gray-600">
+                          {product.Cena} RSD/{product["Jedinica mere"]}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          value={quantity}
+                          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                          className="w-20"
+                        />
+                        <Select
+                          value={paymentType}
+                          onValueChange={(value: 'invoice' | 'cash') => setPaymentType(value)}
+                        >
+                          <SelectTrigger className="w-[100px]">
+                            <SelectValue placeholder="Način plaćanja" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="invoice">Račun</SelectItem>
+                            <SelectItem value="cash">Gotovina</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          onClick={() => handleProductSelect(product)}
+                        >
+                          Dodaj
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+            </ScrollArea>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
