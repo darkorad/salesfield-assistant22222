@@ -38,56 +38,77 @@ export const exportDailySalesReport = async () => {
       return;
     }
 
-    // Prepare data for the first sheet (customer orders)
-    const customerOrdersData = salesData.map((sale: Order) => ({
-      'Kupac': sale.customer.name,
-      'Artikli': sale.items.map(item => 
-        `${item.product.Naziv} (${item.quantity} ${item.product["Jedinica mere"]})`
-      ).join(', '),
-      'Način plaćanja': sale.paymentType === 'cash' ? 'Gotovina' : 'Račun',
-      'Ukupno (RSD)': sale.total
-    }));
+    // Group sales by payment type
+    const salesByType = salesData.reduce((acc: { invoice: Order[], cash: Order[] }, sale: Order) => {
+      if (sale.paymentType === 'cash') {
+        acc.cash.push(sale);
+      } else {
+        acc.invoice.push(sale);
+      }
+      return acc;
+    }, { invoice: [], cash: [] });
 
-    // Prepare data for the second sheet (product quantities)
-    const productQuantities: { [key: string]: number } = {};
-    salesData.forEach((sale: Order) => {
-      sale.items.forEach(item => {
-        const productName = item.product.Naziv;
-        productQuantities[productName] = (productQuantities[productName] || 0) + item.quantity;
-      });
-    });
+    // Prepare worksheet data
+    const wsData: any[] = [];
 
-    // Convert to array and sort by quantity in descending order
-    const productQuantitiesData = Object.entries(productQuantities)
-      .map(([product, quantity]) => ({
-        'Artikal': product,
-        'Količina': quantity
-      }))
-      .sort((a, b) => b.Količina - a.Količina);
+    // Helper function to add sales data
+    const addSalesData = (sales: Order[], type: string) => {
+      if (sales.length > 0) {
+        wsData.push([`${type.toUpperCase()}`]);
+        wsData.push([]);
 
-    // Create workbook with two sheets
+        sales.forEach((sale) => {
+          wsData.push([`Kupac: ${sale.customer.name}`]);
+          wsData.push(['Artikal', 'Proizvođač', 'Količina', 'Cena', 'Ukupno']);
+          
+          sale.items.forEach((item) => {
+            wsData.push([
+              item.product.Naziv,
+              item.product.Proizvođač,
+              `${item.quantity} ${item.product["Jedinica mere"]}`,
+              `${item.product.Cena} RSD`,
+              `${item.product.Cena * item.quantity} RSD`
+            ]);
+          });
+          
+          wsData.push(['', '', '', 'Ukupno:', `${sale.total} RSD`]);
+          wsData.push([]);
+        });
+
+        // Add total for this payment type
+        const typeTotal = sales.reduce((sum, sale) => sum + sale.total, 0);
+        wsData.push(['', '', '', `Ukupno ${type}:`, `${typeTotal} RSD`]);
+        wsData.push([]);
+        wsData.push([]);
+      }
+    };
+
+    // Add invoice sales first
+    addSalesData(salesByType.invoice, 'Račun');
+    
+    // Then add cash sales
+    addSalesData(salesByType.cash, 'Gotovina');
+
+    // Add grand total
+    const grandTotal = salesData.reduce((sum, sale) => sum + sale.total, 0);
+    wsData.push([]);
+    wsData.push(['', '', '', 'UKUPNO:', `${grandTotal} RSD`]);
+
+    // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Add first sheet - Customer Orders
-    const ws1 = XLSX.utils.json_to_sheet(customerOrdersData);
-    XLSX.utils.book_append_sheet(wb, ws1, "Porudžbine");
-
-    // Add second sheet - Product Quantities
-    const ws2 = XLSX.utils.json_to_sheet(productQuantitiesData);
-    XLSX.utils.book_append_sheet(wb, ws2, "Količine artikala");
-
-    // Set column widths for both sheets
-    ws1['!cols'] = [
-      { wch: 30 }, // Kupac
-      { wch: 50 }, // Artikli
-      { wch: 15 }, // Način plaćanja
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 30 }, // Artikal
+      { wch: 20 }, // Proizvođač
+      { wch: 15 }, // Količina
+      { wch: 15 }, // Cena
       { wch: 15 }, // Ukupno
     ];
 
-    ws2['!cols'] = [
-      { wch: 40 }, // Artikal
-      { wch: 15 }, // Količina
-    ];
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Dnevni izveštaj");
 
     // Generate filename with current date
     const dateStr = today.toISOString().split('T')[0];
