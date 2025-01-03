@@ -34,6 +34,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
       }, 0);
     };
 
+    // Use the actual payment type from the items array
     const { data, error } = await supabase
       .from('sales')
       .insert([{
@@ -41,7 +42,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         customer_id: selectedCustomer!.id,
         items: items,
         total: calculateTotal(items),
-        payment_type: items[0].paymentType, // Use the payment type from the items
+        payment_type: paymentType, // Use the payment type passed to the function
         date: new Date().toISOString()
       }])
       .select();
@@ -72,8 +73,8 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
       // Submit orders based on split
       if (cashItems.length > 0 && invoiceItems.length > 0) {
         // Submit both orders with their respective payment types
-        await submitSplitOrders(cashItems, 'cash');
-        await submitSplitOrders(invoiceItems, 'invoice');
+        await submitSplitOrders(cashItems, 'cash'); // Explicitly pass 'cash' for cash items
+        await submitSplitOrders(invoiceItems, 'invoice'); // Explicitly pass 'invoice' for invoice items
         toast.success("Porudžbine su uspešno poslate!");
       } else if (cashItems.length > 0) {
         // Submit only cash order
