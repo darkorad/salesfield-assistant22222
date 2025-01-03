@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderForm } from "./OrderForm";
 import { Customer, Product, OrderItem } from "@/types";
@@ -16,7 +16,6 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   const handleCustomerSelect = (customer: Customer) => {
-    console.log("Selected customer:", customer); // Debug log
     setSelectedCustomer(customer);
     setCustomerSearch(customer.name);
   };
@@ -55,14 +54,18 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         }])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error submitting order:", error);
+        toast.error("Greška pri slanju porudžbine");
+        return;
+      }
 
-      toast.success("Porudžbina je uspešno poslata!");
-      
-      // Reset form after successful submission
+      // Reset form
       setSelectedCustomer(null);
       setCustomerSearch("");
       setOrderItems([]);
+      
+      toast.success("Porudžbina je uspešno poslata!");
     } catch (error) {
       console.error("Error submitting order:", error);
       toast.error("Greška pri slanju porudžbine");

@@ -9,35 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      categories: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categories_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       CenovnikVeljko: {
         Row: {
           Cena: number
@@ -249,41 +220,8 @@ export type Database = {
         }
         Relationships: []
       }
-      order_templates: {
-        Row: {
-          created_at: string
-          id: string
-          items: Json
-          name: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          items: Json
-          name: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          items?: Json
-          name?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_templates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       products: {
         Row: {
-          category_id: string | null
           Cena: number
           created_at: string
           id: string
@@ -293,7 +231,6 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          category_id?: string | null
           Cena: number
           created_at?: string
           id?: string
@@ -303,7 +240,6 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          category_id?: string | null
           Cena?: number
           created_at?: string
           id?: string
@@ -313,13 +249,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "products_user_id_fkey"
             columns: ["user_id"]

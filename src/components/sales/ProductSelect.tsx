@@ -4,16 +4,6 @@ import { ProductSearchInput } from "./ProductSearchInput";
 import { ProductSearchResults } from "./ProductSearchResults";
 import { CustomerInfoCard } from "./CustomerInfoCard";
 import { OrderItemsList } from "./OrderItemsList";
-import { RecentOrders } from "./RecentOrders";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface ProductSelectProps {
   products: Product[];
@@ -29,25 +19,11 @@ export const ProductSelect = ({
   onOrderItemsChange,
 }: ProductSelectProps) => {
   const [productSearch, setProductSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*');
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const filteredProducts = products.filter((product) => {
     const searchTerm = productSearch.toLowerCase();
     const productName = product.Naziv?.toLowerCase() || "";
-    const matchesSearch = productName.includes(searchTerm);
-    const matchesCategory = !selectedCategory || product.category_id === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return productName.includes(searchTerm);
   });
 
   const handleAddProduct = (product: Product) => {
@@ -89,24 +65,6 @@ export const ProductSelect = ({
         <h2 className="text-lg font-semibold mb-4">Proizvodi</h2>
         
         <CustomerInfoCard customer={selectedCustomer} />
-        
-        <RecentOrders onItemSelect={onOrderItemsChange} />
-
-        <div className="flex gap-2 mb-4">
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Sve kategorije" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Sve kategorije</SelectItem>
-              {categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
         <label className="text-sm font-medium">Izbor artikala</label>
         <div className="relative">

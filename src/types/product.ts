@@ -6,7 +6,6 @@ export interface Product {
   Cena: number;
   "Jedinica mere": string;
   created_at?: string;
-  category_id?: string;
 }
 
 export interface OrderItem {
