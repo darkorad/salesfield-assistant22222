@@ -138,6 +138,42 @@ export const exportCashCustomersReport = async () => {
         }
       });
 
+      rowIndex += 12; // Add space for items
+
+      // Add totals section
+      const previousDebt = 0; // This should be fetched from your data source
+      const currentTotal = sale.total;
+      const remainingDebt = previousDebt + currentTotal;
+
+      const totalsRows = [
+        ['Dugovanje iz prethodnog računa:', '', '', '', previousDebt, '', 'Dugovanje iz prethodnog računa:', '', '', '', previousDebt],
+        ['Ukupno artikli:', '', '', '', currentTotal, '', 'Ukupno artikli:', '', '', '', currentTotal],
+        ['Ostalo dugovanje:', '', '', '', remainingDebt, '', 'Ostalo dugovanje:', '', '', '', remainingDebt]
+      ];
+
+      // Add and style totals rows
+      totalsRows.forEach((row, index) => {
+        XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
+        
+        // Style totals rows
+        for (let j = 0; j < 11; j++) {
+          if (j === 5) continue; // Skip spacing column
+          const cell = XLSX.utils.encode_cell({ r: rowIndex + index, c: j });
+          if (!ws[cell]) continue;
+
+          ws[cell].s = {
+            font: { bold: true, sz: 11 },
+            alignment: { vertical: 'center', horizontal: 'left' },
+            border: {
+              top: { style: 'medium', color: { rgb: "000000" } },
+              bottom: { style: 'medium', color: { rgb: "000000" } },
+              left: { style: 'medium', color: { rgb: "000000" } },
+              right: { style: 'medium', color: { rgb: "000000" } }
+            }
+          };
+        }
+      });
+
       rowIndex += 15; // Add spacing for next customer (adjusted for better page fit)
     });
 
