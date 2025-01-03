@@ -23,8 +23,8 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
 
   const { handleSubmitOrder, isSubmitting } = useSplitOrders(selectedCustomer);
 
-  const handleSubmit = async () => {
-    const success = await handleSubmitOrder(orderItems);
+  const handleSubmit = async (note?: string) => {
+    const success = await handleSubmitOrder(orderItems, note);
     if (success) {
       resetOrder();
     }

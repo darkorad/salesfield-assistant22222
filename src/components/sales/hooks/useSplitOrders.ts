@@ -13,29 +13,36 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
     }, 0);
   };
 
-  const submitOrder = async (items: OrderItem[], paymentType: 'cash' | 'invoice') => {
+  const submitOrder = async (items: OrderItem[], paymentType: 'cash' | 'invoice', note?: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !selectedCustomer) {
       throw new Error("Authentication or customer selection required");
     }
 
+    const orderData = {
+      user_id: session.user.id,
+      customer_id: selectedCustomer.id,
+      items: items,
+      total: calculateTotal(items),
+      payment_type: paymentType,
+      date: new Date().toISOString()
+    };
+
+    // Add note to order data if provided
+    if (note) {
+      orderData.items = [...items, { note }];
+    }
+
     const { data, error } = await supabase
       .from('sales')
-      .insert([{
-        user_id: session.user.id,
-        customer_id: selectedCustomer.id,
-        items: items,
-        total: calculateTotal(items),
-        payment_type: paymentType,
-        date: new Date().toISOString()
-      }])
+      .insert([orderData])
       .select();
 
     if (error) throw error;
     return data;
   };
 
-  const handleSubmitOrder = async (orderItems: OrderItem[]) => {
+  const handleSubmitOrder = async (orderItems: OrderItem[], note?: string) => {
     try {
       if (!selectedCustomer) {
         toast.error("Molimo izaberite kupca");
@@ -52,11 +59,11 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
       const invoiceItems = orderItems.filter(item => item.paymentType === 'invoice');
 
       if (cashItems.length > 0) {
-        await submitOrder(cashItems, 'cash');
+        await submitOrder(cashItems, 'cash', note);
       }
       
       if (invoiceItems.length > 0) {
-        await submitOrder(invoiceItems, 'invoice');
+        await submitOrder(invoiceItems, 'invoice', note);
       }
 
       toast.success("Porudžbina je uspešno poslata!");
