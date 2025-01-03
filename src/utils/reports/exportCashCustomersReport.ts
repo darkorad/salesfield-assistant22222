@@ -89,10 +89,10 @@ export const exportCashCustomersReport = async () => {
             font: { bold: true, sz: 11 },
             alignment: { vertical: 'center', horizontal: 'left' },
             border: {
-              top: { style: 'thin', color: { rgb: "000000" } },
-              bottom: { style: 'thin', color: { rgb: "000000" } },
-              left: { style: 'thin', color: { rgb: "000000" } },
-              right: { style: 'thin', color: { rgb: "000000" } }
+              top: { style: 'medium', color: { rgb: "000000" } },
+              bottom: { style: 'medium', color: { rgb: "000000" } },
+              left: { style: 'medium', color: { rgb: "000000" } },
+              right: { style: 'medium', color: { rgb: "000000" } }
             }
           };
         }
@@ -129,10 +129,10 @@ export const exportCashCustomersReport = async () => {
             font: { sz: 11 },
             alignment: { vertical: 'center', horizontal: 'left' },
             border: {
-              top: { style: 'thin', color: { rgb: "000000" } },
-              bottom: { style: 'thin', color: { rgb: "000000" } },
-              left: { style: 'thin', color: { rgb: "000000" } },
-              right: { style: 'thin', color: { rgb: "000000" } }
+              top: { style: 'medium', color: { rgb: "000000" } },
+              bottom: { style: 'medium', color: { rgb: "000000" } },
+              left: { style: 'medium', color: { rgb: "000000" } },
+              right: { style: 'medium', color: { rgb: "000000" } }
             }
           };
         }
@@ -147,7 +147,7 @@ export const exportCashCustomersReport = async () => {
       paper: 9, // A4
       scale: 1,
       fitToPage: true,
-      pageMargins: [0.1, 0.1, 0.1, 0.1] // Minimum margins
+      pageMargins: [0.05, 0.05, 0.05, 0.05] // Very narrow margins (in inches)
     };
 
     // Add worksheet to workbook
