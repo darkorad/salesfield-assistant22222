@@ -3,6 +3,7 @@ import { Customer, Order } from "@/types";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OrderHistoryProps {
   customer: Customer;
@@ -14,20 +15,34 @@ export const OrderHistory = ({ customer, open, onOpenChange }: OrderHistoryProps
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    const loadOrders = () => {
+    const loadOrders = async () => {
       try {
-        const savedOrders = localStorage.getItem("sales");
-        if (savedOrders) {
-          const allOrders = JSON.parse(savedOrders) as Order[];
-          const customerOrders = allOrders.filter(
-            (order) => order.customer.id === customer.id
-          );
-          // Sort orders by date, newest first
-          customerOrders.sort((a, b) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-          );
-          setOrders(customerOrders);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        // Get today's date at start of day in local timezone
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Get tomorrow's date at start of day in local timezone
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        // Fetch all sales for this customer, including today's sales
+        const { data: salesData, error } = await supabase
+          .from('sales')
+          .select('*, customer:customers(*)')
+          .eq('user_id', session.user.id)
+          .eq('customer_id', customer.id)
+          .order('date', { ascending: false });
+
+        if (error) {
+          console.error("Error loading sales:", error);
+          return;
         }
+
+        console.log("Fetched customer sales:", salesData);
+        setOrders(salesData || []);
       } catch (error) {
         console.error("Error loading orders:", error);
       }
