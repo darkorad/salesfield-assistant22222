@@ -1,4 +1,3 @@
-import { Suspense, lazy } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ManufacturerSidebar } from "@/components/sales/ManufacturerSidebar";
 import { CustomerSelect } from "@/components/sales/CustomerSelect";
@@ -6,8 +5,6 @@ import { OrderForm } from "@/components/sales/OrderForm";
 import { useSalesData } from "@/hooks/useSalesData";
 import { useOrderState } from "@/hooks/useOrderState";
 import { useSplitOrders } from "@/components/sales/hooks/useSplitOrders";
-
-const DailySalesSummary = lazy(() => import("@/components/sales/DailySalesSummary"));
 
 const LoadingFallback = () => (
   <div className="animate-pulse space-y-4">
@@ -64,9 +61,6 @@ const SalesManufacturer = () => {
             />
           </CardContent>
         </Card>
-        <Suspense fallback={<LoadingFallback />}>
-          <DailySalesSummary />
-        </Suspense>
       </div>
     </div>
   );
