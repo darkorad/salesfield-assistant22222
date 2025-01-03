@@ -1,14 +1,27 @@
-import { OrderItem } from "@/types";
+import { OrderItem } from "@/types/";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface OrderItemCardProps {
   item: OrderItem;
   onQuantityChange: (quantity: number) => void;
+  onPaymentTypeChange: (paymentType: 'cash' | 'invoice') => void;
   onRemove: () => void;
 }
 
-export const OrderItemCard = ({ item, onQuantityChange, onRemove }: OrderItemCardProps) => {
+export const OrderItemCard = ({ 
+  item, 
+  onQuantityChange, 
+  onPaymentTypeChange,
+  onRemove 
+}: OrderItemCardProps) => {
   const calculateItemTotal = (quantity: number) => {
     const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
     return item.product.Cena * quantity * unitSize;
@@ -33,6 +46,18 @@ export const OrderItemCard = ({ item, onQuantityChange, onRemove }: OrderItemCar
         <span className="whitespace-nowrap text-sm text-gray-600">
           {item.product["Jedinica mere"]}
         </span>
+        <Select
+          value={item.paymentType}
+          onValueChange={(value: 'cash' | 'invoice') => onPaymentTypeChange(value)}
+        >
+          <SelectTrigger className="w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="invoice">Račun</SelectItem>
+            <SelectItem value="cash">Gotovina</SelectItem>
+          </SelectContent>
+        </Select>
         <span className="w-24 text-right">
           {calculateItemTotal(item.quantity)} RSD
         </span>

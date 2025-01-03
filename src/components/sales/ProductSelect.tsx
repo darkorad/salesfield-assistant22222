@@ -39,7 +39,11 @@ export const ProductSelect = ({
       };
       onOrderItemsChange(newItems);
     } else {
-      const newItems = [...orderItems, { product, quantity: 1 }];
+      const newItems = [...orderItems, { 
+        product, 
+        quantity: 1,
+        paymentType: 'invoice' // Default payment type
+      }];
       onOrderItemsChange(newItems);
     }
     setProductSearch("");
@@ -50,6 +54,15 @@ export const ProductSelect = ({
     newItems[index] = {
       ...newItems[index],
       quantity: Math.max(1, newQuantity)
+    };
+    onOrderItemsChange(newItems);
+  };
+
+  const handlePaymentTypeChange = (index: number, paymentType: 'cash' | 'invoice') => {
+    const newItems = [...orderItems];
+    newItems[index] = {
+      ...newItems[index],
+      paymentType
     };
     onOrderItemsChange(newItems);
   };
@@ -83,6 +96,7 @@ export const ProductSelect = ({
         <OrderItemsList
           items={orderItems}
           onQuantityChange={handleQuantityChange}
+          onPaymentTypeChange={handlePaymentTypeChange}
           onRemoveItem={handleRemoveItem}
         />
       </div>

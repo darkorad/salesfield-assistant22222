@@ -20,6 +20,40 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
     setCustomerSearch(customer.name);
   };
 
+  const submitSplitOrders = async (items: OrderItem[], paymentType: 'cash' | 'invoice') => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Niste prijavljeni");
+      return;
+    }
+
+    const calculateTotal = (items: OrderItem[]) => {
+      return items.reduce((sum, item) => {
+        const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
+        return sum + (item.product.Cena * item.quantity * unitSize);
+      }, 0);
+    };
+
+    const { data, error } = await supabase
+      .from('sales')
+      .insert([{
+        user_id: session.user.id,
+        customer_id: selectedCustomer!.id,
+        items: items,
+        total: calculateTotal(items),
+        payment_type: paymentType,
+        date: new Date().toISOString()
+      }])
+      .select();
+
+    if (error) {
+      console.error("Error submitting order:", error);
+      throw error;
+    }
+
+    return data;
+  };
+
   const handleSubmitOrder = async (paymentType: 'cash' | 'invoice') => {
     try {
       if (!selectedCustomer) {
@@ -31,33 +65,24 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Niste prijavljeni");
-        return;
-      }
+      // Split items by payment type
+      const cashItems = orderItems.filter(item => item.paymentType === 'cash');
+      const invoiceItems = orderItems.filter(item => item.paymentType === 'invoice');
 
-      const total = orderItems.reduce((sum, item) => {
-        const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
-        return sum + (item.product.Cena * item.quantity * unitSize);
-      }, 0);
-
-      const { data, error } = await supabase
-        .from('sales')
-        .insert([{
-          user_id: session.user.id,
-          customer_id: selectedCustomer.id,
-          items: orderItems,
-          total,
-          payment_type: paymentType,
-          date: new Date().toISOString()
-        }])
-        .select();
-
-      if (error) {
-        console.error("Error submitting order:", error);
-        toast.error("Greška pri slanju porudžbine");
-        return;
+      // Submit orders based on split
+      if (cashItems.length > 0 && invoiceItems.length > 0) {
+        // Submit both orders
+        await submitSplitOrders(cashItems, 'cash');
+        await submitSplitOrders(invoiceItems, 'invoice');
+        toast.success("Porudžbine su uspešno poslate!");
+      } else if (cashItems.length > 0) {
+        // Submit only cash order
+        await submitSplitOrders(cashItems, 'cash');
+        toast.success("Porudžbina za gotovinu je uspešno poslata!");
+      } else {
+        // Submit only invoice order
+        await submitSplitOrders(invoiceItems, 'invoice');
+        toast.success("Porudžbina za račun je uspešno poslata!");
       }
 
       // Reset form
@@ -65,7 +90,6 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
       setCustomerSearch("");
       setOrderItems([]);
       
-      toast.success("Porudžbina je uspešno poslata!");
     } catch (error) {
       console.error("Error submitting order:", error);
       toast.error("Greška pri slanju porudžbine");
