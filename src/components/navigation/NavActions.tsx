@@ -9,10 +9,11 @@ import {
 import { Menu, Settings, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const NavActions = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -52,13 +53,29 @@ const NavActions = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem asChild>
-              <Link to="/settings" className="w-full cursor-pointer">
-                <Settings className="h-4 w-4 mr-2" />
+              <Link 
+                to="/sales" 
+                className={`w-full cursor-pointer text-xs ${location.pathname === "/sales" ? "font-medium" : ""}`}
+              >
+                Prodaja
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link 
+                to="/sales-manufacturer" 
+                className={`w-full cursor-pointer text-xs ${location.pathname === "/sales-manufacturer" ? "font-medium" : ""}`}
+              >
+                Prodaja po proizvođaču
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings" className="w-full cursor-pointer text-xs">
+                <Settings className="h-3 w-3 mr-2" />
                 Podešavanja
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-              <LogOut className="h-4 w-4 mr-2" />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs">
+              <LogOut className="h-3 w-3 mr-2" />
               Odjava
             </DropdownMenuItem>
           </DropdownMenuContent>
