@@ -43,19 +43,19 @@ export const exportCashCustomersReport = async () => {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([]);
 
-    // Set column widths for both sides (adjusted for A4 landscape)
+    // Set column widths optimized for A4 landscape (297mm)
     ws['!cols'] = [
-      { wch: 35 }, // Article name (left)
-      { wch: 10 }, // Quantity (left)
-      { wch: 12 }, // Unit (left)
-      { wch: 12 }, // Price (left)
-      { wch: 12 }, // Total (left)
+      { wch: 25 }, // Article name (left)
+      { wch: 8 },  // Quantity (left)
+      { wch: 8 },  // Unit (left)
+      { wch: 8 },  // Price (left)
+      { wch: 10 }, // Total (left)
       { wch: 2 },  // Spacing
-      { wch: 35 }, // Article name (right)
-      { wch: 10 }, // Quantity (right)
-      { wch: 12 }, // Unit (right)
-      { wch: 12 }, // Price (right)
-      { wch: 12 }, // Total (right)
+      { wch: 25 }, // Article name (right)
+      { wch: 8 },  // Quantity (right)
+      { wch: 8 },  // Unit (right)
+      { wch: 8 },  // Price (right)
+      { wch: 10 }  // Total (right)
     ];
 
     let rowIndex = 0;
@@ -70,7 +70,7 @@ export const exportCashCustomersReport = async () => {
         [`Adresa: ${customer.address}`, '', '', '', '', '', `Adresa: ${customer.address}`],
         [`Telefon: ${customer.phone || ''}`, '', '', '', '', '', `Telefon: ${customer.phone || ''}`],
         [''], // Empty row
-        ['Artikal', 'Količina', 'Jed. mere', 'Cena', 'Ukupno', '', 'Artikal', 'Količina', 'Jed. mere', 'Cena', 'Ukupno']
+        ['Artikal', 'Količina', 'Jed.mere', 'Cena', 'Ukupno', '', 'Artikal', 'Količina', 'Jed.mere', 'Cena', 'Ukupno']
       ];
 
       // Add headers to worksheet
@@ -78,20 +78,21 @@ export const exportCashCustomersReport = async () => {
         XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
       });
 
-      // Style the headers with black borders and larger font
+      // Style headers with black borders
       for (let i = rowIndex; i < rowIndex + 5; i++) {
         for (let j = 0; j < 11; j++) {
+          if (j === 5) continue; // Skip spacing column
           const cell = XLSX.utils.encode_cell({ r: i, c: j });
           if (!ws[cell]) continue;
           
           ws[cell].s = {
-            font: { bold: true, sz: 12 },
+            font: { bold: true, sz: 11 },
             alignment: { vertical: 'center', horizontal: 'left' },
             border: {
-              top: { style: 'medium', color: { rgb: "000000" } },
-              bottom: { style: 'medium', color: { rgb: "000000" } },
-              left: { style: 'medium', color: { rgb: "000000" } },
-              right: { style: 'medium', color: { rgb: "000000" } }
+              top: { style: 'thin', color: { rgb: "000000" } },
+              bottom: { style: 'thin', color: { rgb: "000000" } },
+              left: { style: 'thin', color: { rgb: "000000" } },
+              right: { style: 'thin', color: { rgb: "000000" } }
             }
           };
         }
@@ -108,8 +109,8 @@ export const exportCashCustomersReport = async () => {
         item.quantity * item.product.Cena
       ]);
 
-      // Add empty rows to fill the page (approximately 15 rows per page)
-      while (items.length < 15) {
+      // Add empty rows to fill the page (approximately 12 rows per page)
+      while (items.length < 12) {
         items.push(['', '', '', '', '']);
       }
 
@@ -118,8 +119,9 @@ export const exportCashCustomersReport = async () => {
         const row = [...item, '', ...item];
         XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
 
-        // Style each cell with black borders and proper font size
+        // Style each cell with black borders
         for (let j = 0; j < 11; j++) {
+          if (j === 5) continue; // Skip spacing column
           const cell = XLSX.utils.encode_cell({ r: rowIndex + index, c: j });
           if (!ws[cell]) continue;
 
@@ -136,7 +138,7 @@ export const exportCashCustomersReport = async () => {
         }
       });
 
-      rowIndex += 20; // Add spacing between customers
+      rowIndex += 15; // Add spacing for next customer (adjusted for better page fit)
     });
 
     // Set print settings for landscape A4
@@ -145,7 +147,7 @@ export const exportCashCustomersReport = async () => {
       paper: 9, // A4
       scale: 1,
       fitToPage: true,
-      pageMargins: [0.25, 0.25, 0.25, 0.25] // Minimum margins to ensure all content is visible
+      pageMargins: [0.1, 0.1, 0.1, 0.1] // Minimum margins
     };
 
     // Add worksheet to workbook
