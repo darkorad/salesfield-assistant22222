@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Eye, FileSpreadsheet } from "lucide-react";
 import { generateDailyReport } from "@/utils/reports/dailyReportUtils";
-import { generateMonthlyReport } from "@/utils/reports/monthlyReportUtils";
-import { generateProductReport } from "@/utils/reports/productReportUtils";
 import { exportDailySalesReport } from "@/utils/reports/exportDailySalesReport";
+import { exportMonthlySalesReport } from "@/utils/reports/exportMonthlySalesReport";
 
 interface SalesReportButtonsProps {
   onPreview: (type: 'daily' | 'monthly' | 'products', data: any[]) => void;
@@ -22,17 +21,10 @@ export const SalesReportButtons = ({ onPreview }: SalesReportButtonsProps) => {
       <div className="space-y-2">
         <Button
           className="w-full py-6 text-lg font-medium"
-          onClick={() => generateMonthlyReport()}
+          onClick={() => exportMonthlySalesReport()}
         >
+          <FileSpreadsheet className="mr-2 h-5 w-5" />
           Izvezi mesečnu prodaju
-        </Button>
-      </div>
-      <div className="space-y-2">
-        <Button
-          className="w-full py-6 text-lg font-medium"
-          onClick={() => generateProductReport()}
-        >
-          Izvezi prodaju po artiklima
         </Button>
       </div>
       <div className="space-y-2">
