@@ -1,31 +1,20 @@
-import { Order } from "@/types";
+import { Order, OrderItem } from "@/types";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 interface SaleRecord {
-  'Datum': string;
-  'Vreme': string;
   'Kupac': string;
+  'Adresa': string;
+  'Artikli': string;
   'Ukupno (RSD)': number;
-  'Broj stavki': number;
-  'Stavke': string;
 }
 
 interface ProductSummary {
-  'Proizvod': string;
+  'Naziv': string;
   'Proizvođač': string;
-  'Ukupna količina': number;
+  'Ukupna količina': string;
   'Ukupna vrednost (RSD)': number;
 }
-
-const formatSaleRecord = (sale: Order): SaleRecord => ({
-  'Datum': sale.date.split('T')[0],
-  'Vreme': sale.date.split('T')[1].substring(0, 8),
-  'Kupac': sale.customer.name,
-  'Ukupno (RSD)': sale.total,
-  'Broj stavki': sale.items.length,
-  'Stavke': sale.items.map(item => `${item.product.Naziv} (${item.quantity})`).join(', ')
-});
 
 const getCurrentUserSales = () => {
   const currentUser = localStorage.getItem("currentUser");
@@ -40,11 +29,40 @@ const getSalesForPeriod = (startDate: string): Order[] => {
   return sales.filter((sale: Order) => sale.date.startsWith(startDate));
 };
 
-const exportToExcel = (data: any[], sheetName: string, fileName: string) => {
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, fileName);
+const formatSaleRecord = (sale: Order): SaleRecord => ({
+  'Kupac': sale.customer.name,
+  'Adresa': `${sale.customer.address}, ${sale.customer.city}`,
+  'Artikli': sale.items.map(item => 
+    `${item.product.Naziv} (${item.quantity} ${item.product["Jedinica mere"]})`
+  ).join(', '),
+  'Ukupno (RSD)': sale.total
+});
+
+const aggregateProductSales = (sales: Order[]): ProductSummary[] => {
+  const productMap = new Map<string, ProductSummary>();
+
+  sales.forEach(sale => {
+    sale.items.forEach((item: OrderItem) => {
+      const key = `${item.product.Naziv}-${item.product.Proizvođač}`;
+      const existing = productMap.get(key);
+      
+      if (!existing) {
+        productMap.set(key, {
+          'Naziv': item.product.Naziv,
+          'Proizvođač': item.product.Proizvođač,
+          'Ukupna količina': `${item.quantity} ${item.product["Jedinica mere"]}`,
+          'Ukupna vrednost (RSD)': item.quantity * item.product.Cena
+        });
+      } else {
+        const currentQty = parseFloat(existing['Ukupna količina'].split(' ')[0]);
+        existing['Ukupna količina'] = `${currentQty + item.quantity} ${item.product["Jedinica mere"]}`;
+        existing['Ukupna vrednost (RSD)'] += item.quantity * item.product.Cena;
+      }
+    });
+  });
+
+  return Array.from(productMap.values())
+    .sort((a, b) => b['Ukupna vrednost (RSD)'] - a['Ukupna vrednost (RSD)']);
 };
 
 export const generateDailyReport = (previewOnly: boolean = false) => {
@@ -76,29 +94,37 @@ export const generateMonthlyReport = (previewOnly: boolean = false) => {
 
     if (monthlySales.length === 0) {
       toast.error("Nema prodaje za tekući mesec");
-      return null;
+      return;
     }
 
-    const uniqueCustomers = new Set(monthlySales.map(sale => sale.customer.id));
-    const totalItems = monthlySales.reduce((sum, sale) => sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-    const totalAmount = monthlySales.reduce((sum, sale) => sum + sale.total, 0);
+    // Create workbook with two sheets
+    const workbook = XLSX.utils.book_new();
 
-    const formattedSales = monthlySales.map(formatSaleRecord);
-    formattedSales.push({
-      'Datum': '---',
-      'Vreme': '---',
-      'Kupac': 'UKUPNO',
-      'Ukupno (RSD)': totalAmount,
-      'Broj stavki': totalItems,
-      'Stavke': `Aktivnih kupaca: ${uniqueCustomers.size}`
-    } as SaleRecord);
+    // Sheet 1: Customer sales
+    const customerSales = monthlySales.map(formatSaleRecord);
+    const customerSheet = XLSX.utils.json_to_sheet(customerSales);
+    XLSX.utils.book_append_sheet(workbook, customerSheet, "Prodaja po kupcima");
 
-    exportToExcel(formattedSales, "Mesečni izveštaj", `mesecni-izvestaj-${year}-${month}.xlsx`);
+    // Sheet 2: Product summary
+    const productSummary = aggregateProductSales(monthlySales);
+    const productSheet = XLSX.utils.json_to_sheet(productSummary);
+    XLSX.utils.book_append_sheet(workbook, productSheet, "Prodaja po artiklima");
+
+    // Set column widths
+    const colWidths = [
+      { wch: 30 }, // Kupac/Naziv
+      { wch: 40 }, // Adresa/Proizvođač
+      { wch: 50 }, // Artikli/Ukupna količina
+      { wch: 15 }, // Ukupno
+    ];
+    customerSheet['!cols'] = colWidths;
+    productSheet['!cols'] = colWidths;
+
+    XLSX.writeFile(workbook, `mesecni-izvestaj-${year}-${month}.xlsx`);
     toast.success("Mesečni izveštaj je uspešno izvezen");
   } catch (error) {
     toast.error("Greška pri izvozu mesečnog izveštaja");
     console.error(error);
-    return null;
   }
 };
 
@@ -114,32 +140,26 @@ export const generateProductReport = (previewOnly: boolean = false) => {
       return null;
     }
 
-    const productSummary = new Map<string, ProductSummary>();
+    const productSummary = aggregateProductSales(monthlySales);
     
-    monthlySales.forEach((sale: Order) => {
-      sale.items.forEach(item => {
-        const key = item.product.id;
-        if (!productSummary.has(key)) {
-          productSummary.set(key, {
-            'Proizvod': item.product.Naziv,
-            'Proizvođač': item.product.Proizvođač,
-            'Ukupna količina': 0,
-            'Ukupna vrednost (RSD)': 0
-          });
-        }
-        const summary = productSummary.get(key)!;
-        summary['Ukupna količina'] += item.quantity;
-        summary['Ukupna vrednost (RSD)'] += item.quantity * item.product.Cena;
-      });
-    });
-
-    const summaryArray = Array.from(productSummary.values());
-    exportToExcel(
-      summaryArray,
-      "Pregled proizvoda",
-      `pregled-proizvoda-${year}-${month}.xlsx`
-    );
-    toast.success("Mesečni pregled proizvoda je uspešno izvezen");
+    if (!previewOnly) {
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(productSummary);
+      
+      const colWidths = [
+        { wch: 30 }, // Naziv
+        { wch: 20 }, // Proizvođač
+        { wch: 15 }, // Količina
+        { wch: 15 }, // Vrednost
+      ];
+      worksheet['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Pregled proizvoda");
+      XLSX.writeFile(workbook, `pregled-proizvoda-${year}-${month}.xlsx`);
+      toast.success("Mesečni pregled proizvoda je uspešno izvezen");
+    }
+    
+    return productSummary;
   } catch (error) {
     toast.error("Greška pri izvozu pregleda proizvoda");
     console.error(error);
