@@ -29,16 +29,17 @@ export const ProductSelect = ({
       const newItems = [...orderItems];
       newItems[existingItemIndex] = {
         ...newItems[existingItemIndex],
-        quantity: newItems[existingItemIndex].quantity + 1
+        quantity: newItems[existingItemIndex].quantity + 1,
       };
       onOrderItemsChange(newItems);
     } else {
-      const newItems = [...orderItems, { 
-        product, 
+      // Create a new order item with default payment type as 'invoice'
+      const newItem: OrderItem = {
+        product,
         quantity: 1,
-        paymentType: 'invoice' as const // Explicitly type this as 'invoice'
-      }];
-      onOrderItemsChange(newItems);
+        paymentType: 'invoice' as const
+      };
+      onOrderItemsChange([...orderItems, newItem]);
     }
     setProductSearch("");
   };

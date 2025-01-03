@@ -51,7 +51,7 @@ export const OrderItemCard = ({
           onValueChange={(value: 'cash' | 'invoice') => onPaymentTypeChange(value)}
         >
           <SelectTrigger className="w-[100px]">
-            <SelectValue />
+            <SelectValue placeholder="Način plaćanja" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="invoice">Račun</SelectItem>
