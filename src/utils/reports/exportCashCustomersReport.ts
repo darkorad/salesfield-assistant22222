@@ -41,9 +41,9 @@ export const exportCashCustomersReport = async () => {
 
     // Create workbook
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([]);  // Start with empty worksheet
+    const ws = XLSX.utils.aoa_to_sheet([]);
 
-    // Set column widths for both sides
+    // Set column widths for both sides (adjusted for A4 landscape)
     ws['!cols'] = [
       { wch: 35 }, // Article name (left)
       { wch: 10 }, // Quantity (left)
@@ -78,7 +78,7 @@ export const exportCashCustomersReport = async () => {
         XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
       });
 
-      // Style the headers
+      // Style the headers with black borders and larger font
       for (let i = rowIndex; i < rowIndex + 5; i++) {
         for (let j = 0; j < 11; j++) {
           const cell = XLSX.utils.encode_cell({ r: i, c: j });
@@ -88,10 +88,10 @@ export const exportCashCustomersReport = async () => {
             font: { bold: true, sz: 12 },
             alignment: { vertical: 'center', horizontal: 'left' },
             border: {
-              top: { style: 'thin' },
-              bottom: { style: 'thin' },
-              left: { style: 'thin' },
-              right: { style: 'thin' }
+              top: { style: 'medium', color: { rgb: "000000" } },
+              bottom: { style: 'medium', color: { rgb: "000000" } },
+              left: { style: 'medium', color: { rgb: "000000" } },
+              right: { style: 'medium', color: { rgb: "000000" } }
             }
           };
         }
@@ -118,7 +118,7 @@ export const exportCashCustomersReport = async () => {
         const row = [...item, '', ...item];
         XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
 
-        // Style the cells
+        // Style each cell with black borders and proper font size
         for (let j = 0; j < 11; j++) {
           const cell = XLSX.utils.encode_cell({ r: rowIndex + index, c: j });
           if (!ws[cell]) continue;
@@ -127,16 +127,16 @@ export const exportCashCustomersReport = async () => {
             font: { sz: 11 },
             alignment: { vertical: 'center', horizontal: 'left' },
             border: {
-              top: { style: 'thin' },
-              bottom: { style: 'thin' },
-              left: { style: 'thin' },
-              right: { style: 'thin' }
+              top: { style: 'thin', color: { rgb: "000000" } },
+              bottom: { style: 'thin', color: { rgb: "000000" } },
+              left: { style: 'thin', color: { rgb: "000000" } },
+              right: { style: 'thin', color: { rgb: "000000" } }
             }
           };
         }
       });
 
-      rowIndex += 20; // Add extra spacing between customers
+      rowIndex += 20; // Add spacing between customers
     });
 
     // Set print settings for landscape A4
@@ -144,7 +144,8 @@ export const exportCashCustomersReport = async () => {
       orientation: 'landscape',
       paper: 9, // A4
       scale: 1,
-      fitToPage: true
+      fitToPage: true,
+      pageMargins: [0.25, 0.25, 0.25, 0.25] // Minimum margins to ensure all content is visible
     };
 
     // Add worksheet to workbook
