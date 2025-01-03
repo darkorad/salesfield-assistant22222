@@ -21,10 +21,8 @@ const Sales = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <div className="w-full md:w-64 md:min-h-screen bg-white shadow-sm">
-        <ManufacturerSidebar products={products} />
-      </div>
-      <div className="flex-1 p-4 md:p-6 max-w-full overflow-x-hidden">
+      <ManufacturerSidebar products={products} />
+      <div className="flex-1 p-2 md:p-6 max-w-full">
         <Suspense fallback={<LoadingFallback />}>
           <SalesFormContainer customers={customers} products={products} />
           <DailySalesSummary />
