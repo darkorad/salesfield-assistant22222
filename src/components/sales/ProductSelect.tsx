@@ -42,7 +42,7 @@ export const ProductSelect = ({
       const newItems = [...orderItems, { 
         product, 
         quantity: 1,
-        paymentType: 'invoice' // Default payment type
+        paymentType: 'invoice' as const // Explicitly type this as 'invoice'
       }];
       onOrderItemsChange(newItems);
     }
