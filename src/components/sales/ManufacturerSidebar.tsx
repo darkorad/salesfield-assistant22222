@@ -14,10 +14,16 @@ interface ManufacturerSidebarProps {
 export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(null);
+  const [manufacturerSearch, setManufacturerSearch] = useState("");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Get unique manufacturers
   const manufacturers = Array.from(new Set(products.map(p => p.Proizvođač))).sort();
+  
+  // Filter manufacturers based on search
+  const filteredManufacturers = manufacturers.filter(m => 
+    m.toLowerCase().includes(manufacturerSearch.toLowerCase())
+  );
 
   // Get products for selected manufacturer
   const manufacturerProducts = products.filter(p => p.Proizvođač === selectedManufacturer);
@@ -83,8 +89,15 @@ export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerS
       <ScrollArea className="h-screen p-4">
         <div className="space-y-4">
           <h2 className="font-semibold text-lg mb-4">Proizvođači</h2>
+          <Input
+            type="text"
+            placeholder="Pretraži proizvođače..."
+            value={manufacturerSearch}
+            onChange={(e) => setManufacturerSearch(e.target.value)}
+            className="mb-4"
+          />
           <div className="space-y-1">
-            {manufacturers.map((manufacturer) => (
+            {filteredManufacturers.map((manufacturer) => (
               <Button
                 key={manufacturer}
                 variant={selectedManufacturer === manufacturer ? "default" : "ghost"}
@@ -99,15 +112,17 @@ export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerS
           {selectedManufacturer && (
             <div className="mt-8">
               <h3 className="font-semibold mb-2">Proizvodi:</h3>
-              <div className="space-y-2">
-                {manufacturerProducts.map((product) => (
+              <div className="space-y-0.5">
+                {manufacturerProducts.map((product, index) => (
                   <div
                     key={product.id}
-                    className="p-2 text-sm bg-background rounded-md flex flex-col gap-2"
+                    className={`p-2 text-sm rounded-md flex flex-col gap-2 ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
+                    }`}
                   >
                     <div>
-                      <p className="font-medium">{product.Naziv}</p>
-                      <p className="text-muted-foreground">
+                      <p className="font-medium text-sm">{product.Naziv}</p>
+                      <p className="text-xs text-muted-foreground">
                         {product.Cena} RSD/{product["Jedinica mere"]}
                       </p>
                     </div>
@@ -115,8 +130,9 @@ export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerS
                       <Input
                         type="number"
                         min="1"
+                        max="100"
                         defaultValue="1"
-                        className="w-20"
+                        className="w-16"
                       />
                       <Select defaultValue="invoice">
                         <SelectTrigger className="w-[100px]">
