@@ -33,10 +33,10 @@ export const CustomerSelect = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <label className="text-sm font-medium">Izbor kupca</label>
-      <div className="flex gap-2">
-        <div className="relative flex-1">
+      <div className="flex gap-2 items-start w-full">
+        <div className="relative flex-1 min-w-0">
           <Input
             placeholder="Pretraži kupca..."
             value={customerSearch}
@@ -53,8 +53,7 @@ export const CustomerSelect = ({
           )}
         </div>
         {selectedCustomer && (
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">Istorija</span>
+          <div className="flex items-start">
             <HistoryButton onClick={() => setShowHistory(true)} />
           </div>
         )}

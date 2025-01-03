@@ -15,14 +15,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
   const [customerSearch, setCustomerSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
-  console.log("SalesFormContainer - Received customers:", customers);
-
-  useEffect(() => {
-    console.log("SalesFormContainer - Selected customer:", selectedCustomer);
-  }, [selectedCustomer]);
-
   const handleCustomerSelect = (customer: Customer) => {
-    console.log("SalesFormContainer - Handling customer selection:", customer);
     setSelectedCustomer(customer);
     setCustomerSearch(customer.name);
   };
@@ -80,7 +73,7 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
   };
 
   return (
-    <Card>
+    <Card className="w-full max-w-5xl mx-auto">
       <CardHeader>
         <CardTitle>Nova porudžbina</CardTitle>
       </CardHeader>
