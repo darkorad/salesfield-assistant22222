@@ -1,14 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import { generateDailyReport, generateMonthlyReport, generateProductReport } from "@/utils/report-utils";
+import { generateDailyReport } from "@/utils/reports/dailyReportUtils";
+import { generateMonthlyReport } from "@/utils/reports/monthlyReportUtils";
+import { generateProductReport } from "@/utils/reports/productReportUtils";
 
 interface SalesReportButtonsProps {
   onPreview: (type: 'daily' | 'monthly' | 'products', data: any[]) => void;
 }
 
 export const SalesReportButtons = ({ onPreview }: SalesReportButtonsProps) => {
-  const handlePreviewDaily = () => {
-    const data = generateDailyReport(true);
+  const handlePreviewDaily = async () => {
+    const data = await generateDailyReport();
     if (data) {
       onPreview('daily', data);
     }
