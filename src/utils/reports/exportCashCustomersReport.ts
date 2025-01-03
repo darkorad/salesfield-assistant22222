@@ -143,7 +143,7 @@ export const exportCashCustomersReport = async () => {
       // Add totals section
       const previousDebt = 0; // This should be fetched from your data source
       const currentTotal = sale.total;
-      const remainingDebt = previousDebt + currentTotal;
+      const remainingDebt = previousDebt + currentTotal; // This is now the sum of previous debt and current total
 
       const totalsRows = [
         ['Dugovanje iz prethodnog računa:', '', '', '', previousDebt, '', 'Dugovanje iz prethodnog računa:', '', '', '', previousDebt],
