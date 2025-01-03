@@ -41,7 +41,7 @@ export const CustomerSelect = ({
             placeholder="Pretraži kupca..."
             value={customerSearch}
             onChange={(e) => onCustomerSearchChange(e.target.value)}
-            className="w-full"
+            className={`w-full ${selectedCustomer ? 'bg-selected hover:bg-selected-hover' : ''}`}
           />
           {customerSearch && 
            !customers.find(c => c.name === customerSearch) && 
@@ -52,15 +52,15 @@ export const CustomerSelect = ({
             />
           )}
         </div>
-        {selectedCustomer && (
-          <div className="flex items-start">
+        <div className="flex items-start gap-2">
+          {selectedCustomer && (
             <HistoryButton onClick={() => setShowHistory(true)} />
-          </div>
-        )}
-        <CustomerDropdown 
-          customers={customers}
-          onCustomerSelect={handleCustomerSelect}
-        />
+          )}
+          <CustomerDropdown 
+            customers={customers}
+            onCustomerSelect={handleCustomerSelect}
+          />
+        </div>
       </div>
       {showHistory && selectedCustomer && (
         <OrderHistory 

@@ -56,6 +56,10 @@ export default {
           DEFAULT: "#FFFFFF",
           foreground: "#222222",
         },
+        selected: {
+          DEFAULT: "#E3F2FD",
+          hover: "#BBDEFB",
+        }
       },
       borderRadius: {
         lg: "0.5rem",
