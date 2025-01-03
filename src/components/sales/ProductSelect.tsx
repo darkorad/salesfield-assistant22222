@@ -36,7 +36,7 @@ export const ProductSelect = ({
       const newItems = [...orderItems, { 
         product, 
         quantity: 1,
-        paymentType: 'invoice'
+        paymentType: 'invoice' as const // Explicitly type this as 'invoice'
       }];
       onOrderItemsChange(newItems);
     }
