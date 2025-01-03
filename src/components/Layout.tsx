@@ -3,7 +3,7 @@ import NavLogo from "./navigation/NavLogo";
 import NavLinks from "./navigation/NavLinks";
 import NavActions from "./navigation/NavActions";
 
-export const Layout = ({ children }: { children?: React.ReactNode }) => {
+const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 w-full">
@@ -18,8 +18,10 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
         </div>
       </nav>
       <main className="container mx-auto py-6">
-        {children || <Outlet />}
+        <Outlet />
       </main>
     </div>
   );
 };
+
+export default Layout;
