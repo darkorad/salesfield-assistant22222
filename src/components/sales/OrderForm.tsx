@@ -4,7 +4,7 @@ import { CustomerSelect } from "./CustomerSelect";
 import { ProductSelect } from "./ProductSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface OrderFormProps {
   customers: Customer[];
@@ -74,11 +74,13 @@ export const OrderForm = ({
         </div>
 
         {includeNote && (
-          <Input
+          <Textarea
             placeholder="Unesite napomenu"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full"
+            className="w-full resize-none"
+            maxLength={100}
+            rows={3}
           />
         )}
       </div>

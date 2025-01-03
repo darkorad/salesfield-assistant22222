@@ -4,6 +4,8 @@ import { CustomerInfoCard } from "./CustomerInfoCard";
 import { OrderItemsList } from "./OrderItemsList";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
+import { ProductSearchResults } from "./ProductSearchResults";
 
 interface ProductSelectProps {
   products: Product[];
@@ -18,7 +20,14 @@ export const ProductSelect = ({
   selectedCustomer,
   onOrderItemsChange,
 }: ProductSelectProps) => {
-  const handleAddProduct = (product: Product, quantity: number, paymentType: 'cash' | 'invoice') => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showResults, setShowResults] = useState(false);
+
+  const filteredProducts = products.filter((product) =>
+    product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddProduct = (product: Product, quantity: number = 1, paymentType: 'cash' | 'invoice' = 'invoice') => {
     const existingItemIndex = orderItems.findIndex(
       (item) => item.product.Naziv === product.Naziv
     );
@@ -39,71 +48,32 @@ export const ProductSelect = ({
       };
       onOrderItemsChange([...orderItems, newItem]);
     }
+    setSearchTerm("");
+    setShowResults(false);
   };
 
   return (
     <div className="space-y-4">
       <CustomerInfoCard customer={selectedCustomer} />
 
-      <ScrollArea className="h-[600px] pr-4">
-        <div className="space-y-2">
-          {products.map((product, index) => {
-            const existingItem = orderItems.find(item => item.product.Naziv === product.Naziv);
-            return (
-              <div
-                key={product.id}
-                className={`p-3 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}
-              >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <div className="flex-1 text-left">
-                    <p className="font-medium">{product.Naziv}</p>
-                    <p className="text-sm text-gray-500">
-                      {product.Proizvođač} - {product.Cena} RSD/{product["Jedinica mere"]}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <Input
-                      type="number"
-                      min="1"
-                      value={existingItem?.quantity || 1}
-                      onChange={(e) => {
-                        const quantity = parseInt(e.target.value) || 1;
-                        handleAddProduct(
-                          product,
-                          quantity,
-                          existingItem?.paymentType || 'invoice'
-                        );
-                      }}
-                      className="w-24"
-                    />
-                    <span className="text-sm text-gray-600 w-16">
-                      {product["Jedinica mere"]}
-                    </span>
-                    <Select
-                      value={existingItem?.paymentType || 'invoice'}
-                      onValueChange={(value: 'cash' | 'invoice') => {
-                        handleAddProduct(
-                          product,
-                          existingItem?.quantity || 1,
-                          value
-                        );
-                      }}
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Način plaćanja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="invoice">Račun</SelectItem>
-                        <SelectItem value="cash">Gotovina</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </ScrollArea>
+      <div className="relative">
+        <Input
+          type="text"
+          placeholder="Pretraži proizvode..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setShowResults(true);
+          }}
+          className="w-full"
+        />
+        {showResults && searchTerm && (
+          <ProductSearchResults
+            products={filteredProducts}
+            onSelect={(product) => handleAddProduct(product)}
+          />
+        )}
+      </div>
 
       {orderItems.length > 0 && (
         <div className="mt-4">
