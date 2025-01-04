@@ -1,11 +1,5 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Product } from "@/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface ProductSelectProps {
   products: Product[];
@@ -16,12 +10,12 @@ interface ProductSelectProps {
 export const ProductSelect = ({ products, selectedProduct, onProductSelect }: ProductSelectProps) => {
   return (
     <Select 
-      value={selectedProduct?.id || ""} 
+      value={selectedProduct?.id} 
       onValueChange={onProductSelect}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Izaberite proizvod">
-          {selectedProduct ? `${selectedProduct.Naziv} - ${selectedProduct.Proizvođač}` : "Izaberite proizvod"}
+          {selectedProduct && `${selectedProduct.Naziv} - ${selectedProduct.Proizvođač}`}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
