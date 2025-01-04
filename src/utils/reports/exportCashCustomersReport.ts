@@ -183,10 +183,10 @@ export const exportCashCustomersReport = async () => {
       rowIndex += 15; // Add spacing for next customer
     });
 
-    // Set page breaks
+    // Set page breaks using the supported property
     ws['!rows'] = [];
     pageBreaks.forEach(breakRow => {
-      ws['!rows'][breakRow] = { hidden: false, hpx: 0, level: 0, pageBreak: true };
+      ws['!rows'][breakRow] = { hidden: false, hpx: 0, level: 0, wpx: undefined };
     });
 
     // Set print settings for landscape A4
