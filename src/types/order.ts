@@ -8,6 +8,6 @@ export interface Order {
   total: number;
   date: string;
   userId: string;
-  paymentType: 'cash' | 'invoice';
+  payment_type: 'cash' | 'invoice';
   sent?: boolean;
 }
