@@ -50,6 +50,10 @@ const DailySalesSummary = () => {
   }, []);
 
   const totalSales = todaySales.reduce((sum, sale) => sum + sale.total, 0);
+  const cashSales = todaySales.filter(sale => sale.payment_type === 'cash');
+  const invoiceSales = todaySales.filter(sale => sale.payment_type === 'invoice');
+  const totalCash = cashSales.reduce((sum, sale) => sum + sale.total, 0);
+  const totalInvoice = invoiceSales.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
     <Card className="mt-4 md:mt-6">
@@ -65,10 +69,18 @@ const DailySalesSummary = () => {
             </div>
           </div>
           {todaySales.length > 0 && (
-            <div className="pt-4 border-t">
-              <div className="flex justify-between items-center">
-                <span className="text-sm md:text-base font-medium">Ukupno za danas:</span>
-                <span className="font-bold text-base md:text-lg">{totalSales} RSD</span>
+            <div className="pt-4 border-t space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium">Gotovina:</span>
+                <span className="font-bold">{totalCash} RSD</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium">Račun:</span>
+                <span className="font-bold">{totalInvoice} RSD</span>
+              </div>
+              <div className="flex justify-between items-center text-base pt-2 border-t">
+                <span className="font-medium">Ukupno za danas:</span>
+                <span className="font-bold">{totalSales} RSD</span>
               </div>
             </div>
           )}

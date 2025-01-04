@@ -7,7 +7,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Order } from "@/types";
-import { format } from "date-fns";
 
 interface SalesTableProps {
   sales: Order[];
@@ -35,7 +34,9 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
           {sales.map((sale) => (
             <TableRow 
               key={sale.id}
-              className={sentOrderIds.includes(sale.id) ? "text-red-500" : ""}
+              className={`${sentOrderIds.includes(sale.id) ? "text-red-500" : ""} ${
+                sale.payment_type === 'cash' ? "bg-blue-50" : ""
+              }`}
             >
               <TableCell className="whitespace-nowrap text-sm font-medium">
                 <div>{sale.customer.name}</div>
@@ -44,8 +45,8 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
               <TableCell className="whitespace-nowrap text-sm hidden md:table-cell">
                 {sale.customer.address}, {sale.customer.city}
               </TableCell>
-              <TableCell className="whitespace-nowrap text-sm">
-                {sale.paymentType === 'cash' ? 'Gotovina' : 'Račun'}
+              <TableCell className="whitespace-nowrap text-sm font-medium">
+                {sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'}
               </TableCell>
               <TableCell className="text-right whitespace-nowrap text-sm">{sale.total} RSD</TableCell>
               <TableCell className="text-center whitespace-nowrap text-sm">{sale.items.length}</TableCell>
