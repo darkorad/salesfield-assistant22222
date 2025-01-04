@@ -59,9 +59,10 @@ export const exportCashCustomersReport = async () => {
     ];
 
     let rowIndex = 0;
+    let pageBreaks = [];
 
     // Process each sale
-    salesData.forEach((sale) => {
+    salesData.forEach((sale, saleIndex) => {
       const customer = sale.customer;
       
       // Headers for both sides
@@ -140,15 +141,15 @@ export const exportCashCustomersReport = async () => {
 
       rowIndex += 12; // Add space for items
 
-      // Add totals section
+      // Add totals section with formulas
       const previousDebt = 0; // This should be fetched from your data source
       const currentTotal = sale.total;
-      const remainingDebt = previousDebt + currentTotal; // This is now the sum of previous debt and current total
 
+      // Add formulas for the totals
       const totalsRows = [
         ['Dugovanje iz prethodnog računa:', '', '', '', previousDebt, '', 'Dugovanje iz prethodnog računa:', '', '', '', previousDebt],
         ['Ukupno artikli:', '', '', '', currentTotal, '', 'Ukupno artikli:', '', '', '', currentTotal],
-        ['Ostalo dugovanje:', '', '', '', remainingDebt, '', 'Ostalo dugovanje:', '', '', '', remainingDebt]
+        ['Ostalo dugovanje:', '', '', '', { f: `SUM(E${rowIndex+1}:E${rowIndex+2})` }, '', 'Ostalo dugovanje:', '', '', '', { f: `SUM(K${rowIndex+1}:K${rowIndex+2})` }]
       ];
 
       // Add and style totals rows
@@ -174,7 +175,18 @@ export const exportCashCustomersReport = async () => {
         }
       });
 
-      rowIndex += 15; // Add spacing for next customer (adjusted for better page fit)
+      // Add page break after each customer except the last one
+      if (saleIndex < salesData.length - 1) {
+        pageBreaks.push(rowIndex + totalsRows.length);
+      }
+
+      rowIndex += 15; // Add spacing for next customer
+    });
+
+    // Set page breaks
+    ws['!rows'] = [];
+    pageBreaks.forEach(breakRow => {
+      ws['!rows'][breakRow] = { hidden: false, hpx: 0, level: 0, pageBreak: true };
     });
 
     // Set print settings for landscape A4
