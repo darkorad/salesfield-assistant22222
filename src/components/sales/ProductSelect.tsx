@@ -4,8 +4,10 @@ import { CustomerInfoCard } from "./CustomerInfoCard";
 import { OrderItemsList } from "./OrderItemsList";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductSearchResults } from "./ProductSearchResults";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ProductSelectProps {
   products: Product[];
@@ -22,14 +24,55 @@ export const ProductSelect = ({
 }: ProductSelectProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const [customerPrices, setCustomerPrices] = useState<Record<string, { cash: number; invoice: number }>>({});
+
+  useEffect(() => {
+    const fetchCustomerPrices = async () => {
+      try {
+        const { data: prices, error } = await supabase
+          .from('customer_prices')
+          .select('*')
+          .eq('customer_id', selectedCustomer.id);
+
+        if (error) {
+          console.error('Error fetching customer prices:', error);
+          return;
+        }
+
+        const pricesMap: Record<string, { cash: number; invoice: number }> = {};
+        prices?.forEach(price => {
+          if (!pricesMap[price.product_id]) {
+            pricesMap[price.product_id] = { cash: 0, invoice: 0 };
+          }
+          pricesMap[price.product_id][price.payment_type as 'cash' | 'invoice'] = price.price;
+        });
+
+        setCustomerPrices(pricesMap);
+      } catch (error) {
+        console.error('Error in fetchCustomerPrices:', error);
+      }
+    };
+
+    if (selectedCustomer?.id) {
+      fetchCustomerPrices();
+    }
+  }, [selectedCustomer]);
 
   const filteredProducts = products.filter((product) =>
     product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getProductPrice = (product: Product, paymentType: 'cash' | 'invoice') => {
+    const customPrice = customerPrices[product.id]?.[paymentType];
+    return customPrice || product.Cena;
+  };
+
   const handleAddProduct = (product: Product, quantity: number = 1, paymentType: 'cash' | 'invoice' = 'invoice') => {
+    const price = getProductPrice(product, paymentType);
+    const productWithPrice = { ...product, Cena: price };
+
     const existingItemIndex = orderItems.findIndex(
-      (item) => item.product.Naziv === product.Naziv
+      (item) => item.product.Naziv === product.Naziv && item.paymentType === paymentType
     );
 
     if (existingItemIndex !== -1) {
@@ -37,12 +80,13 @@ export const ProductSelect = ({
       newItems[existingItemIndex] = {
         ...newItems[existingItemIndex],
         quantity: quantity,
-        paymentType: paymentType
+        paymentType: paymentType,
+        product: productWithPrice
       };
       onOrderItemsChange(newItems);
     } else {
       const newItem: OrderItem = {
-        product,
+        product: productWithPrice,
         quantity,
         paymentType
       };
@@ -71,6 +115,7 @@ export const ProductSelect = ({
           <ProductSearchResults
             products={filteredProducts}
             onSelect={(product) => handleAddProduct(product)}
+            getProductPrice={getProductPrice}
           />
         )}
       </div>
@@ -89,9 +134,12 @@ export const ProductSelect = ({
             }}
             onPaymentTypeChange={(index, paymentType) => {
               const newItems = [...orderItems];
+              const item = newItems[index];
+              const newPrice = getProductPrice(item.product, paymentType);
               newItems[index] = {
-                ...newItems[index],
-                paymentType
+                ...item,
+                paymentType,
+                product: { ...item.product, Cena: newPrice }
               };
               onOrderItemsChange(newItems);
             }}

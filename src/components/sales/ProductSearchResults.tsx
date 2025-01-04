@@ -3,9 +3,14 @@ import { Product } from "@/types";
 interface ProductSearchResultsProps {
   products: Product[];
   onSelect: (product: Product) => void;
+  getProductPrice: (product: Product, paymentType: 'cash' | 'invoice') => number;
 }
 
-export const ProductSearchResults = ({ products, onSelect }: ProductSearchResultsProps) => {
+export const ProductSearchResults = ({ 
+  products, 
+  onSelect,
+  getProductPrice 
+}: ProductSearchResultsProps) => {
   if (products.length === 0) {
     return <div className="p-4 text-gray-500">Nema pronađenih proizvoda</div>;
   }
@@ -22,9 +27,14 @@ export const ProductSearchResults = ({ products, onSelect }: ProductSearchResult
             <span className="font-medium">{product.Naziv}</span>
             <span className="text-sm text-gray-500">{product.Proizvođač}</span>
           </div>
-          <span className="text-sm font-medium">
-            {product.Cena} RSD/{product["Jedinica mere"]}
-          </span>
+          <div className="text-right">
+            <div className="text-sm font-medium">
+              Račun: {getProductPrice(product, 'invoice')} RSD
+            </div>
+            <div className="text-sm font-medium">
+              Gotovina: {getProductPrice(product, 'cash')} RSD
+            </div>
+          </div>
         </div>
       ))}
     </div>
