@@ -3,8 +3,6 @@ import { SalesFormContainer } from "@/components/sales/SalesFormContainer";
 import { ManufacturerSidebar } from "@/components/sales/ManufacturerSidebar";
 import { useSalesData } from "@/hooks/useSalesData";
 
-const DailySalesSummary = lazy(() => import("@/components/sales/DailySalesSummary"));
-
 const LoadingFallback = () => (
   <div className="animate-pulse space-y-4">
     <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -25,7 +23,6 @@ const Sales = () => {
       <div className="flex-1 p-2 md:p-6 max-w-full">
         <Suspense fallback={<LoadingFallback />}>
           <SalesFormContainer customers={customers} products={products} />
-          <DailySalesSummary />
         </Suspense>
       </div>
     </div>

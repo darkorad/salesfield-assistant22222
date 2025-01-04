@@ -62,10 +62,26 @@ const NavActions = () => {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link 
+                to="/daily-orders" 
+                className={`w-full cursor-pointer text-xs ${location.pathname === "/daily-orders" ? "font-medium" : ""}`}
+              >
+                Današnje porudžbine
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link 
                 to="/sales-manufacturer" 
                 className={`w-full cursor-pointer text-xs ${location.pathname === "/sales-manufacturer" ? "font-medium" : ""}`}
               >
                 Prodaja po proizvođaču
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link 
+                to="/monthly-sales" 
+                className={`w-full cursor-pointer text-xs ${location.pathname === "/monthly-sales" ? "font-medium" : ""}`}
+              >
+                Mesečna prodaja u RSD
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>

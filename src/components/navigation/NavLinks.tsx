@@ -15,6 +15,14 @@ const NavLinks = () => {
           Prodaja
         </Button>
       </Link>
+      <Link to="/daily-orders">
+        <Button
+          variant={location.pathname === "/daily-orders" ? "default" : "ghost"}
+          className="text-sm"
+        >
+          Današnje porudžbine
+        </Button>
+      </Link>
       <Link to="/sales-manufacturer">
         <Button
           variant={location.pathname === "/sales-manufacturer" ? "default" : "ghost"}
