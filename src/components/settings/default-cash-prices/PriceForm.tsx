@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { Product } from "@/types";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ProductSelect } from "./ProductSelect";
+import { PriceInput } from "./PriceInput";
 
 interface PriceFormProps {
   products: Product[];
@@ -28,16 +22,22 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
     setCashPrice("");
   };
 
-  const handleSavePrice = async () => {
+  const validateForm = () => {
     if (!selectedProduct?.id) {
       toast.error("Izaberite proizvod");
-      return;
+      return false;
     }
 
     if (!cashPrice || isNaN(parseFloat(cashPrice))) {
       toast.error("Unesite validnu cenu");
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleSavePrice = async () => {
+    if (!validateForm()) return;
 
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) {
@@ -77,36 +77,19 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
     <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
       <h3 className="font-medium text-lg mb-4">Unos podrazumevanih cena za gotovinu</h3>
       
-      <Select 
-        value={selectedProduct?.id || ""} 
-        onValueChange={handleProductSelect}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Izaberite proizvod" />
-        </SelectTrigger>
-        <SelectContent>
-          {products.map((product) => (
-            <SelectItem key={product.id} value={product.id}>
-              {product.Naziv} - {product.Proizvođač}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <ProductSelect
+        products={products}
+        selectedProduct={selectedProduct}
+        onProductSelect={handleProductSelect}
+      />
 
       {selectedProduct && (
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Cena za gotovinu (Regularna: {selectedProduct.Cena} RSD)
-            </label>
-            <Input
-              type="number"
-              value={cashPrice}
-              onChange={(e) => setCashPrice(e.target.value)}
-              placeholder="Unesite cenu za gotovinu"
-              className="w-full"
-            />
-          </div>
+          <PriceInput
+            selectedProduct={selectedProduct}
+            value={cashPrice}
+            onChange={setCashPrice}
+          />
 
           <Button 
             onClick={handleSavePrice} 
