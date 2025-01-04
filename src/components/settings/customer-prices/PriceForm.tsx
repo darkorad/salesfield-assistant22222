@@ -86,7 +86,7 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
     <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
       <h3 className="font-medium text-lg mb-4">Unos posebnih cena</h3>
       
-      <Select onValueChange={handleProductSelect} value={selectedProduct?.id}>
+      <Select onValueChange={handleProductSelect} value={selectedProduct?.id || ""}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Izaberite proizvod" />
         </SelectTrigger>
