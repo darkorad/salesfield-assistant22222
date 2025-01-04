@@ -3,6 +3,7 @@ import { ContactSettings } from "@/components/settings/ContactSettings";
 import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
 import { Reports } from "@/components/settings/Reports";
 import { CommunicationButtons } from "@/components/settings/CommunicationButtons";
+import { CustomerPrices } from "@/components/settings/CustomerPrices";
 
 const Settings = () => {
   return (
@@ -11,6 +12,7 @@ const Settings = () => {
         <div className="flex justify-center">
           <AddCustomerDialog />
         </div>
+        <CustomerPrices />
         <ContactSettings />
         <CommunicationButtons />
         <FileImport />
