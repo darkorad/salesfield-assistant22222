@@ -186,7 +186,7 @@ export const exportCashCustomersReport = async () => {
     // Set page breaks using the supported property
     ws['!rows'] = [];
     pageBreaks.forEach(breakRow => {
-      ws['!rows'][breakRow] = { hidden: false, hpx: 0, level: 0, wpx: undefined };
+      ws['!rows'][breakRow] = { hidden: false, hpx: 0, level: 0 };
     });
 
     // Set print settings for landscape A4
