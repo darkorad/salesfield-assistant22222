@@ -29,7 +29,7 @@ export const ViberButton = ({ contact, sales, onOrdersSent }: ViberButtonProps) 
              `${sale.customer.address}, ${sale.customer.city}\n` +
              `${itemsList}\n` +
              `${sale.total} RSD\n` +
-             `${sale.paymentType === 'cash' ? 'Gotovina' : 'Račun'}`;
+             `${sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'}`;
     }).join('\n\n-------------------\n\n');
 
     // Format the phone number by removing any spaces, dashes, or other characters

@@ -73,7 +73,7 @@ export const OrderHistory = ({ customer, open, onOpenChange }: OrderHistoryProps
                     <div className="text-right">
                       <div className="font-medium">{order.total} RSD</div>
                       <div className="text-sm text-gray-500">
-                        {order.paymentType === 'cash' ? 'Gotovina' : 'Račun'}
+                        {order.payment_type === 'cash' ? 'Gotovina' : 'Račun'}
                       </div>
                     </div>
                   </div>

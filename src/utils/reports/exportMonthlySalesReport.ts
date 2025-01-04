@@ -46,7 +46,7 @@ export const exportMonthlySalesReport = async () => {
       'Artikli': sale.items.map(item => 
         `${item.product.Naziv} (${item.quantity} ${item.product["Jedinica mere"]})`
       ).join(', '),
-      'Način plaćanja': sale.paymentType === 'cash' ? 'Gotovina' : 'Račun',
+      'Način plaćanja': sale.payment_type === 'cash' ? 'Gotovina' : 'Račun',
       'Ukupno (RSD)': sale.total
     }));
 

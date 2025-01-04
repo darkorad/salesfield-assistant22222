@@ -40,7 +40,7 @@ export const exportDailySalesReport = async () => {
 
     // Group sales by payment type
     const salesByType = salesData.reduce((acc: { invoice: Order[], cash: Order[] }, sale: Order) => {
-      if (sale.paymentType === 'cash') {
+      if (sale.payment_type === 'cash') {
         acc.cash.push(sale);
       } else {
         acc.invoice.push(sale);
