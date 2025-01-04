@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Product } from "@/types";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ManufacturerSearch } from "./manufacturer/ManufacturerSearch";
+import { ManufacturerList } from "./manufacturer/ManufacturerList";
+import { ProductList } from "./manufacturer/ProductList";
+import { SidebarToggle } from "./manufacturer/SidebarToggle";
 
 interface ManufacturerSidebarProps {
   products: Product[];
@@ -28,22 +28,11 @@ export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerS
   // Get products for selected manufacturer
   const manufacturerProducts = products.filter(p => p.Proizvođač === selectedManufacturer);
 
-  const handleManufacturerClick = (manufacturer: string) => {
-    setSelectedManufacturer(manufacturer);
-  };
-
-  const handleProductSelect = (product: Product) => {
-    if (onProductSelect) {
-      onProductSelect(product);
-    }
-  };
-
-  // Handle touch start
+  // Handle touch gestures
   const handleTouchStart = (e: TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
   };
 
-  // Handle touch end
   const handleTouchEnd = (e: TouchEvent) => {
     if (touchStartX === null) return;
 
@@ -77,82 +66,30 @@ export const ManufacturerSidebar = ({ products, onProductSelect }: ManufacturerS
       } z-30`}
       style={{ width: '280px' }}
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -right-4 top-4 z-10"
-        onClick={() => setIsCollapsed(true)}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
+      <SidebarToggle onClick={() => setIsCollapsed(true)} />
 
       <ScrollArea className="h-screen p-4">
         <div className="space-y-4">
           <h2 className="font-semibold text-lg mb-4">Proizvođači</h2>
-          <Input
-            type="text"
-            placeholder="Pretraži proizvođače..."
+          
+          <ManufacturerSearch 
             value={manufacturerSearch}
-            onChange={(e) => setManufacturerSearch(e.target.value)}
-            className="mb-4"
+            onChange={setManufacturerSearch}
           />
-          <div className="space-y-1">
-            {filteredManufacturers.map((manufacturer) => (
-              <Button
-                key={manufacturer}
-                variant={selectedManufacturer === manufacturer ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => handleManufacturerClick(manufacturer)}
-              >
-                {manufacturer}
-              </Button>
-            ))}
-          </div>
+
+          <ManufacturerList
+            manufacturers={filteredManufacturers}
+            selectedManufacturer={selectedManufacturer}
+            onSelect={setSelectedManufacturer}
+          />
 
           {selectedManufacturer && (
             <div className="mt-8">
               <h3 className="font-semibold mb-2">Proizvodi:</h3>
-              <div className="space-y-0.5">
-                {manufacturerProducts.map((product, index) => (
-                  <div
-                    key={product.id}
-                    className={`p-2 text-sm rounded-md flex flex-col gap-2 ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
-                    }`}
-                  >
-                    <div>
-                      <p className="font-medium text-sm">{product.Naziv}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {product.Cena} RSD/{product["Jedinica mere"]}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        min="1"
-                        max="100"
-                        defaultValue="1"
-                        className="w-16"
-                      />
-                      <Select defaultValue="invoice">
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue placeholder="Način plaćanja" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="invoice">Račun</SelectItem>
-                          <SelectItem value="cash">Gotovina</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        size="sm"
-                        onClick={() => handleProductSelect(product)}
-                      >
-                        Dodaj
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ProductList 
+                products={manufacturerProducts}
+                onSelect={onProductSelect || (() => {})}
+              />
             </div>
           )}
         </div>
