@@ -83,9 +83,11 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <Select onValueChange={handleProductSelect}>
-        <SelectTrigger>
+    <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
+      <h3 className="font-medium text-lg mb-4">Unos posebnih cena</h3>
+      
+      <Select onValueChange={handleProductSelect} value={selectedProduct?.id}>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Izaberite proizvod" />
         </SelectTrigger>
         <SelectContent>
@@ -108,6 +110,7 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
               value={cashPrice}
               onChange={(e) => setCashPrice(e.target.value)}
               placeholder="Unesite cenu za gotovinu"
+              className="w-full"
             />
           </div>
 
@@ -120,10 +123,11 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
               value={invoicePrice}
               onChange={(e) => setInvoicePrice(e.target.value)}
               placeholder="Unesite cenu za račun"
+              className="w-full"
             />
           </div>
 
-          <Button onClick={handleSavePrices}>
+          <Button onClick={handleSavePrices} className="w-full">
             Sačuvaj cene
           </Button>
         </div>
