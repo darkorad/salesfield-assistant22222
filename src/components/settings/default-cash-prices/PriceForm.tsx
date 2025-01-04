@@ -20,6 +20,7 @@ interface PriceFormProps {
 export const PriceForm = ({ products, onSave }: PriceFormProps) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cashPrice, setCashPrice] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleProductSelect = (productId: string) => {
     const product = products.find(p => p.id === productId);
@@ -28,8 +29,13 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
   };
 
   const handleSavePrice = async () => {
-    if (!selectedProduct) {
+    if (!selectedProduct?.id) {
       toast.error("Izaberite proizvod");
+      return;
+    }
+
+    if (!cashPrice || isNaN(parseFloat(cashPrice))) {
+      toast.error("Unesite validnu cenu");
       return;
     }
 
@@ -39,6 +45,8 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const { error } = await supabase
         .from('default_cash_prices')
@@ -47,7 +55,8 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
           price: parseFloat(cashPrice),
           user_id: sessionData.session.user.id
         }, {
-          onConflict: 'product_id'
+          onConflict: 'product_id',
+          ignoreDuplicates: false
         });
 
       if (error) throw error;
@@ -56,9 +65,11 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
       onSave();
       setSelectedProduct(null);
       setCashPrice("");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving price:', error);
-      toast.error("Greška pri čuvanju cene");
+      toast.error(error.message || "Greška pri čuvanju cene");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -66,7 +77,10 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
     <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
       <h3 className="font-medium text-lg mb-4">Unos podrazumevanih cena za gotovinu</h3>
       
-      <Select onValueChange={handleProductSelect} value={selectedProduct?.id || ""}>
+      <Select 
+        value={selectedProduct?.id || ""} 
+        onValueChange={handleProductSelect}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Izaberite proizvod" />
         </SelectTrigger>
@@ -94,8 +108,12 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
             />
           </div>
 
-          <Button onClick={handleSavePrice} className="w-full">
-            Sačuvaj cenu
+          <Button 
+            onClick={handleSavePrice} 
+            className="w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Čuvanje..." : "Sačuvaj cenu"}
           </Button>
         </div>
       )}
