@@ -17,6 +17,8 @@ interface Customer {
   id: string;
   name: string;
   group_name?: string;
+  city?: string;
+  naselje?: string;
 }
 
 export const CustomerGroupList = () => {
@@ -42,7 +44,7 @@ export const CustomerGroupList = () => {
     try {
       const { data: customers, error } = await supabase
         .from('customers')
-        .select('name, group_name')
+        .select('name, group_name, city, naselje')
         .order('name');
 
       if (error) throw error;
@@ -55,6 +57,8 @@ export const CustomerGroupList = () => {
       ws['!cols'] = [
         { wch: 40 }, // name
         { wch: 20 }, // group_name
+        { wch: 20 }, // city
+        { wch: 20 }, // naselje
       ];
 
       XLSX.writeFile(wb, `kupci-grupe.xlsx`);
@@ -77,14 +81,29 @@ export const CustomerGroupList = () => {
           const workbook = XLSX.read(data, { type: 'binary' });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(sheet) as { name: string; group_name: string }[];
+          const jsonData = XLSX.utils.sheet_to_json(sheet) as { 
+            name: string; 
+            group_name: string;
+            city?: string;
+            naselje?: string;
+          }[];
 
-          // Update customers with new group names
+          // Update customers with new group names and location data
           for (const customer of jsonData) {
-            if (customer.name && customer.group_name) {
+            if (customer.name) {
+              const updateData: {
+                group_name?: string;
+                city?: string;
+                naselje?: string;
+              } = {};
+
+              if (customer.group_name) updateData.group_name = customer.group_name;
+              if (customer.city) updateData.city = customer.city;
+              if (customer.naselje) updateData.naselje = customer.naselje;
+
               const { error: updateError } = await supabase
                 .from('customers')
-                .update({ group_name: customer.group_name })
+                .update(updateData)
                 .eq('name', customer.name);
 
               if (updateError) {
