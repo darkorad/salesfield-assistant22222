@@ -3,10 +3,17 @@ import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ProductSelect } from "../default-cash-prices/ProductSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { PriceFormHeader } from "./PriceFormHeader";
-import { PriceInputGroup } from "./PriceInputGroup";
 
 interface GroupPriceFormProps {
   groupName: string;
@@ -103,29 +110,61 @@ export const GroupPriceForm = ({ groupName, products, onSave }: GroupPriceFormPr
     <Card>
       <PriceFormHeader title="Unos grupnih cena" />
       <CardContent className="space-y-4">
-        <ProductSelect
-          products={products}
-          value={selectedProductId}
-          onChange={setSelectedProductId}
-        />
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Izaberite proizvod
+          </label>
+          <Select
+            value={selectedProductId}
+            onValueChange={setSelectedProductId}
+          >
+            <SelectTrigger className="w-full bg-white">
+              <SelectValue placeholder="Izaberite proizvod" />
+            </SelectTrigger>
+            <SelectContent>
+              <ScrollArea className="h-[300px]">
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    <div className="flex flex-col">
+                      <span>{product.Naziv}</span>
+                      <span className="text-sm text-gray-500">
+                        {product.Proizvođač} - {product.Cena} RSD
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </ScrollArea>
+            </SelectContent>
+          </Select>
+        </div>
 
         {selectedProduct && (
           <div className="space-y-4">
-            <PriceInputGroup
-              label="Cena za gotovinu"
-              regularPrice={selectedProduct.Cena}
-              value={cashPrice}
-              onChange={setCashPrice}
-              placeholder="Unesite cenu za gotovinu"
-            />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Cena za gotovinu (Regularna: {selectedProduct.Cena} RSD)
+              </label>
+              <Input
+                type="number"
+                value={cashPrice}
+                onChange={(e) => setCashPrice(e.target.value)}
+                placeholder="Unesite cenu za gotovinu"
+                className="w-full"
+              />
+            </div>
 
-            <PriceInputGroup
-              label="Cena za račun"
-              regularPrice={selectedProduct.Cena}
-              value={invoicePrice}
-              onChange={setInvoicePrice}
-              placeholder="Unesite cenu za račun"
-            />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Cena za račun (Regularna: {selectedProduct.Cena} RSD)
+              </label>
+              <Input
+                type="number"
+                value={invoicePrice}
+                onChange={(e) => setInvoicePrice(e.target.value)}
+                placeholder="Unesite cenu za račun"
+                className="w-full"
+              />
+            </div>
 
             <Button onClick={handleSavePrices} className="w-full">
               Sačuvaj cene za grupu

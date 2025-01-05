@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { PriceFormHeader } from "./PriceFormHeader";
 
 interface PriceFormProps {
   customer: Customer;
@@ -20,21 +22,20 @@ interface PriceFormProps {
 }
 
 export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [cashPrice, setCashPrice] = useState<string>("");
   const [invoicePrice, setInvoicePrice] = useState<string>("");
 
+  const selectedProduct = products.find(p => p.id === selectedProductId);
+
   const handleProductSelect = (productId: string) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      setSelectedProduct(product);
-      setCashPrice("");
-      setInvoicePrice("");
-    }
+    setSelectedProductId(productId);
+    setCashPrice("");
+    setInvoicePrice("");
   };
 
   const validateForm = () => {
-    if (!selectedProduct) {
+    if (!selectedProductId) {
       toast.error("Izaberite proizvod");
       return false;
     }
@@ -62,7 +63,7 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
       if (cashPrice) {
         priceEntries.push({
           customer_id: customer.id,
-          product_id: selectedProduct.id,
+          product_id: selectedProductId,
           price: parseFloat(cashPrice),
           payment_type: 'cash',
           user_id: sessionData.session.user.id
@@ -72,7 +73,7 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
       if (invoicePrice) {
         priceEntries.push({
           customer_id: customer.id,
-          product_id: selectedProduct.id,
+          product_id: selectedProductId,
           price: parseFloat(invoicePrice),
           payment_type: 'invoice',
           user_id: sessionData.session.user.id
@@ -89,7 +90,7 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
 
       toast.success("Cene su uspešno sačuvane");
       onSave();
-      setSelectedProduct(null);
+      setSelectedProductId("");
       setCashPrice("");
       setInvoicePrice("");
     } catch (error) {
@@ -99,68 +100,71 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
   };
 
   return (
-    <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Izaberite proizvod
-        </label>
-        <Select
-          value={selectedProduct?.id}
-          onValueChange={handleProductSelect}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Izaberite proizvod" />
-          </SelectTrigger>
-          <SelectContent>
-            <ScrollArea className="h-[300px]">
-              {products.map((product) => (
-                <SelectItem key={product.id} value={product.id}>
-                  <div className="flex flex-col">
-                    <span>{product.Naziv}</span>
-                    <span className="text-sm text-gray-500">
-                      {product.Proizvođač} - {product.Cena} RSD
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-            </ScrollArea>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {selectedProduct && (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Cena za gotovinu (Regularna: {selectedProduct.Cena} RSD)
-            </label>
-            <Input
-              type="number"
-              value={cashPrice}
-              onChange={(e) => setCashPrice(e.target.value)}
-              placeholder="Unesite cenu za gotovinu"
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Cena za račun (Regularna: {selectedProduct.Cena} RSD)
-            </label>
-            <Input
-              type="number"
-              value={invoicePrice}
-              onChange={(e) => setInvoicePrice(e.target.value)}
-              placeholder="Unesite cenu za račun"
-              className="w-full"
-            />
-          </div>
-
-          <Button onClick={handleSavePrices} className="w-full">
-            Sačuvaj cene
-          </Button>
+    <Card>
+      <PriceFormHeader title="Unos pojedinačnih cena" />
+      <CardContent className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Izaberite proizvod
+          </label>
+          <Select
+            value={selectedProductId}
+            onValueChange={handleProductSelect}
+          >
+            <SelectTrigger className="w-full bg-white">
+              <SelectValue placeholder="Izaberite proizvod" />
+            </SelectTrigger>
+            <SelectContent>
+              <ScrollArea className="h-[300px]">
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    <div className="flex flex-col">
+                      <span>{product.Naziv}</span>
+                      <span className="text-sm text-gray-500">
+                        {product.Proizvođač} - {product.Cena} RSD
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </ScrollArea>
+            </SelectContent>
+          </Select>
         </div>
-      )}
-    </div>
+
+        {selectedProduct && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Cena za gotovinu (Regularna: {selectedProduct.Cena} RSD)
+              </label>
+              <Input
+                type="number"
+                value={cashPrice}
+                onChange={(e) => setCashPrice(e.target.value)}
+                placeholder="Unesite cenu za gotovinu"
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Cena za račun (Regularna: {selectedProduct.Cena} RSD)
+              </label>
+              <Input
+                type="number"
+                value={invoicePrice}
+                onChange={(e) => setInvoicePrice(e.target.value)}
+                placeholder="Unesite cenu za račun"
+                className="w-full"
+              />
+            </div>
+
+            <Button onClick={handleSavePrices} className="w-full">
+              Sačuvaj cene
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
