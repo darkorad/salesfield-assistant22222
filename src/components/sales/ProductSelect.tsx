@@ -2,12 +2,12 @@ import { Product, OrderItem, Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { CustomerInfoCard } from "./CustomerInfoCard";
 import { OrderItemsList } from "./OrderItemsList";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { ProductSearchResults } from "./ProductSearchResults";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SyncPricesButton } from "./SyncPricesButton";
 
 interface ProductSelectProps {
   products: Product[];
@@ -180,7 +180,15 @@ export const ProductSelect = ({
 
   return (
     <div className="space-y-4">
-      <CustomerInfoCard customer={selectedCustomer} />
+      <div className="flex justify-between items-center">
+        <CustomerInfoCard customer={selectedCustomer} />
+        {selectedCustomer && (
+          <SyncPricesButton 
+            customerId={selectedCustomer.id} 
+            onSyncComplete={fetchCustomerPrices}
+          />
+        )}
+      </div>
 
       <div className="relative">
         <Input
