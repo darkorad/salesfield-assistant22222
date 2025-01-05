@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CustomerSelect } from "@/components/sales/CustomerSelect";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export const CustomerPriceForm = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   // Fetch customers and products on component mount
-  useState(() => {
+  useEffect(() => {
     const fetchData = async () => {
       const { data: customersData } = await supabase.from("customers").select("*");
       const { data: productsData } = await supabase.from("products").select("*");
@@ -30,10 +30,10 @@ export const CustomerPriceForm = () => {
     };
     
     fetchData();
-  });
+  }, []); // Empty dependency array means this runs once on mount
 
   // Filter products based on search
-  useState(() => {
+  useEffect(() => {
     const filtered = products.filter(product =>
       product.Naziv.toLowerCase().includes(productSearch.toLowerCase())
     );
