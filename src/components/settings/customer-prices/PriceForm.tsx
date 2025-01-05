@@ -2,15 +2,9 @@ import { useState } from "react";
 import { Customer, Product } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ProductSelect } from "../default-cash-prices/ProductSelect";
 
 interface PriceFormProps {
   customer: Customer;
@@ -25,14 +19,21 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
 
   const handleProductSelect = (productId: string) => {
     const product = products.find(p => p.id === productId);
-    setSelectedProduct(product || null);
-    setCashPrice("");
-    setInvoicePrice("");
+    if (product) {
+      setSelectedProduct(product);
+      setCashPrice("");
+      setInvoicePrice("");
+    }
   };
 
   const handleSavePrices = async () => {
     if (!customer || !selectedProduct) {
       toast.error("Izaberite kupca i proizvod");
+      return;
+    }
+
+    if (!cashPrice && !invoicePrice) {
+      toast.error("Unesite bar jednu cenu");
       return;
     }
 
@@ -44,6 +45,7 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
 
     try {
       const priceEntries = [];
+      
       if (cashPrice) {
         priceEntries.push({
           customer_id: customer.id,
@@ -53,6 +55,7 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
           user_id: sessionData.session.user.id
         });
       }
+      
       if (invoicePrice) {
         priceEntries.push({
           customer_id: customer.id,
@@ -86,18 +89,11 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
     <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
       <h3 className="font-medium text-lg mb-4">Unos posebnih cena</h3>
       
-      <Select onValueChange={handleProductSelect} value={selectedProduct?.id || ""}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Izaberite proizvod" />
-        </SelectTrigger>
-        <SelectContent>
-          {products.map((product) => (
-            <SelectItem key={product.id} value={product.id}>
-              {product.Naziv} - {product.Proizvođač}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <ProductSelect
+        products={products}
+        selectedProduct={selectedProduct}
+        onProductSelect={handleProductSelect}
+      />
 
       {selectedProduct && (
         <div className="space-y-4">
