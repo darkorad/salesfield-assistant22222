@@ -16,6 +16,7 @@ import {
 
 export const CustomerPrices = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
@@ -85,11 +86,39 @@ export const CustomerPrices = () => {
         </TabsList>
 
         <TabsContent value="individual">
-          <PriceForm 
-            customers={customers}
-            products={products}
-            onSave={() => {}}
-          />
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Izaberite kupca</label>
+              <Select
+                value={selectedCustomer?.id}
+                onValueChange={(value) => {
+                  const customer = customers.find(c => c.id === value);
+                  setSelectedCustomer(customer || null);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Izaberite kupca" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedCustomer && (
+              <PriceForm 
+                customer={selectedCustomer}
+                products={products}
+                onSave={() => {
+                  toast.success("Cene su uspešno sačuvane");
+                }}
+              />
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="group">
