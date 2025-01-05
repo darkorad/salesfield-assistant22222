@@ -19,13 +19,58 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
         return;
       }
 
-      const { data: groupsData, error } = await supabase
-        .from('customer_groups')
-        .select('id, name')
+      // First, get unique group names from customers table
+      const { data: customersData, error: customersError } = await supabase
+        .from('customers')
+        .select('group_name')
+        .not('group_name', 'is', null)
         .eq('user_id', session.user.id);
 
-      if (error) {
-        console.error('Error fetching groups:', error);
+      if (customersError) {
+        console.error('Error fetching customer groups:', customersError);
+        toast.error("Greška pri učitavanju grupa");
+        return;
+      }
+
+      // Get unique group names
+      const uniqueGroups = [...new Set(customersData?.map(c => c.group_name))];
+      
+      // For each unique group name, ensure it exists in customer_groups table
+      for (const groupName of uniqueGroups) {
+        if (!groupName) continue;
+
+        // Check if group already exists
+        const { data: existingGroup } = await supabase
+          .from('customer_groups')
+          .select('id')
+          .eq('name', groupName)
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (!existingGroup) {
+          // Create new group if it doesn't exist
+          const { error: insertError } = await supabase
+            .from('customer_groups')
+            .insert({
+              name: groupName,
+              user_id: session.user.id
+            });
+
+          if (insertError) {
+            console.error('Error creating group:', insertError);
+          }
+        }
+      }
+
+      // Finally, fetch all groups
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('customer_groups')
+        .select('id, name')
+        .eq('user_id', session.user.id)
+        .order('name');
+
+      if (groupsError) {
+        console.error('Error fetching groups:', groupsError);
         toast.error("Greška pri učitavanju grupa");
         return;
       }
