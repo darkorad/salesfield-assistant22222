@@ -7,9 +7,18 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    hmr: {
+      overlay: true,
+      clientPort: 8080
+    },
+    watch: {
+      usePolling: true
+    }
   },
   plugins: [
-    react(),
+    react({
+      fastRefresh: true
+    }),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
