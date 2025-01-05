@@ -62,6 +62,74 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_group_members: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          group_id: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          group_id?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          group_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_group_members_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_groups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_prices: {
         Row: {
           created_at: string
@@ -196,6 +264,58 @@ export type Database = {
           },
           {
             foreignKeyName: "default_cash_prices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_prices: {
+        Row: {
+          created_at: string
+          group_id: string | null
+          id: string
+          payment_type: string
+          price: number
+          product_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          payment_type: string
+          price: number
+          product_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          payment_type?: string
+          price?: number
+          product_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_prices_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_prices_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
