@@ -1,14 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
-import { GPSCoordinatesInput } from "./GPSCoordinatesInput";
-import { VATStatusSelect } from "./VATStatusSelect";
 import { CustomerFormData, initialCustomerFormData } from "./types";
 import { supabase } from "@/integrations/supabase/client";
+import { CustomerFormFields } from "./customer/CustomerFormFields";
 
 export const AddCustomerDialog = () => {
   const [open, setOpen] = useState(false);
@@ -26,7 +23,6 @@ export const AddCustomerDialog = () => {
         return;
       }
 
-      // Generate a simple numeric code for the customer
       const code = Date.now().toString().slice(-6);
 
       const { data, error } = await supabase
@@ -78,72 +74,10 @@ export const AddCustomerDialog = () => {
           <DialogTitle>Dodaj novog kupca</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Ime kupca</Label>
-            <Input
-              id="name"
-              value={customer.name}
-              onChange={handleInputChange("name")}
-              required
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="pib">PIB</Label>
-            <Input
-              id="pib"
-              value={customer.pib}
-              onChange={handleInputChange("pib")}
-              required
-              className="w-full"
-            />
-          </div>
-          <VATStatusSelect 
-            value={customer.isVatRegistered}
-            onChange={(value) => setCustomer(prev => ({ ...prev, isVatRegistered: value }))}
-          />
-          <div className="space-y-2">
-            <Label htmlFor="address">Adresa</Label>
-            <Input
-              id="address"
-              value={customer.address}
-              onChange={handleInputChange("address")}
-              required
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="city">Grad</Label>
-            <Input
-              id="city"
-              value={customer.city}
-              onChange={handleInputChange("city")}
-              required
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="naselje">Naselje</Label>
-            <Input
-              id="naselje"
-              value={customer.naselje}
-              onChange={handleInputChange("naselje")}
-              className="w-full"
-              placeholder="Unesite naselje"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefon</Label>
-            <Input
-              id="phone"
-              value={customer.phone}
-              onChange={handleInputChange("phone")}
-              className="w-full"
-            />
-          </div>
-          <GPSCoordinatesInput 
-            value={customer.gpsCoordinates}
-            onChange={(value) => setCustomer(prev => ({ ...prev, gpsCoordinates: value }))}
+          <CustomerFormFields 
+            customer={customer}
+            handleInputChange={handleInputChange}
+            setCustomer={setCustomer}
           />
           <Button 
             type="submit" 
