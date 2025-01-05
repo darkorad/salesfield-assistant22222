@@ -13,9 +13,16 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
 
   useEffect(() => {
     const fetchGroups = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
       const { data: groupsData, error } = await supabase
         .from('customer_groups')
-        .select('id, name');
+        .select('id, name')
+        .eq('user_id', session.user.id);
 
       if (error) {
         console.error('Error fetching groups:', error);
@@ -23,6 +30,7 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
         return;
       }
 
+      console.log('Fetched groups:', groupsData);
       setGroups(groupsData || []);
     };
 
