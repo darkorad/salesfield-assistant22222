@@ -26,35 +26,77 @@ export const ProductSelect = ({
   const [showResults, setShowResults] = useState(false);
   const [customerPrices, setCustomerPrices] = useState<Record<string, { cash: number; invoice: number }>>({});
 
-  useEffect(() => {
-    const fetchCustomerPrices = async () => {
-      try {
-        const { data: prices, error } = await supabase
-          .from('customer_prices')
-          .select('*')
-          .eq('customer_id', selectedCustomer.id);
+  const fetchCustomerPrices = async () => {
+    try {
+      const { data: prices, error } = await supabase
+        .from('customer_prices')
+        .select('*')
+        .eq('customer_id', selectedCustomer.id);
 
-        if (error) {
-          console.error('Error fetching customer prices:', error);
-          return;
-        }
-
-        const pricesMap: Record<string, { cash: number; invoice: number }> = {};
-        prices?.forEach(price => {
-          if (!pricesMap[price.product_id]) {
-            pricesMap[price.product_id] = { cash: 0, invoice: 0 };
-          }
-          pricesMap[price.product_id][price.payment_type as 'cash' | 'invoice'] = price.price;
-        });
-
-        setCustomerPrices(pricesMap);
-      } catch (error) {
-        console.error('Error in fetchCustomerPrices:', error);
+      if (error) {
+        console.error('Error fetching customer prices:', error);
+        return;
       }
-    };
 
+      const pricesMap: Record<string, { cash: number; invoice: number }> = {};
+      prices?.forEach(price => {
+        if (!pricesMap[price.product_id]) {
+          pricesMap[price.product_id] = { cash: 0, invoice: 0 };
+        }
+        pricesMap[price.product_id][price.payment_type as 'cash' | 'invoice'] = price.price;
+      });
+
+      console.log('Updated customer prices:', pricesMap);
+      setCustomerPrices(pricesMap);
+    } catch (error) {
+      console.error('Error in fetchCustomerPrices:', error);
+    }
+  };
+
+  useEffect(() => {
     if (selectedCustomer?.id) {
       fetchCustomerPrices();
+
+      // Subscribe to real-time changes in customer_prices
+      const channel = supabase
+        .channel('customer-prices-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'customer_prices',
+            filter: `customer_id=eq.${selectedCustomer.id}`
+          },
+          (payload) => {
+            console.log('Customer prices changed:', payload);
+            fetchCustomerPrices();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to real-time changes in products_darko
+      const productsChannel = supabase
+        .channel('products-darko-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'products_darko'
+          },
+          (payload) => {
+            console.log('Products changed:', payload);
+            // Refresh customer prices as they might be affected by product price changes
+            fetchCustomerPrices();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+        supabase.removeChannel(productsChannel);
+      };
     }
   }, [selectedCustomer]);
 
