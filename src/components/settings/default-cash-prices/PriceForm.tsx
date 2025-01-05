@@ -23,7 +23,7 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
   };
 
   const validateForm = () => {
-    if (!selectedProduct?.id) {
+    if (!selectedProduct) {
       toast.error("Izaberite proizvod");
       return false;
     }
@@ -55,8 +55,7 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
           price: parseFloat(cashPrice),
           user_id: sessionData.session.user.id
         }, {
-          onConflict: 'product_id',
-          ignoreDuplicates: false
+          onConflict: 'product_id'
         });
 
       if (error) throw error;
@@ -65,9 +64,9 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
       onSave();
       setSelectedProduct(null);
       setCashPrice("");
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving price:', error);
-      toast.error(error.message || "Greška pri čuvanju cene");
+      toast.error("Greška pri čuvanju cene");
     } finally {
       setIsSubmitting(false);
     }

@@ -26,16 +26,22 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
     }
   };
 
-  const handleSavePrices = async () => {
-    if (!customer || !selectedProduct) {
-      toast.error("Izaberite kupca i proizvod");
-      return;
+  const validateForm = () => {
+    if (!selectedProduct) {
+      toast.error("Izaberite proizvod");
+      return false;
     }
 
     if (!cashPrice && !invoicePrice) {
       toast.error("Unesite bar jednu cenu");
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleSavePrices = async () => {
+    if (!validateForm()) return;
 
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) {
