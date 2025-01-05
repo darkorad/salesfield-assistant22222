@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Product } from "@/types";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductSelect } from "../default-cash-prices/ProductSelect";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PriceFormHeader } from "./PriceFormHeader";
+import { PriceInputGroup } from "./PriceInputGroup";
 
 interface GroupPriceFormProps {
   groupName: string;
@@ -19,12 +20,6 @@ export const GroupPriceForm = ({ groupName, products, onSave }: GroupPriceFormPr
   const [invoicePrice, setInvoicePrice] = useState<string>("");
 
   const selectedProduct = products.find(p => p.id === selectedProductId);
-
-  const handleProductSelect = (productId: string) => {
-    setSelectedProductId(productId);
-    setCashPrice("");
-    setInvoicePrice("");
-  };
 
   const validateForm = () => {
     if (!selectedProductId) {
@@ -62,29 +57,28 @@ export const GroupPriceForm = ({ groupName, products, onSave }: GroupPriceFormPr
         return;
       }
 
-      const priceEntries = [];
-      
-      for (const customer of customers) {
+      const priceEntries = customers.flatMap(customer => {
+        const entries = [];
         if (cashPrice) {
-          priceEntries.push({
+          entries.push({
             customer_id: customer.id,
             product_id: selectedProductId,
             price: parseFloat(cashPrice),
             payment_type: 'cash',
-            user_id: sessionData.session.user.id
+            user_id: sessionData.session!.user.id
           });
         }
-        
         if (invoicePrice) {
-          priceEntries.push({
+          entries.push({
             customer_id: customer.id,
             product_id: selectedProductId,
             price: parseFloat(invoicePrice),
             payment_type: 'invoice',
-            user_id: sessionData.session.user.id
+            user_id: sessionData.session!.user.id
           });
         }
-      }
+        return entries;
+      });
 
       const { error } = await supabase
         .from('customer_prices')
@@ -107,43 +101,31 @@ export const GroupPriceForm = ({ groupName, products, onSave }: GroupPriceFormPr
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Unos grupnih cena</CardTitle>
-      </CardHeader>
+      <PriceFormHeader title="Unos grupnih cena" />
       <CardContent className="space-y-4">
         <ProductSelect
           products={products}
           value={selectedProductId}
-          onChange={handleProductSelect}
+          onChange={setSelectedProductId}
         />
 
         {selectedProduct && (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Cena za gotovinu (Regularna: {selectedProduct.Cena} RSD)
-              </label>
-              <Input
-                type="number"
-                value={cashPrice}
-                onChange={(e) => setCashPrice(e.target.value)}
-                placeholder="Unesite cenu za gotovinu"
-                className="w-full"
-              />
-            </div>
+            <PriceInputGroup
+              label="Cena za gotovinu"
+              regularPrice={selectedProduct.Cena}
+              value={cashPrice}
+              onChange={setCashPrice}
+              placeholder="Unesite cenu za gotovinu"
+            />
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Cena za račun (Regularna: {selectedProduct.Cena} RSD)
-              </label>
-              <Input
-                type="number"
-                value={invoicePrice}
-                onChange={(e) => setInvoicePrice(e.target.value)}
-                placeholder="Unesite cenu za račun"
-                className="w-full"
-              />
-            </div>
+            <PriceInputGroup
+              label="Cena za račun"
+              regularPrice={selectedProduct.Cena}
+              value={invoicePrice}
+              onChange={setInvoicePrice}
+              placeholder="Unesite cenu za račun"
+            />
 
             <Button onClick={handleSavePrices} className="w-full">
               Sačuvaj cene za grupu
