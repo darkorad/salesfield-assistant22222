@@ -18,8 +18,10 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
 
   const handleProductSelect = (productId: string) => {
     const product = products.find(p => p.id === productId);
-    setSelectedProduct(product || null);
-    setCashPrice("");
+    if (product) {
+      setSelectedProduct(product);
+      setCashPrice("");
+    }
   };
 
   const validateForm = () => {
