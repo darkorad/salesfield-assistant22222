@@ -73,9 +73,9 @@ export const ProductSelect = ({
     if (selectedCustomer?.id) {
       fetchCustomerPrices();
 
-      // Subscribe to customer_prices changes
+      // Subscribe to all relevant price changes
       const pricesChannel = supabase
-        .channel('customer-prices-changes')
+        .channel('prices-changes')
         .on(
           'postgres_changes',
           {
@@ -89,11 +89,21 @@ export const ProductSelect = ({
             fetchCustomerPrices();
           }
         )
-        .subscribe();
-
-      // Subscribe to products_darko changes
-      const productsChannel = supabase
-        .channel('products-darko-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'group_prices',
+            filter: selectedCustomer.group_name ? 
+              `group_id=eq.${selectedCustomer.group_name}` : 
+              undefined
+          },
+          (payload) => {
+            console.log('Group prices changed:', payload);
+            fetchCustomerPrices();
+          }
+        )
         .on(
           'postgres_changes',
           {
@@ -101,33 +111,8 @@ export const ProductSelect = ({
             schema: 'public',
             table: 'products_darko'
           },
-          async (payload) => {
+          (payload) => {
             console.log('Products changed:', payload);
-            // Refresh products and customer prices
-            const { data: updatedProducts } = await supabase
-              .from('products_darko')
-              .select('*')
-              .not('Naziv', 'eq', '');
-            
-            if (updatedProducts) {
-              setLocalProducts(updatedProducts);
-              // Update existing order items with new base prices
-              const updatedOrderItems = orderItems.map(item => {
-                const updatedProduct = updatedProducts.find(p => p.Naziv === item.product.Naziv);
-                if (updatedProduct) {
-                  const newPrice = getProductPrice(updatedProduct, item.paymentType);
-                  return {
-                    ...item,
-                    product: {
-                      ...updatedProduct,
-                      Cena: newPrice
-                    }
-                  };
-                }
-                return item;
-              });
-              onOrderItemsChange(updatedOrderItems);
-            }
             fetchCustomerPrices();
           }
         )
@@ -135,7 +120,6 @@ export const ProductSelect = ({
 
       return () => {
         supabase.removeChannel(pricesChannel);
-        supabase.removeChannel(productsChannel);
       };
     }
   }, [selectedCustomer?.id]);

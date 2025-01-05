@@ -23,18 +23,12 @@ export const CustomerPriceForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get user session
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           toast.error("Niste prijavljeni");
           return;
         }
 
-        // Get user email
-        const userEmail = session.user.email;
-        console.log("Fetching data for user:", userEmail);
-
-        // Fetch customers
         const { data: customersData, error: customersError } = await supabase
           .from("customers")
           .select("*")
@@ -43,38 +37,13 @@ export const CustomerPriceForm = () => {
         if (customersError) throw customersError;
         setCustomers(customersData || []);
 
-        // Fetch products based on user email
-        let productsData;
-        let productsError;
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .not('Naziv', 'eq', '');
 
-        if (userEmail === 'zirmd.darko@gmail.com') {
-          console.log("Fetching products from products_darko table");
-          const response = await supabase
-            .from('products_darko')
-            .select('*')
-            .not('Naziv', 'eq', '');
-          
-          productsData = response.data;
-          productsError = response.error;
-        } else {
-          console.log("Fetching products from regular products table");
-          const response = await supabase
-            .from('products')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .not('Naziv', 'eq', '');
-          
-          productsData = response.data;
-          productsError = response.error;
-        }
-
-        if (productsError) {
-          console.error('Error fetching products:', productsError);
-          toast.error("Greška pri učitavanju proizvoda");
-          return;
-        }
-
-        console.log("Fetched products:", productsData?.length || 0);
+        if (productsError) throw productsError;
         setProducts(productsData || []);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -134,6 +103,50 @@ export const CustomerPriceForm = () => {
     setProductSearch("");
     setInvoicePrice("");
     setCashPrice("");
+  };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('customer-prices-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'customer_prices'
+        },
+        (payload) => {
+          console.log('Price change detected:', payload);
+          // Refresh prices when changes occur
+          if (selectedCustomer && selectedProduct) {
+            fetchCurrentPrices(selectedCustomer.id, selectedProduct.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedCustomer, selectedProduct]);
+
+  const fetchCurrentPrices = async (customerId: string, productId: string) => {
+    const { data, error } = await supabase
+      .from('customer_prices')
+      .select('*')
+      .eq('customer_id', customerId)
+      .eq('product_id', productId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching prices:', error);
+      return;
+    }
+
+    if (data) {
+      setInvoicePrice(data.invoice_price.toString());
+      setCashPrice(data.cash_price.toString());
+    }
   };
 
   return (

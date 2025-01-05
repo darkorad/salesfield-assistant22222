@@ -8,9 +8,6 @@ import { CustomerGroupSelect } from "./CustomerGroupSelect";
 import { Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CustomerSearchInput } from "@/components/sales/CustomerSearchInput";
-import { CustomerSearchResults } from "@/components/sales/CustomerSearchResults";
-import { Customer } from "@/types";
 
 export const GroupPriceForm = () => {
   const [selectedGroup, setSelectedGroup] = useState<{ id: string; name: string } | null>(null);
@@ -23,6 +20,67 @@ export const GroupPriceForm = () => {
   const [cashPrice, setCashPrice] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    // Subscribe to group prices changes
+    const groupPricesChannel = supabase
+      .channel('group-prices-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_prices'
+        },
+        (payload) => {
+          console.log('Group price change detected:', payload);
+          if (selectedGroup && selectedProduct) {
+            fetchGroupPrices(selectedGroup.id, selectedProduct.id);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to customer prices changes
+    const customerPricesChannel = supabase
+      .channel('customer-prices-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'customer_prices'
+        },
+        (payload) => {
+          console.log('Customer price change detected:', payload);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(groupPricesChannel);
+      supabase.removeChannel(customerPricesChannel);
+    };
+  }, [selectedGroup, selectedProduct]);
+
+  const fetchGroupPrices = async (groupId: string, productId: string) => {
+    const { data, error } = await supabase
+      .from('group_prices')
+      .select('*')
+      .eq('group_id', groupId)
+      .eq('product_id', productId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching group prices:', error);
+      return;
+    }
+
+    if (data) {
+      setInvoicePrice(data.invoice_price.toString());
+      setCashPrice(data.cash_price.toString());
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
