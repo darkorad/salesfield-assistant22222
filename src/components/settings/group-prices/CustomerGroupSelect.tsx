@@ -34,31 +34,42 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
 
       // Get unique group names
       const uniqueGroups = [...new Set(customersData?.map(c => c.group_name))];
+      console.log('Unique groups found:', uniqueGroups);
       
       // For each unique group name, ensure it exists in customer_groups table
       for (const groupName of uniqueGroups) {
         if (!groupName) continue;
 
-        // Check if group already exists
-        const { data: existingGroup } = await supabase
-          .from('customer_groups')
-          .select('id')
-          .eq('name', groupName)
-          .eq('user_id', session.user.id)
-          .single();
-
-        if (!existingGroup) {
-          // Create new group if it doesn't exist
-          const { error: insertError } = await supabase
+        try {
+          // Check if group already exists
+          const { data: existingGroup, error: checkError } = await supabase
             .from('customer_groups')
-            .insert({
-              name: groupName,
-              user_id: session.user.id
-            });
+            .select('id')
+            .eq('name', groupName)
+            .eq('user_id', session.user.id)
+            .maybeSingle(); // Changed from .single() to .maybeSingle()
 
-          if (insertError) {
-            console.error('Error creating group:', insertError);
+          if (checkError) {
+            console.error('Error checking existing group:', groupName, checkError);
+            continue;
           }
+
+          if (!existingGroup) {
+            console.log('Creating new group:', groupName);
+            // Create new group if it doesn't exist
+            const { error: insertError } = await supabase
+              .from('customer_groups')
+              .insert({
+                name: groupName,
+                user_id: session.user.id
+              });
+
+            if (insertError) {
+              console.error('Error creating group:', groupName, insertError);
+            }
+          }
+        } catch (error) {
+          console.error('Error processing group:', groupName, error);
         }
       }
 
