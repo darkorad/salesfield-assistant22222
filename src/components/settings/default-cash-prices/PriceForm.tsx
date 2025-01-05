@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ProductSelect } from "./ProductSelect";
 import { PriceInput } from "./PriceInput";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PriceFormProps {
   products: Product[];
@@ -55,29 +56,29 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Proizvod
-        </label>
-        <ProductSelect
-          products={products}
-          value={selectedProductId}
-          onChange={setSelectedProductId}
-        />
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Nova podrazumevana cena</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <ProductSelect
+            products={products}
+            value={selectedProductId}
+            onChange={setSelectedProductId}
+          />
 
-      <div>
-        <PriceInput
-          selectedProduct={selectedProduct}
-          value={price}
-          onChange={setPrice}
-        />
-      </div>
+          <PriceInput
+            selectedProduct={selectedProduct}
+            value={price}
+            onChange={setPrice}
+          />
 
-      <Button type="submit" className="w-full">
-        Sačuvaj
-      </Button>
-    </form>
+          <Button type="submit" className="w-full">
+            Sačuvaj
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };

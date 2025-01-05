@@ -9,8 +9,8 @@ interface PriceInputProps {
 
 export const PriceInput = ({ selectedProduct, value, onChange }: PriceInputProps) => {
   return (
-    <div>
-      <label className="block text-sm font-medium mb-1">
+    <div className="space-y-2">
+      <label className="block text-sm font-medium">
         Cena za gotovinu {selectedProduct && `(Regularna: ${selectedProduct.Cena} RSD)`}
       </label>
       <Input
