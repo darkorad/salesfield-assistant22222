@@ -58,6 +58,7 @@ export const CustomerGroupMembers = ({ groupId }: CustomerGroupMembersProps) => 
 
         if (error) throw error;
         setSelectedCustomers(prev => prev.filter(id => id !== customerId));
+        toast.success("Kupac je uklonjen iz grupe");
       } else {
         // Add to group
         const { error } = await supabase
@@ -66,6 +67,7 @@ export const CustomerGroupMembers = ({ groupId }: CustomerGroupMembersProps) => 
 
         if (error) throw error;
         setSelectedCustomers(prev => [...prev, customerId]);
+        toast.success("Kupac je dodat u grupu");
       }
     } catch (error) {
       console.error('Error updating group members:', error);
@@ -91,7 +93,7 @@ export const CustomerGroupMembers = ({ groupId }: CustomerGroupMembersProps) => 
               htmlFor={customer.id}
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              {customer.name}
+              {customer.name} - {customer.code}
             </label>
           </div>
         ))}
