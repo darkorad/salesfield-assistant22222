@@ -7,9 +7,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface ProductSelectProps {
+export interface ProductSelectProps {
   products: Product[];
-  value: string;
+  value?: string;
   onChange: (value: string) => void;
 }
 

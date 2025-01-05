@@ -13,12 +13,12 @@ interface PriceFormProps {
 
 export const PriceForm = ({ products, onSave }: PriceFormProps) => {
   const [selectedProductId, setSelectedProductId] = useState("");
-  const [price, setPrice] = useState<number | "">("");
+  const [price, setPrice] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedProductId || price === "") {
+    if (!selectedProductId || !price) {
       toast.error("Molimo popunite sva polja");
       return;
     }
@@ -34,7 +34,7 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
         .from('default_cash_prices')
         .upsert({
           product_id: selectedProductId,
-          price: price,
+          price: parseFloat(price),
           user_id: session.user.id
         }, {
           onConflict: 'product_id,user_id'

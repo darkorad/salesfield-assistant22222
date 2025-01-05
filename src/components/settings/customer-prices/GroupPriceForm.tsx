@@ -50,7 +50,6 @@ export const GroupPriceForm = ({ groupName, products, onSave }: GroupPriceFormPr
     }
 
     try {
-      // Get all customers in the group
       const { data: customers, error: customersError } = await supabase
         .from('customers')
         .select('id')
@@ -112,8 +111,8 @@ export const GroupPriceForm = ({ groupName, products, onSave }: GroupPriceFormPr
       
       <ProductSelect
         products={products}
-        selectedProduct={selectedProduct}
-        onProductSelect={handleProductSelect}
+        value={selectedProduct?.id}
+        onChange={handleProductSelect}
       />
 
       {selectedProduct && (
