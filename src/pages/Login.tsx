@@ -73,7 +73,7 @@ const Login = () => {
                 border: '1px solid #E2E8F0',
               },
               anchor: {
-                color: '#1A1F2C',
+                display: 'none', // Hide all anchor links (forgot password, sign up)
               },
             },
             className: {
@@ -90,17 +90,10 @@ const Login = () => {
                 password_label: 'Lozinka',
                 button_label: 'Prijava',
                 loading_button_label: 'Prijavljivanje...',
-                link_text: 'Već imate nalog? Prijavite se'
-              },
-              sign_up: {
-                email_label: 'Email adresa',
-                password_label: 'Lozinka',
-                button_label: 'Registracija',
-                loading_button_label: 'Registracija u toku...',
-                link_text: 'Nemate nalog? Registrujte se'
               }
             }
           }}
+          view="sign_in"
         />
       </Card>
     </div>
