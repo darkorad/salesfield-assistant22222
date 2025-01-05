@@ -4,7 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ProductSelect } from "../default-cash-prices/ProductSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PriceFormProps {
   customer: Customer;
@@ -93,13 +100,33 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
 
   return (
     <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
-      <h3 className="font-medium text-lg mb-4">Unos posebnih cena</h3>
-      
-      <ProductSelect
-        products={products}
-        selectedProduct={selectedProduct}
-        onProductSelect={handleProductSelect}
-      />
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Izaberite proizvod
+        </label>
+        <Select
+          value={selectedProduct?.id}
+          onValueChange={handleProductSelect}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Izaberite proizvod" />
+          </SelectTrigger>
+          <SelectContent>
+            <ScrollArea className="h-[300px]">
+              {products.map((product) => (
+                <SelectItem key={product.id} value={product.id}>
+                  <div className="flex flex-col">
+                    <span>{product.Naziv}</span>
+                    <span className="text-sm text-gray-500">
+                      {product.Proizvođač} - {product.Cena} RSD
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </ScrollArea>
+          </SelectContent>
+        </Select>
+      </div>
 
       {selectedProduct && (
         <div className="space-y-4">

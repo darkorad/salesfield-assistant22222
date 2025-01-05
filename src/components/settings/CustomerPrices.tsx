@@ -3,7 +3,6 @@ import { Customer, Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PriceForm } from "./customer-prices/PriceForm";
-import { PricesList } from "./customer-prices/PricesList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GroupPriceForm } from "./customer-prices/GroupPriceForm";
 import {
@@ -20,7 +19,6 @@ export const CustomerPrices = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
-  const [customerPrices, setCustomerPrices] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCustomersAndProducts();
@@ -28,31 +26,29 @@ export const CustomerPrices = () => {
 
   const fetchCustomersAndProducts = async () => {
     try {
-      // Fetch customers
       const { data: customersData, error: customersError } = await supabase
         .from('customers')
-        .select('*');
+        .select('*')
+        .order('name');
       
       if (customersError) throw customersError;
       
-      // Get unique groups
       const uniqueGroups = Array.from(new Set(customersData?.map(c => c.group_name).filter(Boolean)));
       setGroups(uniqueGroups);
 
-      // Get user email to determine which products table to use
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Niste prijavljeni");
         return;
       }
 
-      // Fetch products based on user email
       let productsData;
       if (session.user.email === 'zirmd.darko@gmail.com') {
         const { data, error } = await supabase
           .from('products_darko')
           .select('*')
-          .not('Naziv', 'eq', '');
+          .not('Naziv', 'eq', '')
+          .order('Naziv');
         
         if (error) throw error;
         productsData = data;
@@ -61,7 +57,8 @@ export const CustomerPrices = () => {
           .from('products')
           .select('*')
           .eq('user_id', session.user.id)
-          .not('Naziv', 'eq', '');
+          .not('Naziv', 'eq', '')
+          .order('Naziv');
         
         if (error) throw error;
         productsData = data;
@@ -80,9 +77,9 @@ export const CustomerPrices = () => {
       <h2 className="text-lg font-semibold">Promena cena</h2>
       
       <Tabs defaultValue="individual" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="individual">Pojedinačno</TabsTrigger>
-          <TabsTrigger value="group">Grupno</TabsTrigger>
+        <TabsList className="w-full">
+          <TabsTrigger value="individual" className="flex-1">Pojedinačno</TabsTrigger>
+          <TabsTrigger value="group" className="flex-1">Grupno</TabsTrigger>
         </TabsList>
 
         <TabsContent value="individual">
@@ -115,6 +112,7 @@ export const CustomerPrices = () => {
                 products={products}
                 onSave={() => {
                   toast.success("Cene su uspešno sačuvane");
+                  setSelectedCustomer(null);
                 }}
               />
             )}
@@ -148,6 +146,7 @@ export const CustomerPrices = () => {
                 products={products}
                 onSave={() => {
                   toast.success("Cene su uspešno sačuvane za grupu");
+                  setSelectedGroup("");
                 }}
               />
             )}
