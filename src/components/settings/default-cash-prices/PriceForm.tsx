@@ -15,6 +15,8 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [price, setPrice] = useState("");
 
+  const selectedProduct = products.find(p => p.id === selectedProductId);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -66,10 +68,8 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">
-          Cena za gotovinu
-        </label>
         <PriceInput
+          selectedProduct={selectedProduct}
           value={price}
           onChange={setPrice}
         />
