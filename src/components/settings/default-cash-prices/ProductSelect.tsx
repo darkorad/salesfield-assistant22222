@@ -7,24 +7,38 @@ interface ProductSelectProps {
   onProductSelect: (productId: string) => void;
 }
 
-export const ProductSelect = ({ products, selectedProduct, onProductSelect }: ProductSelectProps) => {
+export const ProductSelect = ({ 
+  products, 
+  selectedProduct, 
+  onProductSelect 
+}: ProductSelectProps) => {
+  const getDisplayValue = () => {
+    if (!selectedProduct) return undefined;
+    return `${selectedProduct.Naziv} - ${selectedProduct.Proizvođač}`;
+  };
+
   return (
-    <Select 
-      value={selectedProduct?.id} 
-      onValueChange={onProductSelect}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Izaberite proizvod">
-          {selectedProduct && `${selectedProduct.Naziv} - ${selectedProduct.Proizvođač}`}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {products.map((product) => (
-          <SelectItem key={product.id} value={product.id}>
-            {product.Naziv} - {product.Proizvođač}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Izaberite proizvod
+      </label>
+      <Select 
+        value={selectedProduct?.id} 
+        onValueChange={onProductSelect}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Izaberite proizvod">
+            {getDisplayValue()}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {products.map((product) => (
+            <SelectItem key={product.id} value={product.id}>
+              {product.Naziv} - {product.Proizvođač}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
