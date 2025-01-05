@@ -1,7 +1,6 @@
 import { CustomerPrices } from "@/components/settings/CustomerPrices";
 import { DefaultCashPrices } from "@/components/settings/DefaultCashPrices";
 import { ExportData } from "@/components/settings/ExportData";
-import { CustomerGroupForm } from "@/components/settings/customer-groups/CustomerGroupForm";
 import { CustomerGroupList } from "@/components/settings/customer-groups/CustomerGroupList";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -35,10 +34,7 @@ const Settings = () => {
       </div>
 
       <div>
-        <div className="space-y-6">
-          <CustomerGroupForm onGroupCreated={() => {}} />
-          <CustomerGroupList />
-        </div>
+        <CustomerGroupList />
       </div>
 
       <div>
