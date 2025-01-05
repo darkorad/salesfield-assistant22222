@@ -23,36 +23,59 @@ export const CustomerPriceForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Get user session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Niste prijavljeni");
+          return;
+        }
+
+        // Get user email
+        const userEmail = session.user.email;
+        console.log("Fetching data for user:", userEmail);
+
         // Fetch customers
         const { data: customersData, error: customersError } = await supabase
           .from("customers")
-          .select("*");
+          .select("*")
+          .eq('user_id', session.user.id);
 
         if (customersError) throw customersError;
         setCustomers(customersData || []);
 
-        // Fetch products from multiple sources
-        const [
-          { data: regularProducts },
-          { data: darkoProducts },
-          { data: veljkoProducts }
-        ] = await Promise.all([
-          supabase.from("products").select("*"),
-          supabase.from("products_darko").select("*"),
-          supabase.from("CenovnikVeljko").select("*")
-        ]);
+        // Fetch products based on user email
+        let productsData;
+        let productsError;
 
-        // Combine and deduplicate products
-        const allProducts = [
-          ...(regularProducts || []),
-          ...(darkoProducts || []),
-          ...(veljkoProducts || [])
-        ].filter((product, index, self) => 
-          index === self.findIndex((p) => p.Naziv === product.Naziv)
-        );
+        if (userEmail === 'zirmd.darko@gmail.com') {
+          console.log("Fetching products from products_darko table");
+          const response = await supabase
+            .from('products_darko')
+            .select('*')
+            .not('Naziv', 'eq', '');
+          
+          productsData = response.data;
+          productsError = response.error;
+        } else {
+          console.log("Fetching products from regular products table");
+          const response = await supabase
+            .from('products')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .not('Naziv', 'eq', '');
+          
+          productsData = response.data;
+          productsError = response.error;
+        }
 
-        console.log("Total products loaded:", allProducts.length);
-        setProducts(allProducts);
+        if (productsError) {
+          console.error('Error fetching products:', productsError);
+          toast.error("Greška pri učitavanju proizvoda");
+          return;
+        }
+
+        console.log("Fetched products:", productsData?.length || 0);
+        setProducts(productsData || []);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Greška pri učitavanju podataka");
