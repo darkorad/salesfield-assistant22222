@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ProductSearchInput } from "@/components/sales/ProductSearchInput";
 import { ProductSearchResults } from "@/components/sales/ProductSearchResults";
 import { CustomerGroupSelect } from "./CustomerGroupSelect";
-import { Product } from "@/types";
+import { Product, Customer } from "@/types";
+import { CustomerSearchInput } from "@/components/sales/CustomerSearchInput";
+import { CustomerSearchResults } from "@/components/sales/CustomerSearchResults";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 

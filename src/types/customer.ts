@@ -10,4 +10,5 @@ export interface Customer {
   is_vat_registered: boolean;
   gps_coordinates?: string;
   naselje?: string;
+  group_name?: string;
 }
