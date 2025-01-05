@@ -235,6 +235,58 @@ export type Database = {
           },
         ]
       }
+      group_prices: {
+        Row: {
+          cash_price: number
+          created_at: string
+          group_id: string | null
+          id: string
+          invoice_price: number
+          product_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cash_price: number
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          invoice_price: number
+          product_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cash_price?: number
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          invoice_price?: number
+          product_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_prices_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_darko"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_prices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imported_products: {
         Row: {
           Cena: number
@@ -390,6 +442,7 @@ export type Database = {
         Row: {
           Cena: number
           created_at: string
+          id: string
           "Jedinica mere": string
           Naziv: string
           Proizvođač: string
@@ -397,6 +450,7 @@ export type Database = {
         Insert: {
           Cena: number
           created_at?: string
+          id?: string
           "Jedinica mere": string
           Naziv: string
           Proizvođač: string
@@ -404,6 +458,7 @@ export type Database = {
         Update: {
           Cena?: number
           created_at?: string
+          id?: string
           "Jedinica mere"?: string
           Naziv?: string
           Proizvođač?: string
