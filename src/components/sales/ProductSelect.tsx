@@ -25,6 +25,7 @@ export const ProductSelect = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [customerPrices, setCustomerPrices] = useState<Record<string, { cash: number; invoice: number }>>({});
+  const [localProducts, setLocalProducts] = useState(products);
 
   const fetchCustomerPrices = async () => {
     try {
@@ -40,16 +41,31 @@ export const ProductSelect = ({
 
       const pricesMap: Record<string, { cash: number; invoice: number }> = {};
       prices?.forEach(price => {
-        if (!pricesMap[price.product_id]) {
-          pricesMap[price.product_id] = { cash: 0, invoice: 0 };
-        }
-        pricesMap[price.product_id][price.payment_type as 'cash' | 'invoice'] = price.price;
+        pricesMap[price.product_id] = {
+          cash: price.cash_price,
+          invoice: price.invoice_price
+        };
       });
 
       console.log('Updated customer prices:', pricesMap);
       setCustomerPrices(pricesMap);
+
+      // Update existing order items with new prices
+      const updatedOrderItems = orderItems.map(item => {
+        const newPrice = getProductPrice(item.product, item.paymentType);
+        return {
+          ...item,
+          product: {
+            ...item.product,
+            Cena: newPrice
+          }
+        };
+      });
+      onOrderItemsChange(updatedOrderItems);
+
     } catch (error) {
       console.error('Error in fetchCustomerPrices:', error);
+      toast.error('Greška pri učitavanju cena');
     }
   };
 
@@ -57,8 +73,8 @@ export const ProductSelect = ({
     if (selectedCustomer?.id) {
       fetchCustomerPrices();
 
-      // Subscribe to real-time changes in customer_prices
-      const channel = supabase
+      // Subscribe to customer_prices changes
+      const pricesChannel = supabase
         .channel('customer-prices-changes')
         .on(
           'postgres_changes',
@@ -75,7 +91,7 @@ export const ProductSelect = ({
         )
         .subscribe();
 
-      // Subscribe to real-time changes in products_darko
+      // Subscribe to products_darko changes
       const productsChannel = supabase
         .channel('products-darko-changes')
         .on(
@@ -85,22 +101,46 @@ export const ProductSelect = ({
             schema: 'public',
             table: 'products_darko'
           },
-          (payload) => {
+          async (payload) => {
             console.log('Products changed:', payload);
-            // Refresh customer prices as they might be affected by product price changes
+            // Refresh products and customer prices
+            const { data: updatedProducts } = await supabase
+              .from('products_darko')
+              .select('*')
+              .not('Naziv', 'eq', '');
+            
+            if (updatedProducts) {
+              setLocalProducts(updatedProducts);
+              // Update existing order items with new base prices
+              const updatedOrderItems = orderItems.map(item => {
+                const updatedProduct = updatedProducts.find(p => p.Naziv === item.product.Naziv);
+                if (updatedProduct) {
+                  const newPrice = getProductPrice(updatedProduct, item.paymentType);
+                  return {
+                    ...item,
+                    product: {
+                      ...updatedProduct,
+                      Cena: newPrice
+                    }
+                  };
+                }
+                return item;
+              });
+              onOrderItemsChange(updatedOrderItems);
+            }
             fetchCustomerPrices();
           }
         )
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(pricesChannel);
         supabase.removeChannel(productsChannel);
       };
     }
-  }, [selectedCustomer]);
+  }, [selectedCustomer?.id]);
 
-  const filteredProducts = products.filter((product) =>
+  const filteredProducts = localProducts.filter((product) =>
     product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
