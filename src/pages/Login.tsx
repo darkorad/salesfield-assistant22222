@@ -60,6 +60,8 @@ const Login = () => {
         <Auth
           supabaseClient={supabase}
           providers={[]}
+          view="sign_in"
+          showLinks={false}
           appearance={{
             theme: ThemeSupa,
             style: {
@@ -71,9 +73,6 @@ const Login = () => {
               input: {
                 borderRadius: '8px',
                 border: '1px solid #E2E8F0',
-              },
-              anchor: {
-                display: 'none', // Hide all anchor links (forgot password, sign up)
               },
             },
             className: {
@@ -93,7 +92,6 @@ const Login = () => {
               }
             }
           }}
-          view="sign_in"
         />
       </Card>
     </div>
