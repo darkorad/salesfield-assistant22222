@@ -11,6 +11,9 @@ export const CustomerInfoCard = ({ customer }: CustomerInfoCardProps) => {
       <div className="text-sm">
         <p><span className="font-medium">Ime:</span> {customer.name}</p>
         <p><span className="font-medium">Adresa:</span> {customer.address}</p>
+        {customer.naselje && (
+          <p><span className="font-medium">Naselje:</span> {customer.naselje}</p>
+        )}
         {customer.phone && (
           <p><span className="font-medium">Telefon:</span> {customer.phone}</p>
         )}

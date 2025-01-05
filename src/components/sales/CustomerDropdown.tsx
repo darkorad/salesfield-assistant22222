@@ -29,7 +29,9 @@ export const CustomerDropdown = ({ customers, onCustomerSelect }: CustomerDropdo
             className="flex flex-col items-start"
           >
             <div className="font-medium">{customer.name}</div>
-            <div className="text-sm text-gray-500">{customer.address}, {customer.city}</div>
+            <div className="text-sm text-gray-500">
+              {customer.address}, {customer.naselje && `${customer.naselje},`} {customer.city}
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

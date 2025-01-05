@@ -17,7 +17,9 @@ export const CustomerSearchResults = ({ customers, onCustomerSelect }: CustomerS
           onClick={() => onCustomerSelect(customer)}
         >
           <div className="font-medium">{customer.name}</div>
-          <div className="text-sm text-gray-500">{customer.address}, {customer.city}</div>
+          <div className="text-sm text-gray-500">
+            {customer.address}, {customer.naselje && `${customer.naselje},`} {customer.city}
+          </div>
         </div>
       ))}
     </div>
