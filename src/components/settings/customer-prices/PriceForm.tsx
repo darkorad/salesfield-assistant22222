@@ -103,8 +103,8 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
     <Card>
       <PriceFormHeader title="Unos pojedinačnih cena" />
       <CardContent className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
             Izaberite proizvod
           </label>
           <Select
@@ -114,8 +114,8 @@ export const PriceForm = ({ customer, products, onSave }: PriceFormProps) => {
             <SelectTrigger className="w-full bg-white">
               <SelectValue placeholder="Izaberite proizvod" />
             </SelectTrigger>
-            <SelectContent>
-              <ScrollArea className="h-[300px]">
+            <SelectContent className="bg-white">
+              <ScrollArea className="h-[200px]">
                 {products.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
                     <div className="flex flex-col">
