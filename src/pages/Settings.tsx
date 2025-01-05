@@ -10,7 +10,7 @@ const Settings = () => {
     <div className="container mx-auto py-6">
       <Tabs defaultValue="customer-prices" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="customer-prices">Cene za kupce</TabsTrigger>
+          <TabsTrigger value="customer-prices">Promena cena</TabsTrigger>
           <TabsTrigger value="default-cash-prices">Podrazumevane cene za gotovinu</TabsTrigger>
           <TabsTrigger value="customer-groups">Grupe kupaca</TabsTrigger>
           <TabsTrigger value="export">Export podataka</TabsTrigger>

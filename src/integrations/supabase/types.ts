@@ -189,6 +189,7 @@ export type Database = {
           code: string
           created_at: string
           gps_coordinates: string | null
+          group_name: string | null
           id: string
           is_vat_registered: boolean | null
           name: string
@@ -202,6 +203,7 @@ export type Database = {
           code: string
           created_at?: string
           gps_coordinates?: string | null
+          group_name?: string | null
           id?: string
           is_vat_registered?: boolean | null
           name: string
@@ -215,6 +217,7 @@ export type Database = {
           code?: string
           created_at?: string
           gps_coordinates?: string | null
+          group_name?: string | null
           id?: string
           is_vat_registered?: boolean | null
           name?: string

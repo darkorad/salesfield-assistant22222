@@ -1,27 +1,29 @@
 import { useState, useEffect } from "react";
 import { Customer, Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerSelect } from "@/components/sales/CustomerSelect";
 import { toast } from "sonner";
 import { PriceForm } from "./customer-prices/PriceForm";
 import { PricesList } from "./customer-prices/PricesList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GroupPriceForm } from "./customer-prices/GroupPriceForm";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const CustomerPrices = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [groups, setGroups] = useState<string[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [customerPrices, setCustomerPrices] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCustomersAndProducts();
   }, []);
-
-  useEffect(() => {
-    if (selectedCustomer) {
-      fetchCustomerPrices();
-    }
-  }, [selectedCustomer]);
 
   const fetchCustomersAndProducts = async () => {
     try {
@@ -32,6 +34,10 @@ export const CustomerPrices = () => {
       
       if (customersError) throw customersError;
       
+      // Get unique groups
+      const uniqueGroups = Array.from(new Set(customersData?.map(c => c.group_name).filter(Boolean)));
+      setGroups(uniqueGroups);
+
       // Get user email to determine which products table to use
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -68,57 +74,57 @@ export const CustomerPrices = () => {
     }
   };
 
-  const fetchCustomerPrices = async () => {
-    if (!selectedCustomer) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('customer_prices')
-        .select('*')
-        .eq('customer_id', selectedCustomer.id);
-
-      if (error) throw error;
-      setCustomerPrices(data || []);
-    } catch (error) {
-      console.error('Error fetching customer prices:', error);
-      toast.error("Greška pri učitavanju cena");
-    }
-  };
-
-  const handleCustomerSelect = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setCustomerSearch(customer.name);
-  };
-
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Posebne cene za kupce</h2>
+      <h2 className="text-lg font-semibold">Promena cena</h2>
       
-      <div className="space-y-4">
-        <CustomerSelect
-          customers={customers}
-          customerSearch={customerSearch}
-          onCustomerSearchChange={setCustomerSearch}
-          onCustomerSelect={handleCustomerSelect}
-        />
+      <Tabs defaultValue="individual" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="individual">Pojedinačno</TabsTrigger>
+          <TabsTrigger value="group">Grupno</TabsTrigger>
+        </TabsList>
 
-        {selectedCustomer && (
-          <>
-            <PriceForm 
-              customer={selectedCustomer}
-              products={products}
-              onSave={fetchCustomerPrices}
-            />
-            
-            {customerPrices.length > 0 && (
-              <PricesList 
-                customerPrices={customerPrices}
+        <TabsContent value="individual">
+          <PriceForm 
+            customers={customers}
+            products={products}
+            onSave={() => {}}
+          />
+        </TabsContent>
+
+        <TabsContent value="group">
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Izaberite grupu</label>
+              <Select
+                value={selectedGroup}
+                onValueChange={setSelectedGroup}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Izaberite grupu kupaca" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((group) => (
+                    <SelectItem key={group} value={group}>
+                      {group}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedGroup && (
+              <GroupPriceForm
+                groupName={selectedGroup}
                 products={products}
+                onSave={() => {
+                  toast.success("Cene su uspešno sačuvane za grupu");
+                }}
               />
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
