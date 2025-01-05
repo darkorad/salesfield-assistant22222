@@ -65,6 +65,7 @@ export const CustomerPriceForm = () => {
         product_id: selectedProduct.id,
         invoice_price: parseFloat(invoicePrice),
         cash_price: parseFloat(cashPrice),
+        user_id: (await supabase.auth.getSession()).data.session?.user.id
       });
 
     if (error) {
