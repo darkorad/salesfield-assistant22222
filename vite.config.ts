@@ -5,11 +5,12 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
     hmr: {
-      overlay: true,
-      clientPort: 8080
+      clientPort: 443,
+      protocol: 'wss',
+      host: '62804ab4-f3f4-4eaa-a344-12e3de709e58.lovableproject.com'
     },
     watch: {
       usePolling: true
