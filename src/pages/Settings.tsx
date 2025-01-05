@@ -1,5 +1,3 @@
-import { CustomerPrices } from "@/components/settings/CustomerPrices";
-import { DefaultCashPrices } from "@/components/settings/DefaultCashPrices";
 import { ExportData } from "@/components/settings/ExportData";
 import { CustomerGroupList } from "@/components/settings/customer-groups/CustomerGroupList";
 import { useEffect } from "react";
@@ -25,14 +23,6 @@ const Settings = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <div>
-        <CustomerPrices />
-      </div>
-
-      <div>
-        <DefaultCashPrices />
-      </div>
-
       <div>
         <CustomerGroupList />
       </div>
