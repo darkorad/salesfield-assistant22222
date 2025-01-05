@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Product } from "@/types";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { ProductSelect } from "./ProductSelect";
 import { PriceInput } from "./PriceInput";
+import { Button } from "@/components/ui/button";
 
 interface PriceFormProps {
   products: Product[];
@@ -12,93 +12,72 @@ interface PriceFormProps {
 }
 
 export const PriceForm = ({ products, onSave }: PriceFormProps) => {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [cashPrice, setCashPrice] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [price, setPrice] = useState<number | "">("");
 
-  const handleProductSelect = (productId: string) => {
-    const product = products.find(p => p.id === productId);
-    setSelectedProduct(product || null);
-    setCashPrice("");
-  };
-
-  const validateForm = () => {
-    if (!selectedProduct) {
-      toast.error("Izaberite proizvod");
-      return false;
-    }
-
-    if (!cashPrice || isNaN(parseFloat(cashPrice))) {
-      toast.error("Unesite validnu cenu");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSavePrice = async () => {
-    if (!validateForm()) return;
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      toast.error("Niste prijavljeni");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedProductId || price === "") {
+      toast.error("Molimo popunite sva polja");
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
       const { error } = await supabase
         .from('default_cash_prices')
         .upsert({
-          product_id: selectedProduct.id,
-          price: parseFloat(cashPrice),
-          user_id: sessionData.session.user.id
+          product_id: selectedProductId,
+          price: price,
+          user_id: session.user.id
         }, {
-          onConflict: 'product_id'
+          onConflict: 'product_id,user_id'
         });
 
       if (error) throw error;
 
       toast.success("Cena je uspešno sačuvana");
+      setSelectedProductId("");
+      setPrice("");
       onSave();
-      setSelectedProduct(null);
-      setCashPrice("");
     } catch (error) {
       console.error('Error saving price:', error);
       toast.error("Greška pri čuvanju cene");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
-      <h3 className="font-medium text-lg mb-4">Unos podrazumevanih cena za gotovinu</h3>
-      
-      <ProductSelect
-        products={products}
-        selectedProduct={selectedProduct}
-        onProductSelect={handleProductSelect}
-      />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Proizvod
+        </label>
+        <ProductSelect
+          products={products}
+          value={selectedProductId}
+          onChange={setSelectedProductId}
+        />
+      </div>
 
-      {selectedProduct && (
-        <div className="space-y-4">
-          <PriceInput
-            selectedProduct={selectedProduct}
-            value={cashPrice}
-            onChange={setCashPrice}
-          />
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Cena za gotovinu
+        </label>
+        <PriceInput
+          value={price}
+          onChange={setPrice}
+        />
+      </div>
 
-          <Button 
-            onClick={handleSavePrice} 
-            className="w-full"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Čuvanje..." : "Sačuvaj cenu"}
-          </Button>
-        </div>
-      )}
-    </div>
+      <Button type="submit" className="w-full">
+        Sačuvaj
+      </Button>
+    </form>
   );
 };

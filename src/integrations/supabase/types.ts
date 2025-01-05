@@ -364,73 +364,7 @@ export type Database = {
           },
         ]
       }
-      "Kupci Darko": {
-        Row: {
-          Adresa: string
-          "GPS Koordinate": string | null
-          Grad: string
-          "Naziv kupca": string
-          "PDV Obveznik": string
-          PIB: string
-          "Šifra kupca": number
-          Telefon: string
-        }
-        Insert: {
-          Adresa: string
-          "GPS Koordinate"?: string | null
-          Grad: string
-          "Naziv kupca": string
-          "PDV Obveznik": string
-          PIB: string
-          "Šifra kupca": number
-          Telefon: string
-        }
-        Update: {
-          Adresa?: string
-          "GPS Koordinate"?: string | null
-          Grad?: string
-          "Naziv kupca"?: string
-          "PDV Obveznik"?: string
-          PIB?: string
-          "Šifra kupca"?: number
-          Telefon?: string
-        }
-        Relationships: []
-      }
-      "Kupci Veljko": {
-        Row: {
-          Adresa: string
-          "GPS Koordinate": string | null
-          Grad: string
-          "Naziv kupca": string
-          "PDV Obveznik": string
-          PIB: string
-          "Šifra kupca": number
-          Telefon: string
-        }
-        Insert: {
-          Adresa: string
-          "GPS Koordinate"?: string | null
-          Grad: string
-          "Naziv kupca": string
-          "PDV Obveznik": string
-          PIB: string
-          "Šifra kupca": number
-          Telefon: string
-        }
-        Update: {
-          Adresa?: string
-          "GPS Koordinate"?: string | null
-          Grad?: string
-          "Naziv kupca"?: string
-          "PDV Obveznik"?: string
-          PIB?: string
-          "Šifra kupca"?: number
-          Telefon?: string
-        }
-        Relationships: []
-      }
-      KupciVeljko: {
+      kupci_darko: {
         Row: {
           Adresa: string
           "GPS Koordinate": string | null
