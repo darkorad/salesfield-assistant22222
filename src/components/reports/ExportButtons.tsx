@@ -27,6 +27,7 @@ export const ExportButtons = () => {
       { wch: 30 }, // name
       { wch: 40 }, // address
       { wch: 20 }, // city
+      { wch: 20 }, // naselje
       { wch: 15 }, // phone
       { wch: 15 }, // pib
     ];

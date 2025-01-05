@@ -9,4 +9,5 @@ export interface Customer {
   pib: string;
   is_vat_registered: boolean;
   gps_coordinates?: string;
+  naselje?: string;
 }

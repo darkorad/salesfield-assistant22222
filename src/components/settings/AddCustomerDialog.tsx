@@ -40,7 +40,8 @@ export const AddCustomerDialog = () => {
           phone: customer.phone,
           pib: customer.pib,
           is_vat_registered: customer.isVatRegistered,
-          gps_coordinates: customer.gpsCoordinates
+          gps_coordinates: customer.gpsCoordinates,
+          naselje: customer.naselje
         }])
         .select()
         .single();
@@ -119,6 +120,16 @@ export const AddCustomerDialog = () => {
               onChange={handleInputChange("city")}
               required
               className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="naselje">Naselje</Label>
+            <Input
+              id="naselje"
+              value={customer.naselje}
+              onChange={handleInputChange("naselje")}
+              className="w-full"
+              placeholder="Unesite naselje"
             />
           </div>
           <div className="space-y-2">

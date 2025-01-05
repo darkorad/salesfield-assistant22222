@@ -193,6 +193,7 @@ export type Database = {
           id: string
           is_vat_registered: boolean | null
           name: string
+          naselje: string | null
           phone: string | null
           pib: string
           user_id: string | null
@@ -207,6 +208,7 @@ export type Database = {
           id?: string
           is_vat_registered?: boolean | null
           name: string
+          naselje?: string | null
           phone?: string | null
           pib: string
           user_id?: string | null
@@ -221,6 +223,7 @@ export type Database = {
           id?: string
           is_vat_registered?: boolean | null
           name?: string
+          naselje?: string | null
           phone?: string | null
           pib?: string
           user_id?: string | null
