@@ -1,5 +1,6 @@
 import { ExportData } from "@/components/settings/ExportData";
 import { CustomerGroupList } from "@/components/settings/customer-groups/CustomerGroupList";
+import { CustomerPriceForm } from "@/components/settings/customer-prices/CustomerPriceForm";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,10 @@ const Settings = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
+      <div>
+        <CustomerPriceForm />
+      </div>
+
       <div>
         <CustomerGroupList />
       </div>
