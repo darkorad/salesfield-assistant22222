@@ -1,5 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Product } from "@/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProductSelectProps {
   products: Product[];
@@ -22,16 +23,21 @@ export const ProductSelect = ({
         onValueChange={onProductSelect}
       >
         <SelectTrigger className="w-full bg-white">
-          <SelectValue placeholder="Izaberite proizvod">
-            {selectedProduct && `${selectedProduct.Naziv} - ${selectedProduct.Proizvođač} (${selectedProduct.Cena} RSD)`}
-          </SelectValue>
+          <SelectValue placeholder="Izaberite proizvod" />
         </SelectTrigger>
-        <SelectContent className="bg-white max-h-[300px]">
-          {products.map((product) => (
-            <SelectItem key={product.id} value={product.id}>
-              {product.Naziv} - {product.Proizvođač} ({product.Cena} RSD)
-            </SelectItem>
-          ))}
+        <SelectContent className="max-h-[300px]">
+          <ScrollArea className="h-[300px]">
+            {products.map((product) => (
+              <SelectItem key={product.id} value={product.id}>
+                <div className="flex flex-col">
+                  <span>{product.Naziv}</span>
+                  <span className="text-sm text-gray-500">
+                    {product.Proizvođač} - {product.Cena} RSD
+                  </span>
+                </div>
+              </SelectItem>
+            ))}
+          </ScrollArea>
         </SelectContent>
       </Select>
     </div>
