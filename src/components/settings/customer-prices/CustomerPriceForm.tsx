@@ -19,18 +19,48 @@ export const CustomerPriceForm = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  // Fetch customers and products on component mount
+  // Fetch customers and products
   useEffect(() => {
     const fetchData = async () => {
-      const { data: customersData } = await supabase.from("customers").select("*");
-      const { data: productsData } = await supabase.from("products").select("*");
-      
-      if (customersData) setCustomers(customersData);
-      if (productsData) setProducts(productsData);
+      try {
+        // Fetch customers
+        const { data: customersData, error: customersError } = await supabase
+          .from("customers")
+          .select("*");
+
+        if (customersError) throw customersError;
+        setCustomers(customersData || []);
+
+        // Fetch products from multiple sources
+        const [
+          { data: regularProducts },
+          { data: darkoProducts },
+          { data: veljkoProducts }
+        ] = await Promise.all([
+          supabase.from("products").select("*"),
+          supabase.from("products_darko").select("*"),
+          supabase.from("CenovnikVeljko").select("*")
+        ]);
+
+        // Combine and deduplicate products
+        const allProducts = [
+          ...(regularProducts || []),
+          ...(darkoProducts || []),
+          ...(veljkoProducts || [])
+        ].filter((product, index, self) => 
+          index === self.findIndex((p) => p.Naziv === product.Naziv)
+        );
+
+        console.log("Total products loaded:", allProducts.length);
+        setProducts(allProducts);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Greška pri učitavanju podataka");
+      }
     };
-    
+
     fetchData();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   // Filter products based on search
   useEffect(() => {
