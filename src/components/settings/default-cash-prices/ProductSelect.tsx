@@ -12,6 +12,11 @@ export const ProductSelect = ({
   selectedProduct, 
   onProductSelect 
 }: ProductSelectProps) => {
+  const getDisplayValue = () => {
+    if (!selectedProduct) return undefined;
+    return `${selectedProduct.Naziv} - ${selectedProduct.Proizvođač}`;
+  };
+
   return (
     <div>
       <label className="block text-sm font-medium mb-1">
@@ -22,14 +27,14 @@ export const ProductSelect = ({
         onValueChange={onProductSelect}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Izaberite proizvod">
-            {selectedProduct ? `${selectedProduct.Naziv} - ${selectedProduct.Cena} RSD` : "Izaberite proizvod"}
+          <SelectValue>
+            {getDisplayValue()}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {products.map((product) => (
             <SelectItem key={product.id} value={product.id}>
-              {product.Naziv} - {product.Cena} RSD
+              {product.Naziv} - {product.Proizvođač}
             </SelectItem>
           ))}
         </SelectContent>
