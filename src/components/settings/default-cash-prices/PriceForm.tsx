@@ -67,11 +67,13 @@ export const PriceForm = ({ products, onSave }: PriceFormProps) => {
             onChange={setSelectedProductId}
           />
 
-          <PriceInput
-            selectedProduct={selectedProduct}
-            value={price}
-            onChange={setPrice}
-          />
+          {selectedProduct && (
+            <PriceInput
+              selectedProduct={selectedProduct}
+              value={price}
+              onChange={setPrice}
+            />
+          )}
 
           <Button type="submit" className="w-full">
             Sačuvaj
