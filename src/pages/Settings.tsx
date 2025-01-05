@@ -7,35 +7,33 @@ import { CustomerGroupList } from "@/components/settings/customer-groups/Custome
 
 const Settings = () => {
   return (
-    <div className="container mx-auto py-6">
-      <Tabs defaultValue="customer-prices" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="customer-prices">Promena cena</TabsTrigger>
-          <TabsTrigger value="default-cash-prices">Podrazumevane cene za gotovinu</TabsTrigger>
-          <TabsTrigger value="customer-groups">Grupe kupaca</TabsTrigger>
-          <TabsTrigger value="export">Export podataka</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="customer-prices">
-          <CustomerPrices />
-        </TabsContent>
+    <Tabs defaultValue="customer-prices" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="customer-prices">Promena cena</TabsTrigger>
+        <TabsTrigger value="default-cash-prices">Podrazumevane cene za gotovinu</TabsTrigger>
+        <TabsTrigger value="customer-groups">Grupe kupaca</TabsTrigger>
+        <TabsTrigger value="export">Export podataka</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="customer-prices">
+        <CustomerPrices />
+      </TabsContent>
 
-        <TabsContent value="default-cash-prices">
-          <DefaultCashPrices />
-        </TabsContent>
+      <TabsContent value="default-cash-prices">
+        <DefaultCashPrices />
+      </TabsContent>
 
-        <TabsContent value="customer-groups">
-          <div className="space-y-6">
-            <CustomerGroupForm onGroupCreated={() => {}} />
-            <CustomerGroupList />
-          </div>
-        </TabsContent>
+      <TabsContent value="customer-groups">
+        <div className="space-y-6">
+          <CustomerGroupForm onGroupCreated={() => {}} />
+          <CustomerGroupList />
+        </div>
+      </TabsContent>
 
-        <TabsContent value="export">
-          <ExportData />
-        </TabsContent>
-      </Tabs>
-    </div>
+      <TabsContent value="export">
+        <ExportData />
+      </TabsContent>
+    </Tabs>
   );
 };
 
