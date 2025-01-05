@@ -35,8 +35,6 @@ export const CustomerGroupList = () => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Postojeće grupe</h3>
-      
       <div className="grid gap-4">
         {groups.map((group) => (
           <div key={group.id} className="p-4 bg-white rounded-lg shadow-sm border">
