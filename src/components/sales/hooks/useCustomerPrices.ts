@@ -38,6 +38,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
     if (selectedCustomer?.id) {
       fetchCustomerPrices();
 
+      // Subscribe to real-time changes for customer_prices table
       const pricesChannel = supabase
         .channel('prices-changes')
         .on(
@@ -48,28 +49,10 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             table: 'customer_prices',
             filter: `customer_id=eq.${selectedCustomer.id}`
           },
-          () => fetchCustomerPrices()
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'group_prices',
-            filter: selectedCustomer.group_name ? 
-              `group_id=eq.${selectedCustomer.group_name}` : 
-              undefined
-          },
-          () => fetchCustomerPrices()
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'products_darko'
-          },
-          () => fetchCustomerPrices()
+          (payload) => {
+            console.log('Price change detected:', payload);
+            fetchCustomerPrices();
+          }
         )
         .subscribe();
 
