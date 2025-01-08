@@ -27,7 +27,7 @@ export const useSalesData = () => {
       const userEmail = session.user.email;
       console.log("User email:", userEmail);
 
-      // Fetch customers
+      // Fetch customers with detailed logging
       const { data: customersData, error: customersError } = await supabase
         .from('customers')
         .select('*')
@@ -38,6 +38,8 @@ export const useSalesData = () => {
         toast.error("Greška pri učitavanju kupaca");
         return;
       }
+
+      console.log("Raw customers data:", customersData);
 
       // Fetch products based on user email
       let productsData;
@@ -86,19 +88,19 @@ export const useSalesData = () => {
   useEffect(() => {
     fetchData();
 
-    // Set up real-time subscription for products_darko table
+    // Set up real-time subscription for customers table
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
-          table: 'products_darko'
+          table: 'customers'
         },
         (payload) => {
-          console.log('Real-time update received:', payload);
-          fetchData(); // Refresh all data when changes occur
+          console.log('Real-time customer update received:', payload);
+          fetchData();
         }
       )
       .subscribe();
@@ -119,5 +121,5 @@ export const useSalesData = () => {
     };
   }, [navigate]);
 
-  return { customers, products, isLoading };
+  return { customers, products, isLoading, refetch: fetchData };
 };

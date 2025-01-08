@@ -22,11 +22,17 @@ export const CustomerSelect = ({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
+  console.log("Available customers:", customers);
+  console.log("Current customer search:", customerSearch);
+
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
+  console.log("Filtered customers:", filteredCustomers);
+
   const handleCustomerSelect = (customer: Customer) => {
+    console.log("Selected customer:", customer);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
