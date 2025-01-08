@@ -27,12 +27,26 @@ export const CustomerGroupList = () => {
 
   const fetchGroups = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
+      console.log("Fetching groups for user:", session.user.id);
+      
       const { data, error } = await supabase
         .from('customer_groups')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching groups:', error);
+        throw error;
+      }
+      
+      console.log("Fetched groups:", data);
       setGroups(data || []);
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -42,9 +56,16 @@ export const CustomerGroupList = () => {
 
   const handleExportCustomers = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
       const { data: customers, error } = await supabase
         .from('customers')
         .select('name, group_name, city, naselje')
+        .eq('user_id', session.user.id)
         .order('name');
 
       if (error) throw error;
@@ -53,7 +74,6 @@ export const CustomerGroupList = () => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Kupci i grupe");
       
-      // Set column widths
       ws['!cols'] = [
         { wch: 40 }, // name
         { wch: 20 }, // group_name
@@ -71,6 +91,12 @@ export const CustomerGroupList = () => {
 
   const handleImportCustomers = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -88,6 +114,40 @@ export const CustomerGroupList = () => {
             naselje?: string;
           }[];
 
+          console.log("Imported data:", jsonData);
+
+          // First, ensure groups exist
+          const uniqueGroups = [...new Set(jsonData.filter(item => item.group_name).map(item => item.group_name))];
+          
+          for (const groupName of uniqueGroups) {
+            const { data: existingGroup, error: checkError } = await supabase
+              .from('customer_groups')
+              .select('id')
+              .eq('name', groupName)
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+
+            if (checkError) {
+              console.error('Error checking group:', groupName, checkError);
+              continue;
+            }
+
+            if (!existingGroup) {
+              const { error: createError } = await supabase
+                .from('customer_groups')
+                .insert({
+                  name: groupName,
+                  user_id: session.user.id
+                });
+
+              if (createError) {
+                console.error('Error creating group:', groupName, createError);
+              } else {
+                console.log('Created new group:', groupName);
+              }
+            }
+          }
+
           // Update customers with new group names and location data
           for (const customer of jsonData) {
             if (customer.name) {
@@ -95,7 +155,10 @@ export const CustomerGroupList = () => {
                 group_name?: string;
                 city?: string;
                 naselje?: string;
-              } = {};
+                user_id: string;
+              } = {
+                user_id: session.user.id
+              };
 
               if (customer.group_name) updateData.group_name = customer.group_name;
               if (customer.city) updateData.city = customer.city;
@@ -104,10 +167,13 @@ export const CustomerGroupList = () => {
               const { error: updateError } = await supabase
                 .from('customers')
                 .update(updateData)
-                .eq('name', customer.name);
+                .eq('name', customer.name)
+                .eq('user_id', session.user.id);
 
               if (updateError) {
                 console.error('Error updating customer:', customer.name, updateError);
+              } else {
+                console.log('Updated customer:', customer.name);
               }
             }
           }
@@ -133,6 +199,27 @@ export const CustomerGroupList = () => {
 
   useEffect(() => {
     fetchGroups();
+
+    // Set up real-time subscription for customer_groups table
+    const channel = supabase
+      .channel('customer-groups-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'customer_groups'
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          fetchGroups(); // Refresh groups when changes occur
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
