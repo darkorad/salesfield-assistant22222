@@ -22,15 +22,31 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         return;
       }
 
-      // Then try to get group prices if the customer belongs to a group
-      const { data: groupPrices, error: groupError } = await supabase
-        .from('group_prices')
-        .select('*')
-        .eq('group_id', selectedCustomer.group_name)
-        .order('last_changed', { ascending: false });
+      // Get the group ID if customer belongs to a group
+      let groupPrices = null;
+      if (selectedCustomer.group_name) {
+        const { data: groupData, error: groupError } = await supabase
+          .from('customer_groups')
+          .select('id')
+          .eq('name', selectedCustomer.group_name)
+          .single();
 
-      if (groupError) {
-        console.error('Error fetching group prices:', groupError);
+        if (groupError) {
+          console.error('Error fetching group ID:', groupError);
+        } else if (groupData) {
+          // Then get group prices using the group's UUID
+          const { data: prices, error: pricesError } = await supabase
+            .from('group_prices')
+            .select('*')
+            .eq('group_id', groupData.id)
+            .order('last_changed', { ascending: false });
+
+          if (pricesError) {
+            console.error('Error fetching group prices:', pricesError);
+          } else {
+            groupPrices = prices;
+          }
+        }
       }
 
       // Combine prices, prioritizing customer-specific prices over group prices
@@ -85,8 +101,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           {
             event: '*',
             schema: 'public',
-            table: 'group_prices',
-            filter: `group_id=eq.${selectedCustomer.group_name}`
+            table: 'group_prices'
           },
           (payload) => {
             console.log('Group price change detected:', payload);
