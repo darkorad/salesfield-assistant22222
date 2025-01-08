@@ -17,29 +17,46 @@ export const usePriceForm = () => {
       return;
     }
 
-    const { error } = await supabase
-      .from("customer_prices")
-      .upsert({
-        customer_id: selectedCustomer.id,
-        product_id: selectedProduct.id,
-        invoice_price: parseFloat(invoicePrice),
-        cash_price: parseFloat(cashPrice),
-        user_id: (await supabase.auth.getSession()).data.session?.user.id
-      });
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
 
-    if (error) {
-      console.error("Error saving price:", error);
+      const { error } = await supabase
+        .from("customer_prices")
+        .upsert(
+          {
+            customer_id: selectedCustomer.id,
+            product_id: selectedProduct.id,
+            invoice_price: parseFloat(invoicePrice),
+            cash_price: parseFloat(cashPrice),
+            user_id: session.session.user.id
+          },
+          {
+            onConflict: 'customer_id,product_id',
+            ignoreDuplicates: false
+          }
+        );
+
+      if (error) {
+        console.error("Error saving price:", error);
+        toast.error("Greška pri čuvanju cene");
+        return;
+      }
+
+      toast.success("Cena uspešno sačuvana");
+      
+      // Reset form
+      setSelectedProduct(null);
+      setProductSearch("");
+      setInvoicePrice("");
+      setCashPrice("");
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
       toast.error("Greška pri čuvanju cene");
-      return;
     }
-
-    toast.success("Cena uspešno sačuvana");
-    
-    // Reset form
-    setSelectedProduct(null);
-    setProductSearch("");
-    setInvoicePrice("");
-    setCashPrice("");
   };
 
   return {
