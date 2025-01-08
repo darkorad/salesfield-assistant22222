@@ -137,6 +137,7 @@ export type Database = {
           customer_id: string | null
           id: string
           invoice_price: number
+          last_changed: string | null
           product_id: string | null
           user_id: string | null
         }
@@ -146,6 +147,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           invoice_price: number
+          last_changed?: string | null
           product_id?: string | null
           user_id?: string | null
         }
@@ -155,6 +157,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           invoice_price?: number
+          last_changed?: string | null
           product_id?: string | null
           user_id?: string | null
         }
@@ -245,6 +248,7 @@ export type Database = {
           group_id: string | null
           id: string
           invoice_price: number
+          last_changed: string | null
           product_id: string | null
           user_id: string | null
         }
@@ -254,6 +258,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           invoice_price: number
+          last_changed?: string | null
           product_id?: string | null
           user_id?: string | null
         }
@@ -263,6 +268,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           invoice_price?: number
+          last_changed?: string | null
           product_id?: string | null
           user_id?: string | null
         }
