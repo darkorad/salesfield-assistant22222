@@ -20,6 +20,9 @@ export const CustomerSearchResults = ({ customers, onCustomerSelect }: CustomerS
           <div className="text-sm text-gray-500">
             {customer.address}, {customer.naselje && `${customer.naselje},`} {customer.city}
           </div>
+          {customer.email && (
+            <div className="text-sm text-gray-500">{customer.email}</div>
+          )}
         </div>
       ))}
     </div>

@@ -11,4 +11,5 @@ export interface Customer {
   gps_coordinates?: string;
   naselje?: string;
   group_name?: string;
+  email?: string;
 }
