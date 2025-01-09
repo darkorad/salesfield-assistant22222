@@ -30,6 +30,7 @@ export const CustomerSelect = ({
     if (!customers || !customerSearch) return [];
     
     try {
+      // Show all customers that match the search term, regardless of group
       return customers.filter((customer) =>
         customer?.name?.toLowerCase().includes(customerSearch.toLowerCase())
       );

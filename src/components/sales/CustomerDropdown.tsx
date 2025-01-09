@@ -19,6 +19,7 @@ export const CustomerDropdown = ({ customers, onCustomerSelect }: CustomerDropdo
     if (!customers) return [];
     
     try {
+      // Show all customers sorted alphabetically
       return [...customers].sort((a, b) => 
         a.name.localeCompare(b.name, 'sr-RS')
       );
