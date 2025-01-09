@@ -31,9 +31,12 @@ export const CustomerSelect = ({
     
     try {
       // Show all customers that match the search term, regardless of group
-      return customers.filter((customer) =>
+      const filtered = customers.filter((customer) =>
         customer?.name?.toLowerCase().includes(customerSearch.toLowerCase())
       );
+      console.log("Filtered customers:", filtered.length);
+      console.log("First few filtered customers:", filtered.slice(0, 5).map(c => c.name));
+      return filtered;
     } catch (error) {
       console.error("Error filtering customers:", error);
       toast.error("Greška pri filtriranju kupaca");
@@ -41,15 +44,13 @@ export const CustomerSelect = ({
     }
   }, [customers, customerSearch]);
 
-  console.log("Filtered customers:", filteredCustomers?.length || 0);
-
   const handleCustomerSelect = useCallback((customer: Customer) => {
     if (!customer) {
       console.error("Invalid customer selected");
       return;
     }
 
-    console.log("Selected customer:", customer);
+    console.log("Selected customer:", customer.name);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);

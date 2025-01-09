@@ -19,10 +19,13 @@ export const CustomerDropdown = ({ customers, onCustomerSelect }: CustomerDropdo
     if (!customers) return [];
     
     try {
+      console.log("Sorting customers, total count:", customers.length);
       // Show all customers sorted alphabetically
-      return [...customers].sort((a, b) => 
-        a.name.localeCompare(b.name, 'sr-RS')
+      const sorted = [...customers].sort((a, b) => 
+        (a.name || '').localeCompare(b.name || '', 'sr-RS')
       );
+      console.log("First few customers after sorting:", sorted.slice(0, 5).map(c => c.name));
+      return sorted;
     } catch (error) {
       console.error("Error sorting customers:", error);
       return customers;
