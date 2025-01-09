@@ -8,9 +8,6 @@ const NavLogo = () => {
         alt="ŽIR-MD COMPANY Logo" 
         className="h-12 w-auto md:h-16 md:mr-2 animate-[scale-in_0.2s_ease-out]"
       />
-      <span className="text-sm md:text-xl font-semibold text-gray-900 mt-1 md:mt-0">
-        ZIR-MD COMPANY
-      </span>
     </Link>
   );
 };
