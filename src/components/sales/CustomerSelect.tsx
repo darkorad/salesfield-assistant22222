@@ -1,10 +1,11 @@
 import { Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { OrderHistory } from "./OrderHistory";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { CustomerSearchResults } from "./CustomerSearchResults";
 import { HistoryButton } from "./HistoryButton";
 import { CustomerDropdown } from "./CustomerDropdown";
+import { toast } from "sonner";
 
 interface CustomerSelectProps {
   customers: Customer[];
@@ -22,21 +23,36 @@ export const CustomerSelect = ({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  console.log("Available customers:", customers);
+  console.log("Available customers:", customers?.length || 0);
   console.log("Current customer search:", customerSearch);
 
-  const filteredCustomers = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(customerSearch.toLowerCase())
-  );
+  const filteredCustomers = useMemo(() => {
+    if (!customers || !customerSearch) return [];
+    
+    try {
+      return customers.filter((customer) =>
+        customer?.name?.toLowerCase().includes(customerSearch.toLowerCase())
+      );
+    } catch (error) {
+      console.error("Error filtering customers:", error);
+      toast.error("Greška pri filtriranju kupaca");
+      return [];
+    }
+  }, [customers, customerSearch]);
 
-  console.log("Filtered customers:", filteredCustomers);
+  console.log("Filtered customers:", filteredCustomers?.length || 0);
 
-  const handleCustomerSelect = (customer: Customer) => {
+  const handleCustomerSelect = useCallback((customer: Customer) => {
+    if (!customer) {
+      console.error("Invalid customer selected");
+      return;
+    }
+
     console.log("Selected customer:", customer);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
-  };
+  }, [onCustomerSelect, onCustomerSearchChange]);
 
   return (
     <div className="space-y-2 w-full">

@@ -8,6 +8,7 @@ export const useSalesData = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchData = async () => {
@@ -21,10 +22,14 @@ export const useSalesData = () => {
       }
 
       setIsLoading(true);
+      setError(null);
       console.log("Fetching data for user:", session.user.id);
 
       // Get user email
       const userEmail = session.user.email;
+      if (!userEmail) {
+        throw new Error("User email not found");
+      }
       console.log("User email:", userEmail);
 
       // Fetch customers with detailed logging
@@ -36,6 +41,7 @@ export const useSalesData = () => {
       if (customersError) {
         console.error('Error fetching customers:', customersError);
         toast.error("Greška pri učitavanju kupaca");
+        setError(customersError.message);
         return;
       }
 
@@ -69,17 +75,19 @@ export const useSalesData = () => {
       if (productsError) {
         console.error('Error fetching products:', productsError);
         toast.error("Greška pri učitavanju proizvoda");
+        setError(productsError.message);
         return;
       }
 
-      console.log("Fetched customers:", customersData);
-      console.log("Fetched products:", productsData);
+      console.log("Fetched customers:", customersData?.length || 0);
+      console.log("Fetched products:", productsData?.length || 0);
 
       setCustomers(customersData || []);
       setProducts(productsData || []);
     } catch (error) {
       console.error('Error:', error);
       toast.error("Greška pri učitavanju podataka");
+      setError(error instanceof Error ? error.message : "Unknown error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -89,8 +97,8 @@ export const useSalesData = () => {
     fetchData();
 
     // Set up real-time subscription for customers table
-    const channel = supabase
-      .channel('schema-db-changes')
+    const customersChannel = supabase
+      .channel('customers-changes')
       .on(
         'postgres_changes',
         {
@@ -103,10 +111,32 @@ export const useSalesData = () => {
           fetchData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Customers subscription status:', status);
+      });
+
+    // Set up real-time subscription for products table
+    const productsChannel = supabase
+      .channel('products-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        (payload) => {
+          console.log('Real-time product update received:', payload);
+          fetchData();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Products subscription status:', status);
+      });
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
       if (event === 'SIGNED_OUT') {
         navigate("/login");
       } else if (event === 'SIGNED_IN') {
@@ -117,9 +147,16 @@ export const useSalesData = () => {
     // Cleanup subscriptions
     return () => {
       subscription.unsubscribe();
-      supabase.removeChannel(channel);
+      supabase.removeChannel(customersChannel);
+      supabase.removeChannel(productsChannel);
     };
   }, [navigate]);
 
-  return { customers, products, isLoading, refetch: fetchData };
+  return { 
+    customers, 
+    products, 
+    isLoading, 
+    error,
+    refetch: fetchData 
+  };
 };

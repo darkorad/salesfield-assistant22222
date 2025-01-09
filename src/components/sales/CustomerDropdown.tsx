@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMemo } from "react";
 
 interface CustomerDropdownProps {
   customers: Customer[];
@@ -14,6 +15,19 @@ interface CustomerDropdownProps {
 }
 
 export const CustomerDropdown = ({ customers, onCustomerSelect }: CustomerDropdownProps) => {
+  const sortedCustomers = useMemo(() => {
+    if (!customers) return [];
+    
+    try {
+      return [...customers].sort((a, b) => 
+        a.name.localeCompare(b.name, 'sr-RS')
+      );
+    } catch (error) {
+      console.error("Error sorting customers:", error);
+      return customers;
+    }
+  }, [customers]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -22,7 +36,7 @@ export const CustomerDropdown = ({ customers, onCustomerSelect }: CustomerDropdo
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[300px] bg-white max-h-[400px] overflow-y-auto z-50">
-        {customers.map((customer) => (
+        {sortedCustomers.map((customer) => (
           <DropdownMenuItem
             key={customer.id}
             onClick={() => onCustomerSelect(customer)}
@@ -30,8 +44,13 @@ export const CustomerDropdown = ({ customers, onCustomerSelect }: CustomerDropdo
           >
             <div className="font-medium">{customer.name}</div>
             <div className="text-sm text-gray-500">
-              {customer.address}, {customer.naselje && `${customer.naselje},`} {customer.city}
+              {customer.address}
+              {customer.naselje && `, ${customer.naselje}`}
+              {customer.city && `, ${customer.city}`}
             </div>
+            {customer.email && (
+              <div className="text-sm text-gray-500">{customer.email}</div>
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
