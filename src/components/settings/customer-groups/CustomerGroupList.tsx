@@ -169,6 +169,13 @@ export const CustomerGroupList = () => {
               customer.code = Date.now().toString().slice(-6);
             }
 
+            // Ensure PIB is not null or empty
+            if (!customer.pib?.trim()) {
+              console.error('Skipping customer due to missing PIB:', customer);
+              toast.error(`Preskočen kupac "${customer.name}" - nedostaje PIB`);
+              continue;
+            }
+
             const updateData = {
               id: customer.id,
               user_id: session.user.id,
@@ -177,7 +184,7 @@ export const CustomerGroupList = () => {
               address: customer.address,
               city: customer.city,
               phone: customer.phone || '',
-              pib: customer.pib,
+              pib: customer.pib.trim(),
               is_vat_registered: typeof customer.is_vat_registered === 'string' 
                 ? customer.is_vat_registered.toUpperCase() === 'DA' || customer.is_vat_registered.toLowerCase() === 'true'
                 : Boolean(customer.is_vat_registered),
