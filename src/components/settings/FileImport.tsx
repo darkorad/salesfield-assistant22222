@@ -100,7 +100,6 @@ export const FileImport = () => {
             for (const row of jsonData) {
               const customer = row as ExcelCustomer;
               const customerData = {
-                id: customer.id || crypto.randomUUID(),
                 user_id: session.user.id,
                 code: customer.code || Date.now().toString().slice(-6),
                 name: customer.name,
@@ -115,15 +114,13 @@ export const FileImport = () => {
                 email: customer.email || null
               };
 
-              // Upsert customer data
+              // Insert customer data without specifying ID
               const { error } = await supabase
                 .from('customers')
-                .upsert(customerData, {
-                  onConflict: 'id'
-                });
+                .insert(customerData);
 
               if (error) {
-                console.error('Error upserting customer:', error);
+                console.error('Error inserting customer:', error);
                 toast.error(`Greška pri ažuriranju kupca: ${customerData.name}`);
               }
             }
@@ -135,24 +132,21 @@ export const FileImport = () => {
             for (const row of jsonData) {
               const product = row as ExcelProduct;
               const productData = {
-                id: product.id || crypto.randomUUID(),
                 user_id: session.user.id,
-                name: product.name,
-                manufacturer: product.manufacturer || '',
-                price: product.price || 0,
-                unit: product.unit || '',
+                Naziv: product.name,
+                Proizvođač: product.manufacturer || '',
+                Cena: product.price || 0,
+                "Jedinica mere": product.unit || '',
                 created_at: new Date().toISOString()
               };
 
               const { error } = await supabase
                 .from('products')
-                .upsert(productData, {
-                  onConflict: 'id'
-                });
+                .insert(productData);
 
               if (error) {
-                console.error('Error upserting product:', error);
-                toast.error(`Greška pri ažuriranju proizvoda: ${productData.name}`);
+                console.error('Error inserting product:', error);
+                toast.error(`Greška pri ažuriranju proizvoda: ${productData.Naziv}`);
               }
             }
 

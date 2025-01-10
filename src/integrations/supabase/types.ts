@@ -339,36 +339,62 @@ export type Database = {
       }
       kupci_darko: {
         Row: {
-          Adresa: string
-          "GPS Koordinate": string | null
-          Grad: string
-          "Naziv kupca": string
-          "PDV Obveznik": string
-          PIB: string
-          "Šifra kupca": number
-          Telefon: string
+          address: string
+          city: string
+          code: string
+          created_at: string
+          email: string | null
+          gps_coordinates: string | null
+          group_name: string | null
+          id: string
+          is_vat_registered: boolean | null
+          name: string
+          naselje: string | null
+          phone: string | null
+          pib: string
+          user_id: string | null
         }
         Insert: {
-          Adresa: string
-          "GPS Koordinate"?: string | null
-          Grad: string
-          "Naziv kupca": string
-          "PDV Obveznik": string
-          PIB: string
-          "Šifra kupca": number
-          Telefon: string
+          address: string
+          city: string
+          code: string
+          created_at?: string
+          email?: string | null
+          gps_coordinates?: string | null
+          group_name?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name: string
+          naselje?: string | null
+          phone?: string | null
+          pib: string
+          user_id?: string | null
         }
         Update: {
-          Adresa?: string
-          "GPS Koordinate"?: string | null
-          Grad?: string
-          "Naziv kupca"?: string
-          "PDV Obveznik"?: string
-          PIB?: string
-          "Šifra kupca"?: number
-          Telefon?: string
+          address?: string
+          city?: string
+          code?: string
+          created_at?: string
+          email?: string | null
+          gps_coordinates?: string | null
+          group_name?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name?: string
+          naselje?: string | null
+          phone?: string | null
+          pib?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kupci_darko_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_templates: {
         Row: {
