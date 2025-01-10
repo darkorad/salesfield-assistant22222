@@ -5,6 +5,29 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 
+interface ExcelCustomer {
+  id?: string;
+  code?: string;
+  name: string;
+  address: string;
+  city: string;
+  phone?: string;
+  pib: string;
+  is_vat_registered?: boolean;
+  gps_coordinates?: string;
+  group_name?: string;
+  naselje?: string;
+  email?: string;
+}
+
+interface ExcelProduct {
+  id?: string;
+  name: string;
+  manufacturer?: string;
+  price?: number;
+  unit?: string;
+}
+
 export const FileImport = () => {
   useEffect(() => {
     const checkLastImport = async () => {
@@ -74,7 +97,8 @@ export const FileImport = () => {
 
           if (type === "customers") {
             // Process each customer
-            for (const customer of jsonData) {
+            for (const row of jsonData) {
+              const customer = row as ExcelCustomer;
               const customerData = {
                 id: customer.id || crypto.randomUUID(),
                 user_id: session.user.id,
@@ -108,7 +132,8 @@ export const FileImport = () => {
             toast.success("Kupci su uspešno ažurirani");
           } else {
             // Process each product
-            for (const product of jsonData) {
+            for (const row of jsonData) {
+              const product = row as ExcelProduct;
               const productData = {
                 id: product.id || crypto.randomUUID(),
                 user_id: session.user.id,
