@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 
 interface ExcelCustomer {
-  id?: string;
   code?: string;
   name: string;
   address: string;
@@ -21,7 +20,6 @@ interface ExcelCustomer {
 }
 
 interface ExcelProduct {
-  id?: string;
   name: string;
   manufacturer?: string;
   price?: number;
@@ -114,9 +112,9 @@ export const FileImport = () => {
                 email: customer.email || null
               };
 
-              // Insert customer data without specifying ID
+              // Insert into kupci_darko table
               const { error } = await supabase
-                .from('customers')
+                .from('kupci_darko')
                 .insert(customerData);
 
               if (error) {
