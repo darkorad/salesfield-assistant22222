@@ -13,8 +13,8 @@ interface CustomerGroup {
   description: string | null;
 }
 
-interface Customer {
-  id: string;
+interface ImportedCustomer {
+  id?: string;
   name: string;
   group_name?: string;
   city?: string;
@@ -22,7 +22,7 @@ interface Customer {
   address?: string;
   phone?: string;
   pib?: string;
-  is_vat_registered?: boolean;
+  is_vat_registered?: string | boolean;
   code?: string;
   gps_coordinates?: string;
   email?: string;
@@ -123,7 +123,7 @@ export const CustomerGroupList = () => {
           const workbook = XLSX.read(data, { type: 'binary' });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(sheet) as Partial<Customer>[];
+          const jsonData = XLSX.utils.sheet_to_json(sheet) as ImportedCustomer[];
 
           console.log("Imported data:", jsonData);
 
