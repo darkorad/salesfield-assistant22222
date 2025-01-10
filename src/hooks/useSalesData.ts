@@ -32,11 +32,44 @@ export const useSalesData = () => {
       }
       console.log("User email:", userEmail);
 
-      // Fetch customers with detailed logging
-      const { data: customersData, error: customersError } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('user_id', session.user.id);
+      // Fetch customers based on user email
+      let customersData;
+      let customersError;
+
+      if (userEmail === 'zirmd.darko@gmail.com') {
+        console.log("Fetching customers from kupci_darko table");
+        const response = await supabase
+          .from('kupci_darko')
+          .select('*');
+        
+        // Transform kupci_darko data to match Customer type
+        customersData = response.data?.map(customer => ({
+          id: crypto.randomUUID(),
+          user_id: session.user.id,
+          code: customer['Šifra kupca'].toString(),
+          name: customer['Naziv kupca'],
+          address: customer['Adresa'],
+          city: customer['Grad'],
+          phone: customer['Telefon'] || '',
+          pib: customer['PIB'] || '',
+          is_vat_registered: customer['PDV Obveznik'] === 'DA',
+          gps_coordinates: customer['GPS Koordinate'] || '',
+          created_at: new Date().toISOString(),
+          group_name: null,
+          naselje: null,
+          email: null
+        }));
+        customersError = response.error;
+      } else {
+        console.log("Fetching customers from regular customers table");
+        const response = await supabase
+          .from('customers')
+          .select('*')
+          .eq('user_id', session.user.id);
+        
+        customersData = response.data;
+        customersError = response.error;
+      }
 
       if (customersError) {
         console.error('Error fetching customers:', customersError);
@@ -44,8 +77,6 @@ export const useSalesData = () => {
         setError(customersError.message);
         return;
       }
-
-      console.log("Raw customers data:", customersData);
 
       // Fetch products based on user email
       let productsData;
