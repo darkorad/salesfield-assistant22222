@@ -167,8 +167,10 @@ export const CustomerGroupList = () => {
             const updateData = {
               ...customer,
               user_id: session.user.id,
-              // Ensure boolean type for is_vat_registered
-              is_vat_registered: customer.is_vat_registered === true || customer.is_vat_registered === 'DA' || customer.is_vat_registered === 'true'
+              // Convert is_vat_registered to boolean properly
+              is_vat_registered: typeof customer.is_vat_registered === 'string' 
+                ? customer.is_vat_registered.toUpperCase() === 'DA' || customer.is_vat_registered.toLowerCase() === 'true'
+                : Boolean(customer.is_vat_registered)
             };
 
             const { error: upsertError } = await supabase
