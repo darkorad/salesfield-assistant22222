@@ -159,9 +159,16 @@ export const CustomerGroupList = () => {
               customer.id = crypto.randomUUID();
             }
 
-            const updateData: Partial<Customer> & { user_id: string } = {
+            // Generate code if missing
+            if (!customer.code) {
+              customer.code = Date.now().toString().slice(-6);
+            }
+
+            const updateData = {
               ...customer,
-              user_id: session.user.id
+              user_id: session.user.id,
+              // Ensure boolean type for is_vat_registered
+              is_vat_registered: customer.is_vat_registered === true || customer.is_vat_registered === 'DA' || customer.is_vat_registered === 'true'
             };
 
             const { error: upsertError } = await supabase
@@ -172,6 +179,7 @@ export const CustomerGroupList = () => {
 
             if (upsertError) {
               console.error('Error updating customer:', customer.name, upsertError);
+              toast.error(`Greška pri ažuriranju kupca: ${customer.name}`);
             }
           }
 
