@@ -3,38 +3,53 @@ import { Button } from "@/components/ui/button";
 import { FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ExportData = () => {
-  const handleExportBuyers = () => {
-    const currentUser = localStorage.getItem("currentUser");
-    if (!currentUser) {
-      toast.error("No user logged in");
-      return;
+  const handleExportBuyers = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
+      const { data: customers, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('user_id', session.user.id);
+
+      if (error) {
+        console.error('Error fetching customers:', error);
+        toast.error("Greška pri preuzimanju podataka");
+        return;
+      }
+
+      if (!customers || customers.length === 0) {
+        toast.error("Nema podataka o kupcima");
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(customers);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Kupci");
+      
+      const colWidths = [
+        { wch: 15 }, // code
+        { wch: 30 }, // name
+        { wch: 40 }, // address
+        { wch: 20 }, // city
+        { wch: 15 }, // phone
+        { wch: 15 }, // pib
+      ];
+      ws['!cols'] = colWidths;
+
+      XLSX.writeFile(wb, `lista-kupaca.xlsx`);
+      toast.success("Lista kupaca je uspešno izvezena");
+    } catch (error) {
+      console.error('Error exporting customers:', error);
+      toast.error("Greška pri izvozu kupaca");
     }
-
-    const buyers = localStorage.getItem(`customers_${currentUser}`);
-    if (!buyers) {
-      toast.error("Nema podataka o kupcima");
-      return;
-    }
-
-    const buyersData = JSON.parse(buyers);
-    const ws = XLSX.utils.json_to_sheet(buyersData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Kupci");
-    
-    const colWidths = [
-      { wch: 15 }, // code
-      { wch: 30 }, // name
-      { wch: 40 }, // address
-      { wch: 20 }, // city
-      { wch: 15 }, // phone
-      { wch: 15 }, // pib
-    ];
-    ws['!cols'] = colWidths;
-
-    XLSX.writeFile(wb, `lista-kupaca.xlsx`);
-    toast.success("Lista kupaca je uspešno izvezena");
   };
 
   const handleExportPrices = () => {
