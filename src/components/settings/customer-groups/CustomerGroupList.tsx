@@ -152,7 +152,12 @@ export const CustomerGroupList = () => {
 
           // Update or insert customers
           for (const customer of jsonData) {
-            if (!customer.name) continue;
+            // Skip if required fields are missing
+            if (!customer.name || !customer.address || !customer.city || !customer.pib) {
+              console.error('Skipping customer due to missing required fields:', customer);
+              toast.error(`Preskočen kupac "${customer.name || 'Nepoznat'}" - nedostaju obavezna polja`);
+              continue;
+            }
 
             // Generate UUID if missing
             if (!customer.id) {
@@ -165,19 +170,26 @@ export const CustomerGroupList = () => {
             }
 
             const updateData = {
-              ...customer,
+              id: customer.id,
               user_id: session.user.id,
-              // Convert is_vat_registered to boolean properly
+              code: customer.code,
+              name: customer.name,
+              address: customer.address,
+              city: customer.city,
+              phone: customer.phone || '',
+              pib: customer.pib,
               is_vat_registered: typeof customer.is_vat_registered === 'string' 
                 ? customer.is_vat_registered.toUpperCase() === 'DA' || customer.is_vat_registered.toLowerCase() === 'true'
-                : Boolean(customer.is_vat_registered)
+                : Boolean(customer.is_vat_registered),
+              gps_coordinates: customer.gps_coordinates || '',
+              group_name: customer.group_name || null,
+              naselje: customer.naselje || null,
+              email: customer.email || null
             };
 
             const { error: upsertError } = await supabase
               .from('customers')
-              .upsert(updateData, {
-                onConflict: 'id'
-              });
+              .upsert(updateData);
 
             if (upsertError) {
               console.error('Error updating customer:', customer.name, upsertError);
