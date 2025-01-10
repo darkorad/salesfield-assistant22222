@@ -19,6 +19,13 @@ interface Customer {
   group_name?: string;
   city?: string;
   naselje?: string;
+  address?: string;
+  phone?: string;
+  pib?: string;
+  is_vat_registered?: boolean;
+  code?: string;
+  gps_coordinates?: string;
+  email?: string;
 }
 
 export const CustomerGroupList = () => {
@@ -64,9 +71,8 @@ export const CustomerGroupList = () => {
 
       const { data: customers, error } = await supabase
         .from('customers')
-        .select('name, group_name, city, naselje')
-        .eq('user_id', session.user.id)
-        .order('name');
+        .select('*')
+        .eq('user_id', session.user.id);
 
       if (error) throw error;
 
@@ -75,10 +81,20 @@ export const CustomerGroupList = () => {
       XLSX.utils.book_append_sheet(wb, ws, "Kupci i grupe");
       
       ws['!cols'] = [
+        { wch: 40 }, // id
+        { wch: 40 }, // user_id
+        { wch: 15 }, // code
         { wch: 40 }, // name
-        { wch: 20 }, // group_name
+        { wch: 40 }, // address
         { wch: 20 }, // city
+        { wch: 15 }, // phone
+        { wch: 15 }, // pib
+        { wch: 10 }, // is_vat_registered
+        { wch: 30 }, // gps_coordinates
+        { wch: 20 }, // created_at
+        { wch: 20 }, // group_name
         { wch: 20 }, // naselje
+        { wch: 30 }, // email
       ];
 
       XLSX.writeFile(wb, `kupci-grupe.xlsx`);
@@ -107,12 +123,7 @@ export const CustomerGroupList = () => {
           const workbook = XLSX.read(data, { type: 'binary' });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(sheet) as { 
-            name: string; 
-            group_name: string;
-            city?: string;
-            naselje?: string;
-          }[];
+          const jsonData = XLSX.utils.sheet_to_json(sheet) as Partial<Customer>[];
 
           console.log("Imported data:", jsonData);
 
@@ -120,65 +131,51 @@ export const CustomerGroupList = () => {
           const uniqueGroups = [...new Set(jsonData.filter(item => item.group_name).map(item => item.group_name))];
           
           for (const groupName of uniqueGroups) {
-            const { data: existingGroup, error: checkError } = await supabase
+            if (!groupName) continue;
+            
+            const { data: existingGroup } = await supabase
               .from('customer_groups')
               .select('id')
               .eq('name', groupName)
               .eq('user_id', session.user.id)
               .maybeSingle();
 
-            if (checkError) {
-              console.error('Error checking group:', groupName, checkError);
-              continue;
-            }
-
             if (!existingGroup) {
-              const { error: createError } = await supabase
+              await supabase
                 .from('customer_groups')
                 .insert({
                   name: groupName,
                   user_id: session.user.id
                 });
-
-              if (createError) {
-                console.error('Error creating group:', groupName, createError);
-              } else {
-                console.log('Created new group:', groupName);
-              }
             }
           }
 
-          // Update customers with new group names and location data
+          // Update or insert customers
           for (const customer of jsonData) {
-            if (customer.name) {
-              const updateData: {
-                group_name?: string;
-                city?: string;
-                naselje?: string;
-                user_id: string;
-              } = {
-                user_id: session.user.id
-              };
+            if (!customer.name) continue;
 
-              if (customer.group_name) updateData.group_name = customer.group_name;
-              if (customer.city) updateData.city = customer.city;
-              if (customer.naselje) updateData.naselje = customer.naselje;
+            // Generate UUID if missing
+            if (!customer.id) {
+              customer.id = crypto.randomUUID();
+            }
 
-              const { error: updateError } = await supabase
-                .from('customers')
-                .update(updateData)
-                .eq('name', customer.name)
-                .eq('user_id', session.user.id);
+            const updateData: Partial<Customer> & { user_id: string } = {
+              ...customer,
+              user_id: session.user.id
+            };
 
-              if (updateError) {
-                console.error('Error updating customer:', customer.name, updateError);
-              } else {
-                console.log('Updated customer:', customer.name);
-              }
+            const { error: upsertError } = await supabase
+              .from('customers')
+              .upsert(updateData, {
+                onConflict: 'id'
+              });
+
+            if (upsertError) {
+              console.error('Error updating customer:', customer.name, upsertError);
             }
           }
 
-          toast.success("Grupe kupaca su uspešno ažurirane");
+          toast.success("Kupci su uspešno ažurirani");
           fetchGroups(); // Refresh the groups list
         } catch (error) {
           console.error('Error processing file:', error);
