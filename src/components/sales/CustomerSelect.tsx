@@ -24,30 +24,43 @@ export const CustomerSelect = ({
   const [showHistory, setShowHistory] = useState(false);
 
   console.log("Available customers:", customers?.length || 0);
-  console.log("Current customer search:", customerSearch);
+  console.log("Current search term:", customerSearch);
+  console.log("Sample customers:", customers?.slice(0, 3).map(c => ({
+    name: c.name,
+    group: c.group_name,
+    city: c.city
+  })));
 
   const filteredCustomers = useMemo(() => {
     if (!customers) return [];
     
     try {
-      // Show all customers that match the search term in name, group_name, or address
       const searchTerm = customerSearch.toLowerCase().trim();
       if (!searchTerm) return [];
 
       const filtered = customers.filter((customer) => {
         if (!customer) return false;
         
-        const nameMatch = customer.name?.toLowerCase().includes(searchTerm);
-        const groupMatch = customer.group_name?.toLowerCase().includes(searchTerm);
-        const addressMatch = customer.address?.toLowerCase().includes(searchTerm);
+        // Split search term into words for more flexible matching
+        const searchWords = searchTerm.split(/\s+/);
         
-        return nameMatch || groupMatch || addressMatch;
+        // Check if all search words match any of the fields
+        return searchWords.every(word => {
+          const nameMatch = customer.name?.toLowerCase().includes(word);
+          const groupMatch = customer.group_name?.toLowerCase().includes(word);
+          const addressMatch = customer.address?.toLowerCase().includes(word);
+          const cityMatch = customer.city?.toLowerCase().includes(word);
+          const naseljeMatch = customer.naselje?.toLowerCase().includes(word);
+          
+          return nameMatch || groupMatch || addressMatch || cityMatch || naseljeMatch;
+        });
       });
 
       console.log("Filtered customers:", filtered.length);
       console.log("First few filtered customers:", filtered.slice(0, 5).map(c => ({
         name: c.name,
-        group: c.group_name
+        group: c.group_name,
+        city: c.city
       })));
       
       return filtered;
@@ -64,7 +77,7 @@ export const CustomerSelect = ({
       return;
     }
 
-    console.log("Selected customer:", customer.name, "Group:", customer.group_name);
+    console.log("Selected customer:", customer.name, "Group:", customer.group_name, "City:", customer.city);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
@@ -76,7 +89,7 @@ export const CustomerSelect = ({
       <div className="flex gap-2 items-start w-full">
         <div className="relative flex-1 min-w-0">
           <Input
-            placeholder="Pretraži kupca po nazivu, grupi ili adresi..."
+            placeholder="Pretraži kupca po nazivu, grupi, gradu ili adresi..."
             value={customerSearch}
             onChange={(e) => onCustomerSearchChange(e.target.value)}
             className="w-full"
