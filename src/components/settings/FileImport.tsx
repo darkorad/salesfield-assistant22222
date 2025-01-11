@@ -56,6 +56,7 @@ export const FileImport = () => {
 
           if (type === "customers") {
             for (const row of jsonData) {
+              // Process each row as unknown type since we'll validate it in processCustomerData
               const success = await processCustomerData(row, session.user.id);
               if (success) successCount++; else errorCount++;
             }
@@ -66,6 +67,7 @@ export const FileImport = () => {
             }
           } else {
             for (const row of jsonData) {
+              // Process each row as unknown type since we'll validate it in processProductData
               const success = await processProductData(row, session.user.id);
               if (success) successCount++; else errorCount++;
             }

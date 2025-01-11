@@ -1,21 +1,34 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
-interface ImportProduct {
+export interface ImportProduct {
   name: string;
   manufacturer?: string;
   price?: number;
   unit?: string;
 }
 
-export const processProductData = async (product: ImportProduct, userId: string) => {
+export const processProductData = async (rawData: unknown, userId: string) => {
   try {
+    // Type guard to validate the raw data
+    const isValidProduct = (data: any): data is ImportProduct => {
+      return (
+        typeof data === 'object' &&
+        data !== null &&
+        typeof data.name === 'string'
+      );
+    };
+
+    if (!isValidProduct(rawData)) {
+      console.error('Invalid product data format:', rawData);
+      return false;
+    }
+
     const productData = {
       user_id: userId,
-      Naziv: product.name,
-      Proizvođač: product.manufacturer || '',
-      Cena: product.price || 0,
-      "Jedinica mere": product.unit || '',
+      Naziv: rawData.name,
+      Proizvođač: rawData.manufacturer || '',
+      Cena: rawData.price || 0,
+      "Jedinica mere": rawData.unit || '',
     };
 
     // Check for existing product to prevent duplicates
