@@ -27,15 +27,29 @@ export const CustomerSelect = ({
   console.log("Current customer search:", customerSearch);
 
   const filteredCustomers = useMemo(() => {
-    if (!customers || !customerSearch) return [];
+    if (!customers) return [];
     
     try {
-      // Show all customers that match the search term, regardless of group
-      const filtered = customers.filter((customer) =>
-        customer?.name?.toLowerCase().includes(customerSearch.toLowerCase())
-      );
+      // Show all customers that match the search term in name, group_name, or address
+      const searchTerm = customerSearch.toLowerCase().trim();
+      if (!searchTerm) return [];
+
+      const filtered = customers.filter((customer) => {
+        if (!customer) return false;
+        
+        const nameMatch = customer.name?.toLowerCase().includes(searchTerm);
+        const groupMatch = customer.group_name?.toLowerCase().includes(searchTerm);
+        const addressMatch = customer.address?.toLowerCase().includes(searchTerm);
+        
+        return nameMatch || groupMatch || addressMatch;
+      });
+
       console.log("Filtered customers:", filtered.length);
-      console.log("First few filtered customers:", filtered.slice(0, 5).map(c => c.name));
+      console.log("First few filtered customers:", filtered.slice(0, 5).map(c => ({
+        name: c.name,
+        group: c.group_name
+      })));
+      
       return filtered;
     } catch (error) {
       console.error("Error filtering customers:", error);
@@ -50,7 +64,7 @@ export const CustomerSelect = ({
       return;
     }
 
-    console.log("Selected customer:", customer.name);
+    console.log("Selected customer:", customer.name, "Group:", customer.group_name);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
@@ -62,7 +76,7 @@ export const CustomerSelect = ({
       <div className="flex gap-2 items-start w-full">
         <div className="relative flex-1 min-w-0">
           <Input
-            placeholder="Pretraži kupca..."
+            placeholder="Pretraži kupca po nazivu, grupi ili adresi..."
             value={customerSearch}
             onChange={(e) => onCustomerSearchChange(e.target.value)}
             className="w-full"
