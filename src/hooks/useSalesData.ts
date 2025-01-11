@@ -42,24 +42,27 @@ export const useSalesData = () => {
           .from('kupci_darko')
           .select('*');
         
+        if (response.error) {
+          throw new Error(`Error fetching customers: ${response.error.message}`);
+        }
+
         // Transform kupci_darko data to match Customer type
         customersData = response.data?.map(customer => ({
-          id: crypto.randomUUID(),
+          id: customer.id || crypto.randomUUID(),
           user_id: session.user.id,
-          code: customer['Šifra kupca'].toString(),
-          name: customer['Naziv kupca'],
-          address: customer['Adresa'],
-          city: customer['Grad'],
-          phone: customer['Telefon'] || '',
-          pib: customer['PIB'] || '',
-          is_vat_registered: customer['PDV Obveznik'] === 'DA',
-          gps_coordinates: customer['GPS Koordinate'] || '',
-          created_at: new Date().toISOString(),
-          group_name: null,
-          naselje: null,
-          email: null
+          code: customer.code || '',
+          name: customer.name || '',
+          address: customer.address || '',
+          city: customer.city || '',
+          phone: customer.phone || '',
+          pib: customer.pib || '',
+          is_vat_registered: customer.is_vat_registered || false,
+          gps_coordinates: customer.gps_coordinates || '',
+          created_at: customer.created_at || new Date().toISOString(),
+          group_name: customer.group_name || null,
+          naselje: customer.naselje || null,
+          email: customer.email || null
         }));
-        customersError = response.error;
       } else {
         console.log("Fetching customers from regular customers table");
         const response = await supabase
