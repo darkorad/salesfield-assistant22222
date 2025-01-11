@@ -4,27 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
-
-interface ExcelCustomer {
-  code?: string;
-  name: string;
-  address: string;
-  city: string;
-  phone?: string;
-  pib: string;
-  is_vat_registered?: boolean;
-  gps_coordinates?: string;
-  group_name?: string;
-  naselje?: string;
-  email?: string;
-}
-
-interface ExcelProduct {
-  name: string;
-  manufacturer?: string;
-  price?: number;
-  unit?: string;
-}
+import { processCustomerData } from "@/utils/import/customerImportUtils";
+import { processProductData } from "@/utils/import/productImportUtils";
 
 export const FileImport = () => {
   useEffect(() => {
@@ -33,41 +14,18 @@ export const FileImport = () => {
       if (!session) return;
 
       const currentUser = session.user.id;
-      
-      // Check last import dates and auto-load if needed
       const lastCustomersImport = localStorage.getItem(`lastCustomersImport_${currentUser}`);
       const lastProductsImport = localStorage.getItem(`lastProductsImport_${currentUser}`);
 
-      if (lastCustomersImport) {
-        const lastImport = new Date(lastCustomersImport);
-        const today = new Date();
-        // Auto-load if last import was today
-        if (lastImport.toDateString() === today.toDateString()) {
-          const { data: customers } = await supabase
-            .from('customers')
-            .select('*')
-            .eq('user_id', currentUser);
-            
-          if (customers) {
-            console.log("Customers auto-loaded from Supabase");
-          }
-        }
+      // Auto-load if imports were done today
+      const today = new Date().toDateString();
+      
+      if (lastCustomersImport && new Date(lastCustomersImport).toDateString() === today) {
+        console.log("Customers auto-loaded from last import");
       }
 
-      // Same for products
-      if (lastProductsImport) {
-        const lastImport = new Date(lastProductsImport);
-        const today = new Date();
-        if (lastImport.toDateString() === today.toDateString()) {
-          const { data: products } = await supabase
-            .from('products')
-            .select('*')
-            .eq('user_id', currentUser);
-            
-          if (products) {
-            console.log("Products auto-loaded from Supabase");
-          }
-        }
+      if (lastProductsImport && new Date(lastProductsImport).toDateString() === today) {
+        console.log("Products auto-loaded from last import");
       }
     };
 
@@ -93,63 +51,33 @@ export const FileImport = () => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+          let successCount = 0;
+          let errorCount = 0;
+
           if (type === "customers") {
-            // Process each customer
             for (const row of jsonData) {
-              const customer = row as ExcelCustomer;
-              const customerData = {
-                user_id: session.user.id,
-                code: customer.code || Date.now().toString().slice(-6),
-                name: customer.name,
-                address: customer.address,
-                city: customer.city,
-                phone: customer.phone || '',
-                pib: customer.pib,
-                is_vat_registered: customer.is_vat_registered || false,
-                gps_coordinates: customer.gps_coordinates || '',
-                group_name: customer.group_name || null,
-                naselje: customer.naselje || null,
-                email: customer.email || null
-              };
-
-              // Insert into kupci_darko table
-              const { error } = await supabase
-                .from('kupci_darko')
-                .insert(customerData);
-
-              if (error) {
-                console.error('Error inserting customer:', error);
-                toast.error(`Greška pri ažuriranju kupca: ${customerData.name}`);
-              }
+              const success = await processCustomerData(row, session.user.id);
+              if (success) successCount++; else errorCount++;
             }
-
-            localStorage.setItem(`lastCustomersImport_${session.user.id}`, new Date().toISOString());
-            toast.success("Kupci su uspešno ažurirani");
+            
+            if (successCount > 0) {
+              localStorage.setItem(`lastCustomersImport_${session.user.id}`, new Date().toISOString());
+              toast.success(`${successCount} kupaca je uspešno ažurirano`);
+            }
           } else {
-            // Process each product
             for (const row of jsonData) {
-              const product = row as ExcelProduct;
-              const productData = {
-                user_id: session.user.id,
-                Naziv: product.name,
-                Proizvođač: product.manufacturer || '',
-                Cena: product.price || 0,
-                "Jedinica mere": product.unit || '',
-                created_at: new Date().toISOString()
-              };
-
-              const { error } = await supabase
-                .from('products')
-                .insert(productData);
-
-              if (error) {
-                console.error('Error inserting product:', error);
-                toast.error(`Greška pri ažuriranju proizvoda: ${productData.Naziv}`);
-              }
+              const success = await processProductData(row, session.user.id);
+              if (success) successCount++; else errorCount++;
             }
+            
+            if (successCount > 0) {
+              localStorage.setItem(`lastProductsImport_${session.user.id}`, new Date().toISOString());
+              toast.success(`${successCount} proizvoda je uspešno ažurirano`);
+            }
+          }
 
-            localStorage.setItem(`lastProductsImport_${session.user.id}`, new Date().toISOString());
-            toast.success("Proizvodi su uspešno ažurirani");
+          if (errorCount > 0) {
+            toast.error(`Greška pri ažuriranju ${errorCount} stavki`);
           }
         } catch (error) {
           console.error('Error processing file:', error);
