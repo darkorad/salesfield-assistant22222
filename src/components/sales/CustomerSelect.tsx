@@ -23,7 +23,7 @@ export const CustomerSelect = ({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  console.log("Available customers:", customers?.length || 0);
+  console.log("Total customers available:", customers?.length || 0);
   console.log("Current search term:", customerSearch);
 
   const filteredCustomers = useMemo(() => {
@@ -33,24 +33,20 @@ export const CustomerSelect = ({
       const searchTerm = customerSearch.toLowerCase().trim();
       if (!searchTerm) return [];
 
-      // More flexible search that matches partial words
+      // Simple search that matches any part of the customer data
       return customers.filter((customer) => {
-        if (!customer?.name) return false;
+        if (!customer) return false;
         
-        const customerName = customer.name.toLowerCase();
-        const customerGroup = customer.group_name?.toLowerCase() || '';
-        const customerCity = customer.city?.toLowerCase() || '';
-        const customerAddress = customer.address?.toLowerCase() || '';
-        const customerNaselje = customer.naselje?.toLowerCase() || '';
+        const searchableFields = [
+          customer.name,
+          customer.group_name,
+          customer.city,
+          customer.address,
+          customer.naselje
+        ].map(field => (field || '').toLowerCase());
 
-        // Check if search term is found in any of the customer fields
-        return (
-          customerName.includes(searchTerm) ||
-          customerGroup.includes(searchTerm) ||
-          customerCity.includes(searchTerm) ||
-          customerAddress.includes(searchTerm) ||
-          customerNaselje.includes(searchTerm)
-        );
+        // Return true if any field contains the search term
+        return searchableFields.some(field => field.includes(searchTerm));
       });
     } catch (error) {
       console.error("Error filtering customers:", error);
