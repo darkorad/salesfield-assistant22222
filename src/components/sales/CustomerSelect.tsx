@@ -25,45 +25,33 @@ export const CustomerSelect = ({
 
   console.log("Available customers:", customers?.length || 0);
   console.log("Current search term:", customerSearch);
-  console.log("Sample customers:", customers?.slice(0, 3).map(c => ({
-    name: c.name,
-    group: c.group_name,
-    city: c.city
-  })));
 
   const filteredCustomers = useMemo(() => {
-    if (!customers) return [];
+    if (!customers || !customerSearch) return [];
     
     try {
       const searchTerm = customerSearch.toLowerCase().trim();
       if (!searchTerm) return [];
 
-      const filtered = customers.filter((customer) => {
+      // More flexible search that matches partial words
+      return customers.filter((customer) => {
         if (!customer?.name) return false;
         
-        // Split search term into words for more flexible matching
-        const searchWords = searchTerm.split(/\s+/);
-        
-        // Check if all search words match any of the fields
-        return searchWords.every(word => {
-          const nameMatch = customer.name.toLowerCase().includes(word);
-          const groupMatch = customer.group_name?.toLowerCase().includes(word);
-          const addressMatch = customer.address?.toLowerCase().includes(word);
-          const cityMatch = customer.city?.toLowerCase().includes(word);
-          const naseljeMatch = customer.naselje?.toLowerCase().includes(word);
-          
-          return nameMatch || groupMatch || addressMatch || cityMatch || naseljeMatch;
-        });
-      });
+        const customerName = customer.name.toLowerCase();
+        const customerGroup = customer.group_name?.toLowerCase() || '';
+        const customerCity = customer.city?.toLowerCase() || '';
+        const customerAddress = customer.address?.toLowerCase() || '';
+        const customerNaselje = customer.naselje?.toLowerCase() || '';
 
-      console.log("Filtered customers:", filtered.length);
-      console.log("First few filtered customers:", filtered.slice(0, 5).map(c => ({
-        name: c.name,
-        group: c.group_name,
-        city: c.city
-      })));
-      
-      return filtered;
+        // Check if search term is found in any of the customer fields
+        return (
+          customerName.includes(searchTerm) ||
+          customerGroup.includes(searchTerm) ||
+          customerCity.includes(searchTerm) ||
+          customerAddress.includes(searchTerm) ||
+          customerNaselje.includes(searchTerm)
+        );
+      });
     } catch (error) {
       console.error("Error filtering customers:", error);
       toast.error("Greška pri filtriranju kupaca");
@@ -77,7 +65,7 @@ export const CustomerSelect = ({
       return;
     }
 
-    console.log("Selected customer:", customer.name, "Group:", customer.group_name, "City:", customer.city);
+    console.log("Selected customer:", customer.name);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
