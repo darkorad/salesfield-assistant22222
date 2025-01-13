@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       clientPort: 443,
       protocol: 'wss',
-      host: '62804ab4-f3f4-4eaa-a344-12e3de709e58.lovableproject.com'
+      // Remove the host configuration to let Vite handle it automatically
     },
     watch: {
       usePolling: true
