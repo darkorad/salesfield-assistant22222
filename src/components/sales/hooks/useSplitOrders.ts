@@ -19,6 +19,9 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
       throw new Error("Authentication or customer selection required");
     }
 
+    // Check if the user is using kupci_darko table
+    const isUsingDarkoTable = session.user.email === 'zirmd.darko@gmail.com';
+
     const orderItems = note 
       ? items.map(item => ({ ...item })).concat([{ 
           product: { 
@@ -43,6 +46,17 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
       payment_type: paymentType,
       date: new Date().toISOString()
     };
+
+    // First verify the customer exists in the appropriate table
+    const { data: customerExists, error: customerCheckError } = await supabase
+      .from(isUsingDarkoTable ? 'kupci_darko' : 'customers')
+      .select('id')
+      .eq('id', selectedCustomer.id)
+      .single();
+
+    if (customerCheckError || !customerExists) {
+      throw new Error(`Customer not found in ${isUsingDarkoTable ? 'kupci_darko' : 'customers'} table`);
+    }
 
     const { data, error } = await supabase
       .from('sales')
