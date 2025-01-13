@@ -23,13 +23,37 @@ const DailySalesSummary = () => {
 
       console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
 
-      const { data: salesData, error } = await supabase
+      // First try to get from kupci_darko for Darko's account
+      let { data: salesData, error } = await supabase
         .from('sales')
-        .select('*, customer:customers(*)')
+        .select(`
+          *,
+          customer:kupci_darko!sales_customer_id_fkey(*)
+        `)
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
         .lt('date', tomorrow.toISOString())
         .order('date', { ascending: false });
+
+      // If no customer data found in kupci_darko, try regular customers table
+      if (!error && salesData && salesData.every(sale => !sale.customer)) {
+        const { data: regularSalesData, error: regularError } = await supabase
+          .from('sales')
+          .select(`
+            *,
+            customer:customers!sales_customer_id_fkey(*)
+          `)
+          .eq('user_id', session.user.id)
+          .gte('date', today.toISOString())
+          .lt('date', tomorrow.toISOString())
+          .order('date', { ascending: false });
+
+        if (!regularError) {
+          salesData = regularSalesData;
+        } else {
+          console.error("Error loading sales from regular customers:", regularError);
+        }
+      }
 
       if (error) {
         console.error("Error loading sales:", error);

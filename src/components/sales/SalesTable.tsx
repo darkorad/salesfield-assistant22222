@@ -39,11 +39,11 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
               }`}
             >
               <TableCell className="whitespace-nowrap text-sm font-medium">
-                <div>{sale.customer.name}</div>
-                <div className="text-xs text-gray-500 md:hidden">{sale.customer.address}</div>
+                <div>{sale.customer?.name || 'Nepoznat kupac'}</div>
+                <div className="text-xs text-gray-500 md:hidden">{sale.customer?.address || 'N/A'}</div>
               </TableCell>
               <TableCell className="whitespace-nowrap text-sm hidden md:table-cell">
-                {sale.customer.address}, {sale.customer.city}
+                {sale.customer ? `${sale.customer.address}, ${sale.customer.city}` : 'N/A'}
               </TableCell>
               <TableCell className="whitespace-nowrap text-sm font-medium">
                 {sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'}
