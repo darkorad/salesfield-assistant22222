@@ -40,16 +40,24 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
             >
               <TableCell className="whitespace-nowrap text-sm font-medium">
                 <div>{sale.customer?.name || 'Nepoznat kupac'}</div>
-                <div className="text-xs text-gray-500 md:hidden">{sale.customer?.address || 'N/A'}</div>
+                <div className="text-xs text-gray-500 md:hidden">
+                  {sale.customer?.address || 'N/A'}
+                </div>
               </TableCell>
               <TableCell className="whitespace-nowrap text-sm hidden md:table-cell">
-                {sale.customer ? `${sale.customer.address}, ${sale.customer.city}` : 'N/A'}
+                {sale.customer ? 
+                  `${sale.customer.address}${sale.customer.city ? `, ${sale.customer.city}` : ''}` 
+                  : 'N/A'}
               </TableCell>
               <TableCell className="whitespace-nowrap text-sm font-medium">
                 {sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'}
               </TableCell>
-              <TableCell className="text-right whitespace-nowrap text-sm">{sale.total} RSD</TableCell>
-              <TableCell className="text-center whitespace-nowrap text-sm">{sale.items.length}</TableCell>
+              <TableCell className="text-right whitespace-nowrap text-sm">
+                {sale.total} RSD
+              </TableCell>
+              <TableCell className="text-center whitespace-nowrap text-sm">
+                {sale.items.length}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

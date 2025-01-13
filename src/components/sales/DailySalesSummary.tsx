@@ -4,14 +4,19 @@ import { Order } from "@/types";
 import { SalesTable } from "./SalesTable";
 import { SyncDataButton } from "./SyncDataButton";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const DailySalesSummary = () => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadTodaySales = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
 
       // Get today's date at start of day in local timezone
       const today = new Date();
@@ -24,39 +29,20 @@ const DailySalesSummary = () => {
       console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
 
       // First try to get from kupci_darko for Darko's account
-      let { data: salesData, error } = await supabase
+      const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
           *,
-          customer:kupci_darko!sales_customer_id_fkey(*)
+          customer:customers(*)
         `)
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
         .lt('date', tomorrow.toISOString())
         .order('date', { ascending: false });
 
-      // If no customer data found in kupci_darko, try regular customers table
-      if (!error && salesData && salesData.every(sale => !sale.customer)) {
-        const { data: regularSalesData, error: regularError } = await supabase
-          .from('sales')
-          .select(`
-            *,
-            customer:customers!sales_customer_id_fkey(*)
-          `)
-          .eq('user_id', session.user.id)
-          .gte('date', today.toISOString())
-          .lt('date', tomorrow.toISOString())
-          .order('date', { ascending: false });
-
-        if (!regularError) {
-          salesData = regularSalesData;
-        } else {
-          console.error("Error loading sales from regular customers:", regularError);
-        }
-      }
-
       if (error) {
         console.error("Error loading sales:", error);
+        toast.error("Greška pri učitavanju prodaje");
         return;
       }
 
@@ -64,6 +50,9 @@ const DailySalesSummary = () => {
       setTodaySales(salesData || []);
     } catch (error) {
       console.error("Error loading sales:", error);
+      toast.error("Greška pri učitavanju prodaje");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,26 +76,32 @@ const DailySalesSummary = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="overflow-x-auto -mx-4 md:mx-0">
-            <div className="min-w-full inline-block align-middle">
-              <SalesTable sales={todaySales} sentOrderIds={[]} />
-            </div>
-          </div>
-          {todaySales.length > 0 && (
-            <div className="pt-4 border-t space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-medium">Gotovina:</span>
-                <span className="font-bold">{totalCash} RSD</span>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Učitavanje...</p>
+          ) : (
+            <>
+              <div className="overflow-x-auto -mx-4 md:mx-0">
+                <div className="min-w-full inline-block align-middle">
+                  <SalesTable sales={todaySales} sentOrderIds={[]} />
+                </div>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-medium">Račun:</span>
-                <span className="font-bold">{totalInvoice} RSD</span>
-              </div>
-              <div className="flex justify-between items-center text-base pt-2 border-t">
-                <span className="font-medium">Ukupno za danas:</span>
-                <span className="font-bold">{totalSales} RSD</span>
-              </div>
-            </div>
+              {todaySales.length > 0 && (
+                <div className="pt-4 border-t space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium">Gotovina:</span>
+                    <span className="font-bold">{totalCash} RSD</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium">Račun:</span>
+                    <span className="font-bold">{totalInvoice} RSD</span>
+                  </div>
+                  <div className="flex justify-between items-center text-base pt-2 border-t">
+                    <span className="font-medium">Ukupno za danas:</span>
+                    <span className="font-bold">{totalSales} RSD</span>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </CardContent>
