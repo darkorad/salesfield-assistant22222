@@ -28,12 +28,12 @@ const DailySalesSummary = () => {
 
       console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
 
-      // First try to get from kupci_darko for Darko's account
       const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
           *,
-          customer:customers(*)
+          customer:customers(*),
+          darko_customer:kupci_darko(*)
         `)
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
@@ -46,8 +46,14 @@ const DailySalesSummary = () => {
         return;
       }
 
-      console.log("Fetched sales data:", salesData);
-      setTodaySales(salesData || []);
+      // Transform the data to use either regular customer or darko_customer
+      const transformedSales = salesData?.map(sale => ({
+        ...sale,
+        customer: sale.customer || sale.darko_customer
+      }));
+
+      console.log("Fetched sales data:", transformedSales);
+      setTodaySales(transformedSales || []);
     } catch (error) {
       console.error("Error loading sales:", error);
       toast.error("Greška pri učitavanju prodaje");
