@@ -190,7 +190,6 @@ export type Database = {
           address: string
           city: string
           code: string
-          created_at: string
           email: string | null
           gps_coordinates: string | null
           group_name: string | null
@@ -206,7 +205,6 @@ export type Database = {
           address: string
           city: string
           code: string
-          created_at?: string
           email?: string | null
           gps_coordinates?: string | null
           group_name?: string | null
@@ -222,7 +220,6 @@ export type Database = {
           address?: string
           city?: string
           code?: string
-          created_at?: string
           email?: string | null
           gps_coordinates?: string | null
           group_name?: string | null
@@ -342,7 +339,6 @@ export type Database = {
           address: string
           city: string
           code: string
-          created_at: string
           email: string | null
           gps_coordinates: string | null
           group_name: string | null
@@ -358,7 +354,6 @@ export type Database = {
           address: string
           city: string
           code: string
-          created_at?: string
           email?: string | null
           gps_coordinates?: string | null
           group_name?: string | null
@@ -374,7 +369,6 @@ export type Database = {
           address?: string
           city?: string
           code?: string
-          created_at?: string
           email?: string | null
           gps_coordinates?: string | null
           group_name?: string | null

@@ -39,14 +39,14 @@ export const CustomerSelect = ({
       if (!searchTerm) return [];
 
       const filtered = customers.filter((customer) => {
-        if (!customer) return false;
+        if (!customer?.name) return false;
         
         // Split search term into words for more flexible matching
         const searchWords = searchTerm.split(/\s+/);
         
         // Check if all search words match any of the fields
         return searchWords.every(word => {
-          const nameMatch = customer.name?.toLowerCase().includes(word);
+          const nameMatch = customer.name.toLowerCase().includes(word);
           const groupMatch = customer.group_name?.toLowerCase().includes(word);
           const addressMatch = customer.address?.toLowerCase().includes(word);
           const cityMatch = customer.city?.toLowerCase().includes(word);
@@ -72,7 +72,7 @@ export const CustomerSelect = ({
   }, [customers, customerSearch]);
 
   const handleCustomerSelect = useCallback((customer: Customer) => {
-    if (!customer) {
+    if (!customer?.name) {
       console.error("Invalid customer selected");
       return;
     }
