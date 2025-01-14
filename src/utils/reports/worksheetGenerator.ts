@@ -135,11 +135,18 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     }
   };
 
-  // Set page breaks
+  // Set page breaks using the correct property
   ws['!rows'] = [];
   salesData.forEach((_, index) => {
     if (index < salesData.length - 1) {
-      ws['!rows'][(index + 1) * 44 - 1] = { hidden: false, hpx: 1, level: 0, pageBreak: true };
+      ws['!rows'][(index + 1) * 44 - 1] = { 
+        hidden: false, 
+        hpx: 1, 
+        level: 0,
+        hpt: 1,
+        wpx: 1,
+        wch: 1
+      };
     }
   });
 
