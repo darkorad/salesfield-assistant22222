@@ -33,7 +33,7 @@ const DailySalesSummary = () => {
         .select(`
           *,
           customer:customers(*),
-          darko_customer:kupci_darko(*)
+          darko_customer:kupci_darko!sales_kupci_darko_fkey(*)
         `)
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
