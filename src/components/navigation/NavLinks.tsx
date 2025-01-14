@@ -23,21 +23,13 @@ const NavLinks = () => {
           Današnje porudžbine
         </Button>
       </Link>
-      <Link to="/sales-manufacturer">
-        <Button
-          variant={location.pathname === "/sales-manufacturer" ? "default" : "ghost"}
-          className="text-sm"
-        >
-          Prodaja po proizvođaču
-        </Button>
-      </Link>
       <Link to="/settings">
         <Button
           variant={location.pathname === "/settings" ? "default" : "ghost"}
           className="text-sm"
         >
           <Settings className="h-4 w-4 mr-2" />
-          Podešavanja
+          Podešavanja i izveštaji
         </Button>
       </Link>
     </div>

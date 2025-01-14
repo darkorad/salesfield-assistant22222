@@ -70,14 +70,6 @@ const NavActions = () => {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link 
-                to="/sales-manufacturer" 
-                className={`w-full cursor-pointer text-xs ${location.pathname === "/sales-manufacturer" ? "font-medium" : ""}`}
-              >
-                Prodaja po proizvođaču
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link 
                 to="/monthly-sales" 
                 className={`w-full cursor-pointer text-xs ${location.pathname === "/monthly-sales" ? "font-medium" : ""}`}
               >
@@ -87,7 +79,7 @@ const NavActions = () => {
             <DropdownMenuItem asChild>
               <Link to="/settings" className="w-full cursor-pointer text-xs">
                 <Settings className="h-3 w-3 mr-2" />
-                Podešavanja
+                Podešavanja i izveštaji
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs">
