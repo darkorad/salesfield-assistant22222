@@ -534,6 +534,7 @@ export type Database = {
         Row: {
           created_at: string | null
           customer_id: string | null
+          darko_customer_id: string | null
           date: string | null
           id: string
           items: Json
@@ -545,6 +546,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           customer_id?: string | null
+          darko_customer_id?: string | null
           date?: string | null
           id?: string
           items: Json
@@ -556,6 +558,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           customer_id?: string | null
+          darko_customer_id?: string | null
           date?: string | null
           id?: string
           items?: Json
@@ -573,8 +576,15 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_darko_customer_id_fkey"
+            columns: ["darko_customer_id"]
+            isOneToOne: false
+            referencedRelation: "kupci_darko"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sales_kupci_darko_fkey"
-            columns: ["customer_id"]
+            columns: ["darko_customer_id"]
             isOneToOne: false
             referencedRelation: "kupci_darko"
             referencedColumns: ["id"]

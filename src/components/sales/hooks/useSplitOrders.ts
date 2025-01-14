@@ -40,7 +40,6 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
 
     const orderData = {
       user_id: session.user.id,
-      customer_id: selectedCustomer.id,
       items: orderItems,
       total: calculateTotal(items),
       payment_type: paymentType,
