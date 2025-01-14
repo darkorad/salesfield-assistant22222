@@ -105,10 +105,14 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     // Add page break after each customer except the last one
     if (saleIndex < salesData.length - 1) {
       ws['!rows'] = ws['!rows'] || [];
-      ws['!rows'][rowIndex + 4] = { hpx: 0, level: 0 };
       
-      // Add extra spacing for next customer's page
-      rowIndex += 20; // Increased spacing to ensure proper page breaks
+      // Add significant spacing to force page break
+      for (let i = 0; i < 50; i++) {
+        ws['!rows'][rowIndex + 4 + i] = { hpx: 20 }; // Add multiple rows with height
+      }
+      
+      // Move rowIndex significantly to ensure next customer starts on new page
+      rowIndex += 60; // Increased spacing dramatically to force page breaks
     }
   });
 
