@@ -7,6 +7,7 @@ import { CustomerSearchInput } from "./CustomerSearchInput";
 import { useCustomerSync } from "./hooks/useCustomerSync";
 import { useCustomerFilter } from "./hooks/useCustomerFilter";
 import { useSalesData } from "@/hooks/useSalesData";
+import { OrderHistory } from "./OrderHistory";
 
 interface CustomerSelectProps {
   customers: Customer[];
