@@ -104,15 +104,18 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
     // Add page break after each customer except the last one
     if (saleIndex < salesData.length - 1) {
-      ws['!rows'] = ws['!rows'] || [];
+      // Calculate remaining space to fill current page
+      const currentPageRows = 55; // Approximate number of rows that fit on one A4 page
+      const usedRows = rowIndex + 4; // Current content rows
+      const remainingRows = currentPageRows - (usedRows % currentPageRows);
       
-      // Add significant spacing to force page break
-      for (let i = 0; i < 50; i++) {
-        ws['!rows'][rowIndex + 4 + i] = { hpx: 20 }; // Add multiple rows with height
+      // Add empty rows to push next customer to new page
+      for (let i = 0; i < remainingRows; i++) {
+        XLSX.utils.sheet_add_aoa(ws, [['']], { origin: rowIndex + 4 + i });
       }
       
-      // Move rowIndex significantly to ensure next customer starts on new page
-      rowIndex += 60; // Increased spacing dramatically to force page breaks
+      // Update rowIndex to start of next page
+      rowIndex += remainingRows + 4;
     }
   });
 
