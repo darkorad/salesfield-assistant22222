@@ -47,15 +47,15 @@ export const exportMonthlyItemsReport = async () => {
         }
         
         if (sale.payment_type === 'cash') {
-          acc[key].cashQuantity += item.quantity;
-          acc[key].cashValue += item.quantity * item.price;
+          acc[key].cashQuantity += Number(item.quantity);
+          acc[key].cashValue += Number(item.quantity) * Number(item.price);
         } else {
-          acc[key].invoiceQuantity += item.quantity;
-          acc[key].invoiceValue += item.quantity * item.price;
+          acc[key].invoiceQuantity += Number(item.quantity);
+          acc[key].invoiceValue += Number(item.quantity) * Number(item.price);
         }
         
-        acc[key].totalQuantity += item.quantity;
-        acc[key].totalValue += item.quantity * item.price;
+        acc[key].totalQuantity = acc[key].cashQuantity + acc[key].invoiceQuantity;
+        acc[key].totalValue = acc[key].cashValue + acc[key].invoiceValue;
       });
       
       return acc;
@@ -67,16 +67,28 @@ export const exportMonthlyItemsReport = async () => {
         'Naziv artikla': item.name,
         'Proizvođač': item.manufacturer,
         'Jedinica mere': item.unit,
-        'Količina (gotovina)': item.cashQuantity,
-        'Vrednost (gotovina)': item.cashValue,
-        'Količina (račun)': item.invoiceQuantity,
-        'Vrednost (račun)': item.invoiceValue,
-        'Ukupna količina': item.totalQuantity,
-        'Ukupna vrednost': item.totalValue
+        'Količina (gotovina)': Number(item.cashQuantity.toFixed(2)),
+        'Vrednost (gotovina)': Number(item.cashValue.toFixed(2)),
+        'Količina (račun)': Number(item.invoiceQuantity.toFixed(2)),
+        'Vrednost (račun)': Number(item.invoiceValue.toFixed(2)),
+        'Ukupna količina': Number(item.totalQuantity.toFixed(2)),
+        'Ukupna vrednost': Number(item.totalValue.toFixed(2))
       }));
 
+    // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(reportData);
+    const ws = XLSX.utils.json_to_sheet(reportData, { cellDates: true });
+
+    // Format numbers to 2 decimal places
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+        if (cell && typeof cell.v === 'number') {
+          cell.z = '#,##0.00';
+        }
+      }
+    }
 
     // Set column widths
     ws['!cols'] = [
