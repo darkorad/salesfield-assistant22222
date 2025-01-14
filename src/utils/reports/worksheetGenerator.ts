@@ -5,24 +5,30 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([]);
 
-  // Set column widths for A4 landscape layout
+  // Set column widths for A4 landscape layout (297mm width)
   const columnWidths = [
-    { wch: 30 }, // Product name
-    { wch: 8 },  // Quantity
-    { wch: 8 },  // Price
-    { wch: 10 }, // Total
-    { wch: 2 },  // Spacing
-    { wch: 30 }, // Product name (right side)
-    { wch: 8 },  // Quantity (right side)
-    { wch: 8 },  // Price (right side)
-    { wch: 10 }  // Total (right side)
+    { wch: 35 }, // Product name (wider for better readability)
+    { wch: 10 }, // Quantity
+    { wch: 10 }, // Price
+    { wch: 12 }, // Total
+    { wch: 3 },  // Spacing
+    { wch: 35 }, // Product name (right side)
+    { wch: 10 }, // Quantity (right side)
+    { wch: 10 }, // Price (right side)
+    { wch: 12 }  // Total (right side)
   ];
   ws['!cols'] = columnWidths;
 
+  // Initialize row tracking
   let rowIndex = 0;
 
-  // Process each sale one at a time (one customer per page)
+  // Process each sale (one customer per page)
   salesData.forEach((sale, saleIndex) => {
+    // Start each customer at the beginning of a new page
+    if (saleIndex > 0) {
+      rowIndex = (Math.ceil(rowIndex / 44) * 44); // 44 rows per page in landscape
+    }
+
     // Add headers for both left and right sides
     const headers = [
       [`Naziv kupca: ${sale.customer.name}`, '', '', '', '', `Naziv kupca: ${sale.customer.name}`],
@@ -45,12 +51,12 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
         item.product.Naziv,
         item.quantity,
         item.product.Cena,
-        { f: `B${rowIndex + j + 1}*C${rowIndex + j + 1}` }, // Left side total
+        { f: `B${rowIndex + j + 1}*C${rowIndex + j + 1}` },
         '',
         item.product.Naziv,
         item.quantity,
         item.product.Cena,
-        { f: `G${rowIndex + j + 1}*H${rowIndex + j + 1}` }  // Right side total
+        { f: `G${rowIndex + j + 1}*H${rowIndex + j + 1}` }
       ];
 
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + j });
@@ -58,9 +64,8 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
     rowIndex += sale.items.length;
 
-    // Add totals with Excel formulas
+    // Add totals
     const totalRow = rowIndex;
-
     const totalsRows = [
       [
         'Ukupno:', 
@@ -95,39 +100,33 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
         '', 
         { f: `SUM(I${totalRow + 1}:I${totalRow + 2})` }
       ],
-      ['potpis kupca', 'potpis vozaca', '', '', '', 'potpis kupca', 'potpis vozaca']
+      [''],
+      ['potpis kupca', '', 'potpis vozaca', '', '', 'potpis kupca', '', 'potpis vozaca']
     ];
 
     totalsRows.forEach((row, index) => {
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
     });
-
-    // Add page break after each customer except the last one
-    if (saleIndex < salesData.length - 1) {
-      // Calculate remaining space to fill current page
-      const currentPageRows = 55; // Approximate number of rows that fit on one A4 page
-      const usedRows = rowIndex + 4; // Current content rows
-      const remainingRows = currentPageRows - (usedRows % currentPageRows);
-      
-      // Add empty rows to push next customer to new page
-      for (let i = 0; i < remainingRows; i++) {
-        XLSX.utils.sheet_add_aoa(ws, [['']], { origin: rowIndex + 4 + i });
-      }
-      
-      // Update rowIndex to start of next page
-      rowIndex += remainingRows + 4;
-    }
+    
+    rowIndex += totalsRows.length;
   });
 
   // Set print settings for A4 landscape
   ws['!print'] = {
     orientation: 'landscape',
     paper: 9, // A4
-    scale: 0, // 0 means "fit to page"
     fitToPage: true,
-    fitToHeight: 1,
     fitToWidth: 1,
-    pageMargins: [0.25, 0.25, 0.25, 0.25], // inches
+    fitToHeight: 1,
+    scale: 65, // Adjusted scale to fit content better
+    margins: {
+      left: 0.25,
+      right: 0.25,
+      top: 0.75,
+      bottom: 0.75,
+      header: 0.3,
+      footer: 0.3
+    },
     pageSetup: {
       paperSize: 9, // A4
       orientation: 'landscape',
@@ -135,6 +134,14 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
       fitToHeight: 1
     }
   };
+
+  // Set page breaks
+  ws['!rows'] = [];
+  salesData.forEach((_, index) => {
+    if (index < salesData.length - 1) {
+      ws['!rows'][(index + 1) * 44 - 1] = { hidden: false, hpx: 1, level: 0, pageBreak: true };
+    }
+  });
 
   XLSX.utils.book_append_sheet(wb, ws, "Gotovinska prodaja");
 
