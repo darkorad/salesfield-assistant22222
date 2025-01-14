@@ -1,11 +1,12 @@
 import { Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { OrderHistory } from "./OrderHistory";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { CustomerSearchResults } from "./CustomerSearchResults";
 import { HistoryButton } from "./HistoryButton";
 import { CustomerDropdown } from "./CustomerDropdown";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerSelectProps {
   customers: Customer[];
@@ -25,6 +26,30 @@ export const CustomerSelect = ({
 
   console.log("Total customers available:", customers?.length || 0);
   console.log("Current search term:", customerSearch);
+
+  // Subscribe to real-time updates for customers table
+  useEffect(() => {
+    const channel = supabase
+      .channel('customers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'customers'
+        },
+        (payload) => {
+          console.log('Customer change detected:', payload);
+          // Refresh the page to show the new customer
+          window.location.reload();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const filteredCustomers = useMemo(() => {
     if (!customers || !customerSearch) return [];
