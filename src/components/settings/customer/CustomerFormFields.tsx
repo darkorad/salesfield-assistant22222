@@ -12,7 +12,7 @@ interface CustomerFormFieldsProps {
 
 export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }: CustomerFormFieldsProps) => {
   return (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label htmlFor="name">Ime kupca</Label>
         <Input
@@ -33,10 +33,12 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
           className="w-full"
         />
       </div>
-      <VATStatusSelect 
-        value={customer.isVatRegistered}
-        onChange={(value) => setCustomer(prev => ({ ...prev, isVatRegistered: value }))}
-      />
+      <div className="md:col-span-2">
+        <VATStatusSelect 
+          value={customer.isVatRegistered}
+          onChange={(value) => setCustomer(prev => ({ ...prev, isVatRegistered: value }))}
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="address">Adresa</Label>
         <Input
@@ -86,10 +88,12 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
           className="w-full"
         />
       </div>
-      <GPSCoordinatesInput 
-        value={customer.gpsCoordinates}
-        onChange={(value) => setCustomer(prev => ({ ...prev, gpsCoordinates: value }))}
-      />
-    </>
+      <div className="md:col-span-2">
+        <GPSCoordinatesInput 
+          value={customer.gpsCoordinates}
+          onChange={(value) => setCustomer(prev => ({ ...prev, gpsCoordinates: value }))}
+        />
+      </div>
+    </div>
   );
 };

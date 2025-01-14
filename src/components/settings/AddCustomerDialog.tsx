@@ -70,11 +70,11 @@ export const AddCustomerDialog = () => {
           Novi kupac
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Dodaj novog kupca</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <CustomerFormFields 
             customer={customer}
             handleInputChange={handleInputChange}
@@ -82,7 +82,7 @@ export const AddCustomerDialog = () => {
           />
           <Button 
             type="submit" 
-            className="w-full"
+            className="w-full mt-4"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Dodavanje..." : "Dodaj kupca"}
