@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -25,6 +26,11 @@ const Settings = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Podešavanja</h2>
+        <AddCustomerDialog />
+      </div>
+
       <div>
         <CustomerPriceForm />
       </div>

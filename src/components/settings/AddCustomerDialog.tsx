@@ -34,6 +34,7 @@ export const AddCustomerDialog = () => {
           address: customer.address,
           city: customer.city,
           phone: customer.phone,
+          email: customer.email,
           pib: customer.pib,
           is_vat_registered: customer.isVatRegistered,
           gps_coordinates: customer.gpsCoordinates,

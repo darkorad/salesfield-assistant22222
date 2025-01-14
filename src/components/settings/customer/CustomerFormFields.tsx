@@ -76,6 +76,16 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
           className="w-full"
         />
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={customer.email || ''}
+          onChange={handleInputChange("email")}
+          className="w-full"
+        />
+      </div>
       <GPSCoordinatesInput 
         value={customer.gpsCoordinates}
         onChange={(value) => setCustomer(prev => ({ ...prev, gpsCoordinates: value }))}
