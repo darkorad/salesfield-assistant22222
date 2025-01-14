@@ -1,12 +1,11 @@
 import * as XLSX from "xlsx";
 import { CashSale } from "@/types/reports";
-import { applyStyleToRange, getColumnWidths } from "./worksheetStyles";
 
 export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([]);
 
-  // Set column widths for the dual-column layout
+  // Set column widths
   const columnWidths = [
     { wch: 30 }, // Product name
     { wch: 8 },  // Quantity
@@ -39,19 +38,17 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     headers.forEach((row, index) => {
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
     });
-
-    // Style headers
-    applyStyleToRange(ws, rowIndex, rowIndex + 3, true);
     rowIndex += 4;
 
+    // Track the start of items for formula ranges
+    const leftItemsStartRow = rowIndex;
+    const rightItemsStartRow = rowIndex;
+    
     // Add items
     const maxItems = Math.max(
       leftSale.items.length,
       rightSale ? rightSale.items.length : 0
     );
-
-    let leftTotal = 0;
-    let rightTotal = 0;
 
     for (let j = 0; j < maxItems; j++) {
       const leftItem = leftSale.items[j] || { 
@@ -73,40 +70,61 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
         total: 0 
       };
 
-      // Calculate row totals
-      const leftRowTotal = leftItem.quantity * leftItem.product.Cena;
-      const rightRowTotal = rightItem.quantity * rightItem.product.Cena;
-      
-      // Add to running totals
-      leftTotal += leftRowTotal;
-      rightTotal += rightRowTotal;
-
       const row = [
         leftItem.product.Naziv,
         leftItem.quantity || '',
         leftItem.product.Cena || '',
-        leftRowTotal || '',
+        { f: `B${rowIndex + j + 1}*C${rowIndex + j + 1}` }, // Excel formula for left total
         '',
         rightItem.product.Naziv,
         rightItem.quantity || '',
         rightItem.product.Cena || '',
-        rightRowTotal || ''
+        { f: `G${rowIndex + j + 1}*H${rowIndex + j + 1}` }  // Excel formula for right total
       ];
 
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + j });
-      applyStyleToRange(ws, rowIndex + j, rowIndex + j);
     }
 
     rowIndex += maxItems;
 
-    // Add totals with proper number parsing
-    const leftPreviousDebt = parseFloat(leftSale.previousDebt?.toString() || '0');
-    const rightPreviousDebt = rightSale ? parseFloat(rightSale.previousDebt?.toString() || '0') : 0;
+    // Add totals with Excel formulas
+    const leftTotalRow = rowIndex;
+    const rightTotalRow = rowIndex;
 
     const totalsRows = [
-      ['Ukupno:', '', '', leftTotal || '', '', 'Ukupno:', '', '', rightSale ? rightTotal : ''],
-      ['Dug iz prethodnog perioda:', '', '', leftPreviousDebt || '', '', 'Dug iz prethodnog perioda:', '', '', rightSale ? rightPreviousDebt : ''],
-      ['ZBIR:', '', '', (leftTotal + leftPreviousDebt) || '', '', 'ZBIR:', '', '', rightSale ? (rightTotal + rightPreviousDebt) : ''],
+      [
+        'Ukupno:', 
+        '', 
+        '', 
+        { f: `SUM(D${leftItemsStartRow + 1}:D${leftTotalRow})` },
+        '',
+        'Ukupno:', 
+        '', 
+        '', 
+        rightSale ? { f: `SUM(I${rightItemsStartRow + 1}:I${rightTotalRow})` } : ''
+      ],
+      [
+        'Dug iz prethodnog perioda:', 
+        '', 
+        '', 
+        leftSale.previousDebt || 0,
+        '',
+        'Dug iz prethodnog perioda:', 
+        '', 
+        '', 
+        rightSale ? (rightSale.previousDebt || 0) : ''
+      ],
+      [
+        'ZBIR:', 
+        '', 
+        '', 
+        { f: `SUM(D${leftTotalRow + 1}:D${leftTotalRow + 2})` },
+        '',
+        'ZBIR:', 
+        '', 
+        '', 
+        rightSale ? { f: `SUM(I${rightTotalRow + 1}:I${rightTotalRow + 2})` } : ''
+      ],
       ['potpis kupca', 'potpis vozaca', '', '', '', 'potpis kupca', 'potpis vozaca']
     ];
 
@@ -114,14 +132,12 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
     });
 
-    applyStyleToRange(ws, rowIndex, rowIndex + 3, true);
-
     // Add page break after each pair except the last one
     if (i < salesData.length - 2) {
       pageBreaks.push(rowIndex + 4);
     }
 
-    rowIndex += 6; // Add some spacing for next pair
+    rowIndex += 6; // Add spacing for next pair
   }
 
   // Set page breaks
@@ -130,13 +146,15 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     ws['!rows'][breakRow] = { hidden: false, hpx: 0, level: 0 };
   });
 
-  // Set print settings
+  // Set print settings for landscape and fit to page
   ws['!print'] = {
     orientation: 'landscape',
     paper: 9, // A4
-    scale: 1,
+    scale: 0, // 0 means "fit to page"
     fitToPage: true,
-    pageMargins: [0.25, 0.25, 0.25, 0.25]
+    fitToHeight: 1,
+    fitToWidth: 1,
+    pageMargins: [0.25, 0.25, 0.25, 0.25] // inches
   };
 
   XLSX.utils.book_append_sheet(wb, ws, "Gotovinska prodaja");
