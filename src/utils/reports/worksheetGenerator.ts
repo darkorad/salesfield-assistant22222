@@ -6,15 +6,17 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([]);
 
-  // Set column widths for the dual-column layout
+  // Set column widths for the dual-column layout with new kg column
   const columnWidths = [
     { wch: 25 }, // Product name
     { wch: 8 },  // Quantity
+    { wch: 8 },  // KG
     { wch: 8 },  // Price
     { wch: 10 }, // Total
     { wch: 2 },  // Spacing
     { wch: 25 }, // Product name (right side)
     { wch: 8 },  // Quantity (right side)
+    { wch: 8 },  // KG (right side)
     { wch: 8 },  // Price (right side)
     { wch: 10 }  // Total (right side)
   ];
@@ -30,10 +32,10 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
     // Add headers
     const headers = [
-      [`Naziv kupca: ${leftSale.customer.name}`, '', '', '', '', rightSale ? `Naziv kupca: ${rightSale.customer.name}` : ''],
-      [`Adresa: ${leftSale.customer.address}`, '', '', '', '', rightSale ? `Adresa: ${rightSale.customer.address}` : ''],
+      [`Naziv kupca: ${leftSale.customer.name}`, '', '', '', '', '', rightSale ? `Naziv kupca: ${rightSale.customer.name}` : ''],
+      [`Adresa: ${leftSale.customer.address}`, '', '', '', '', '', rightSale ? `Adresa: ${rightSale.customer.address}` : ''],
       [''],
-      ['Proizvod', 'Kom', 'Cena', 'Ukupno', '', 'Proizvod', 'Kom', 'Cena', 'Ukupno']
+      ['Proizvod', 'Kom', 'KG', 'Cena', 'Ukupno', '', 'Proizvod', 'Kom', 'KG', 'Cena', 'Ukupno']
     ];
 
     headers.forEach((row, index) => {
@@ -51,19 +53,46 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     );
 
     for (let j = 0; j < maxItems; j++) {
-      const leftItem = leftSale.items[j] || { product: { Naziv: '', Cena: 0 }, quantity: 0, total: 0 };
-      const rightItem = rightSale?.items[j] || { product: { Naziv: '', Cena: 0 }, quantity: 0, total: 0 };
+      const leftItem = leftSale.items[j] || { 
+        product: { 
+          Naziv: '', 
+          Cena: 0, 
+          "Jedinica mere": ''
+        }, 
+        quantity: 0, 
+        total: 0 
+      };
+      const rightItem = rightSale?.items[j] || { 
+        product: { 
+          Naziv: '', 
+          Cena: 0, 
+          "Jedinica mere": ''
+        }, 
+        quantity: 0, 
+        total: 0 
+      };
+
+      // Parse unit size from Jedinica mere
+      const getUnitSize = (item: typeof leftItem) => {
+        const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
+        return unitSize;
+      };
+
+      const leftUnitSize = getUnitSize(leftItem);
+      const rightUnitSize = getUnitSize(rightItem);
 
       const row = [
         leftItem.product.Naziv,
         leftItem.quantity,
+        leftUnitSize,
         leftItem.product.Cena,
-        leftItem.total,
+        leftItem.quantity * leftUnitSize * leftItem.product.Cena,
         '',
         rightItem.product.Naziv,
         rightItem.quantity,
+        rightUnitSize,
         rightItem.product.Cena,
-        rightItem.total
+        rightItem.quantity * rightUnitSize * rightItem.product.Cena
       ];
 
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + j });
@@ -73,10 +102,10 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
     // Add totals
     const totalsRows = [
-      ['Ukupno:', '', '', leftSale.total, '', 'Ukupno:', '', '', rightSale ? rightSale.total : ''],
-      ['Dug iz prethodnog perioda:', '', '', leftSale.previousDebt, '', 'Dug iz prethodnog perioda:', '', '', rightSale ? rightSale.previousDebt : ''],
-      ['ZBIR:', '', '', leftSale.total + leftSale.previousDebt, '', 'ZBIR:', '', '', rightSale ? (rightSale.total + rightSale.previousDebt) : ''],
-      ['potpis kupca', 'potpis vozaca', '', '', '', 'potpis kupca', 'potpis vozaca']
+      ['Ukupno:', '', '', '', leftSale.total, '', 'Ukupno:', '', '', '', rightSale ? rightSale.total : ''],
+      ['Dug iz prethodnog perioda:', '', '', '', leftSale.previousDebt, '', 'Dug iz prethodnog perioda:', '', '', '', rightSale ? rightSale.previousDebt : ''],
+      ['ZBIR:', '', '', '', leftSale.total + leftSale.previousDebt, '', 'ZBIR:', '', '', '', rightSale ? (rightSale.total + rightSale.previousDebt) : ''],
+      ['potpis kupca', 'potpis vozaca', '', '', '', '', 'potpis kupca', 'potpis vozaca']
     ];
 
     totalsRows.forEach((row, index) => {
