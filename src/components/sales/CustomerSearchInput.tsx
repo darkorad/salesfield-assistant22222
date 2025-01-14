@@ -7,11 +7,13 @@ interface CustomerSearchInputProps {
 
 export const CustomerSearchInput = ({ value, onChange }: CustomerSearchInputProps) => {
   return (
-    <Input
-      placeholder="Pretraži kupca..."
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full"
-    />
+    <div className="relative flex-1 min-w-0">
+      <Input
+        placeholder="Pretraži kupca po nazivu, grupi, gradu ili adresi..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full"
+      />
+    </div>
   );
 };

@@ -1,12 +1,11 @@
 import { Customer } from "@/types";
-import { Input } from "@/components/ui/input";
-import { OrderHistory } from "./OrderHistory";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { CustomerSearchResults } from "./CustomerSearchResults";
 import { HistoryButton } from "./HistoryButton";
 import { CustomerDropdown } from "./CustomerDropdown";
-import { toast } from "sonner";
+import { CustomerSearchInput } from "./CustomerSearchInput";
 import { useCustomerSync } from "./hooks/useCustomerSync";
+import { useCustomerFilter } from "./hooks/useCustomerFilter";
 import { useSalesData } from "@/hooks/useSalesData";
 
 interface CustomerSelectProps {
@@ -29,37 +28,11 @@ export const CustomerSelect = ({
   console.log("Total customers available:", customers?.length || 0);
   console.log("Current search term:", customerSearch);
 
-  // Use the custom hook for real-time updates
   useCustomerSync(() => {
     refetch();
   });
 
-  const filteredCustomers = useMemo(() => {
-    if (!customers || !customerSearch) return [];
-    
-    try {
-      const searchTerm = customerSearch.toLowerCase().trim();
-      if (!searchTerm) return [];
-
-      return customers.filter((customer) => {
-        if (!customer) return false;
-        
-        const searchableFields = [
-          customer.name,
-          customer.group_name,
-          customer.city,
-          customer.address,
-          customer.naselje
-        ].map(field => (field || '').toLowerCase());
-
-        return searchableFields.some(field => field.includes(searchTerm));
-      });
-    } catch (error) {
-      console.error("Error filtering customers:", error);
-      toast.error("Greška pri filtriranju kupaca");
-      return [];
-    }
-  }, [customers, customerSearch]);
+  const filteredCustomers = useCustomerFilter(customers, customerSearch);
 
   const handleCustomerSelect = useCallback((customer: Customer) => {
     if (!customer?.name) {
@@ -78,11 +51,9 @@ export const CustomerSelect = ({
       <label className="text-sm font-medium">Izbor kupca</label>
       <div className="flex gap-2 items-start w-full">
         <div className="relative flex-1 min-w-0">
-          <Input
-            placeholder="Pretraži kupca po nazivu, grupi, gradu ili adresi..."
+          <CustomerSearchInput 
             value={customerSearch}
-            onChange={(e) => onCustomerSearchChange(e.target.value)}
-            className="w-full"
+            onChange={onCustomerSearchChange}
           />
           {customerSearch && 
            !customers.find(c => c.name === customerSearch) && 
