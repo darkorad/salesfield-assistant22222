@@ -6,24 +6,34 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([]);
 
-  // Set column widths
-  const columnWidths = getColumnWidths();
-  ws['!cols'] = [...columnWidths.left, columnWidths.spacing, ...columnWidths.right];
+  // Set column widths for the dual-column layout
+  const columnWidths = [
+    { wch: 25 }, // Product name
+    { wch: 8 },  // Quantity
+    { wch: 8 },  // Price
+    { wch: 10 }, // Total
+    { wch: 2 },  // Spacing
+    { wch: 25 }, // Product name (right side)
+    { wch: 8 },  // Quantity (right side)
+    { wch: 8 },  // Price (right side)
+    { wch: 10 }  // Total (right side)
+  ];
+  ws['!cols'] = columnWidths;
 
   let rowIndex = 0;
   let pageBreaks = [];
 
-  // Process each sale
-  salesData.forEach((sale, saleIndex) => {
-    const customer = sale.customer;
-    
+  // Process each sale in pairs
+  for (let i = 0; i < salesData.length; i += 2) {
+    const leftSale = salesData[i];
+    const rightSale = salesData[i + 1];
+
     // Add headers
     const headers = [
-      [`Kupac: ${customer.name}`, '', '', '', '', '', `Kupac: ${customer.name}`],
-      [`Adresa: ${customer.address}`, '', '', '', '', '', `Adresa: ${customer.address}`],
-      [`Telefon: ${customer.phone || ''}`, '', '', '', '', '', `Telefon: ${customer.phone || ''}`],
+      [`Naziv kupca: ${leftSale.customer.name}`, '', '', '', '', rightSale ? `Naziv kupca: ${rightSale.customer.name}` : ''],
+      [`Adresa: ${leftSale.customer.address}`, '', '', '', '', rightSale ? `Adresa: ${rightSale.customer.address}` : ''],
       [''],
-      ['Artikal', 'Količina', 'Jed.mere', 'Cena', 'Ukupno', '', 'Artikal', 'Količina', 'Jed.mere', 'Cena', 'Ukupno']
+      ['Proizvod', 'Kom', 'Cena', 'Ukupno', '', 'Proizvod', 'Kom', 'Cena', 'Ukupno']
     ];
 
     headers.forEach((row, index) => {
@@ -31,51 +41,57 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     });
 
     // Style headers
-    applyStyleToRange(ws, rowIndex, rowIndex + 4, true);
-    rowIndex += 5;
+    applyStyleToRange(ws, rowIndex, rowIndex + 3, true);
+    rowIndex += 4;
 
-    // Add and style items
-    const items = sale.items.map(item => [
-      item.product.Naziv,
-      item.quantity,
-      item.product["Jedinica mere"],
-      item.product.Cena,
-      item.quantity * item.product.Cena
-    ]);
+    // Add items
+    const maxItems = Math.max(
+      leftSale.items.length,
+      rightSale ? rightSale.items.length : 0
+    );
 
-    // Fill to 12 rows
-    while (items.length < 12) {
-      items.push(['', '', '', '', '']);
+    for (let j = 0; j < maxItems; j++) {
+      const leftItem = leftSale.items[j] || { product: { Naziv: '', Cena: 0 }, quantity: 0, total: 0 };
+      const rightItem = rightSale?.items[j] || { product: { Naziv: '', Cena: 0 }, quantity: 0, total: 0 };
+
+      const row = [
+        leftItem.product.Naziv,
+        leftItem.quantity,
+        leftItem.product.Cena,
+        leftItem.total,
+        '',
+        rightItem.product.Naziv,
+        rightItem.quantity,
+        rightItem.product.Cena,
+        rightItem.total
+      ];
+
+      XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + j });
     }
 
-    items.forEach((item, index) => {
-      const row = [...item, '', ...item];
-      XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
-    });
-
-    applyStyleToRange(ws, rowIndex, rowIndex + 11);
-    rowIndex += 12;
+    rowIndex += maxItems;
 
     // Add totals
     const totalsRows = [
-      ['Dugovanje iz prethodnog računa:', '', '', '', sale.previousDebt || 0, '', 'Dugovanje iz prethodnog računa:', '', '', '', sale.previousDebt || 0],
-      ['Ukupno artikli:', '', '', '', sale.total, '', 'Ukupno artikli:', '', '', '', sale.total],
-      ['Ostalo dugovanje:', '', '', '', { f: `SUM(E${rowIndex+1}:E${rowIndex+2})` }, '', 'Ostalo dugovanje:', '', '', '', { f: `SUM(K${rowIndex+1}:K${rowIndex+2})` }]
+      ['Ukupno:', '', '', leftSale.total, '', 'Ukupno:', '', '', rightSale ? rightSale.total : ''],
+      ['Dug iz prethodnog perioda:', '', '', leftSale.previousDebt, '', 'Dug iz prethodnog perioda:', '', '', rightSale ? rightSale.previousDebt : ''],
+      ['ZBIR:', '', '', leftSale.total + leftSale.previousDebt, '', 'ZBIR:', '', '', rightSale ? (rightSale.total + rightSale.previousDebt) : ''],
+      ['potpis kupca', 'potpis vozaca', '', '', '', 'potpis kupca', 'potpis vozaca']
     ];
 
     totalsRows.forEach((row, index) => {
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + index });
     });
 
-    applyStyleToRange(ws, rowIndex, rowIndex + 2, true);
+    applyStyleToRange(ws, rowIndex, rowIndex + 3, true);
 
-    // Add page break after each customer except the last one
-    if (saleIndex < salesData.length - 1) {
-      pageBreaks.push(rowIndex + totalsRows.length);
+    // Add page break after each pair except the last one
+    if (i < salesData.length - 2) {
+      pageBreaks.push(rowIndex + 4);
     }
 
-    rowIndex += 15; // Add spacing for next customer
-  });
+    rowIndex += 6; // Add some spacing for next pair
+  }
 
   // Set page breaks
   ws['!rows'] = [];
@@ -91,6 +107,8 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     fitToPage: true,
     pageMargins: [0.05, 0.05, 0.05, 0.05]
   };
+
+  XLSX.utils.book_append_sheet(wb, ws, "Gotovinska prodaja");
 
   return { wb, ws };
 };

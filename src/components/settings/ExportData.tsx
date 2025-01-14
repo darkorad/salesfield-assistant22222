@@ -4,6 +4,7 @@ import { FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
+import { generateCashSalesWorksheet } from "@/utils/reports/worksheetGenerator";
 
 export const ExportData = () => {
   const handleExportBuyers = async () => {
@@ -122,33 +123,28 @@ export const ExportData = () => {
         return;
       }
 
-      // Transform data for Excel
-      const excelData = salesData.map(sale => ({
-        'Kupac': sale.customer?.name || sale.darko_customer?.name || 'Nepoznat',
-        'Adresa': sale.customer?.address || sale.darko_customer?.address || 'N/A',
-        'Grad': sale.customer?.city || sale.darko_customer?.city || 'N/A',
-        'Telefon': sale.customer?.phone || sale.darko_customer?.phone || 'N/A',
-        'Iznos': sale.total,
-        'Vreme': new Date(sale.date).toLocaleTimeString('sr-RS'),
-        'Broj stavki': sale.items.length
+      // Transform data for worksheet generator
+      const formattedSales = salesData.map(sale => ({
+        customer: sale.customer || sale.darko_customer || { 
+          name: 'Nepoznat',
+          address: 'N/A',
+          city: 'N/A',
+          phone: 'N/A'
+        },
+        items: sale.items.map((item: any) => ({
+          product: {
+            Naziv: item.product.Naziv,
+            "Jedinica mere": item.product["Jedinica mere"],
+            Cena: item.product.Cena
+          },
+          quantity: item.quantity,
+          total: item.quantity * item.product.Cena
+        })),
+        total: sale.total,
+        previousDebt: 0 // You might want to fetch this from somewhere
       }));
 
-      // Create worksheet
-      const ws = XLSX.utils.json_to_sheet(excelData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Gotovinska prodaja");
-      
-      // Set column widths
-      const colWidths = [
-        { wch: 30 }, // Kupac
-        { wch: 40 }, // Adresa
-        { wch: 20 }, // Grad
-        { wch: 15 }, // Telefon
-        { wch: 15 }, // Iznos
-        { wch: 15 }, // Vreme
-        { wch: 12 }, // Broj stavki
-      ];
-      ws['!cols'] = colWidths;
+      const { wb, ws } = generateCashSalesWorksheet(formattedSales);
 
       // Generate filename with current date
       const dateStr = new Date().toLocaleDateString('sr-RS').replace(/\./g, '-');
