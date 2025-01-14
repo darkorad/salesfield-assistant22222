@@ -4,7 +4,6 @@ export const getColumnWidths = () => ({
   left: [
     { wch: 25 }, // Product name
     { wch: 8 },  // Quantity
-    { wch: 8 },  // KG
     { wch: 8 },  // Price
     { wch: 10 }, // Total
   ],
@@ -12,7 +11,6 @@ export const getColumnWidths = () => ({
   right: [
     { wch: 25 }, // Product name
     { wch: 8 },  // Quantity
-    { wch: 8 },  // KG
     { wch: 8 },  // Price
     { wch: 10 }  // Total
   ]
@@ -36,8 +34,8 @@ export const applyStyleToRange = (
   isBold: boolean = false
 ) => {
   for (let i = startRow; i <= endRow; i++) {
-    for (let j = 0; j < 11; j++) { // Updated to include KG column
-      if (j === 5) continue; // Skip spacing column
+    for (let j = 0; j < 9; j++) {
+      if (j === 4) continue; // Skip spacing column
       const cell = XLSX.utils.encode_cell({ r: i, c: j });
       if (!ws[cell]) continue;
       ws[cell].s = getCellStyle(isBold);

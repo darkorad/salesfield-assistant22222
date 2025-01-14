@@ -6,17 +6,15 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([]);
 
-  // Set column widths for the dual-column layout with new kg column
+  // Set column widths for the dual-column layout
   const columnWidths = [
-    { wch: 25 }, // Product name
+    { wch: 30 }, // Product name
     { wch: 8 },  // Quantity
-    { wch: 8 },  // KG
     { wch: 8 },  // Price
     { wch: 10 }, // Total
     { wch: 2 },  // Spacing
-    { wch: 25 }, // Product name (right side)
+    { wch: 30 }, // Product name (right side)
     { wch: 8 },  // Quantity (right side)
-    { wch: 8 },  // KG (right side)
     { wch: 8 },  // Price (right side)
     { wch: 10 }  // Total (right side)
   ];
@@ -32,10 +30,10 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
     // Add headers
     const headers = [
-      [`Naziv kupca: ${leftSale.customer.name}`, '', '', '', '', '', rightSale ? `Naziv kupca: ${rightSale.customer.name}` : ''],
-      [`Adresa: ${leftSale.customer.address}`, '', '', '', '', '', rightSale ? `Adresa: ${rightSale.customer.address}` : ''],
+      [`Naziv kupca: ${leftSale.customer.name}`, '', '', '', '', rightSale ? `Naziv kupca: ${rightSale.customer.name}` : ''],
+      [`Adresa: ${leftSale.customer.address}`, '', '', '', '', rightSale ? `Adresa: ${rightSale.customer.address}` : ''],
       [''],
-      ['Proizvod', 'Kom', 'KG', 'Cena', 'Ukupno', '', 'Proizvod', 'Kom', 'KG', 'Cena', 'Ukupno']
+      ['Proizvod', 'Kom', 'Cena', 'Ukupno', '', 'Proizvod', 'Kom', 'Cena', 'Ukupno']
     ];
 
     headers.forEach((row, index) => {
@@ -75,18 +73,9 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
         total: 0 
       };
 
-      // Parse unit size from Jedinica mere
-      const getUnitSize = (item: typeof leftItem) => {
-        const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
-        return unitSize;
-      };
-
-      const leftUnitSize = getUnitSize(leftItem);
-      const rightUnitSize = getUnitSize(rightItem);
-
       // Calculate row totals
-      const leftRowTotal = leftItem.quantity * leftUnitSize * leftItem.product.Cena;
-      const rightRowTotal = rightItem.quantity * rightUnitSize * rightItem.product.Cena;
+      const leftRowTotal = leftItem.quantity * leftItem.product.Cena;
+      const rightRowTotal = rightItem.quantity * rightItem.product.Cena;
       
       // Add to running totals
       leftTotal += leftRowTotal;
@@ -94,16 +83,14 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
       const row = [
         leftItem.product.Naziv,
-        leftItem.quantity,
-        leftUnitSize,
-        leftItem.product.Cena,
-        leftRowTotal,
+        leftItem.quantity || '',
+        leftItem.product.Cena || '',
+        leftRowTotal || '',
         '',
         rightItem.product.Naziv,
-        rightItem.quantity,
-        rightUnitSize,
-        rightItem.product.Cena,
-        rightRowTotal
+        rightItem.quantity || '',
+        rightItem.product.Cena || '',
+        rightRowTotal || ''
       ];
 
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + j });
@@ -113,14 +100,14 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     rowIndex += maxItems;
 
     // Add totals with proper number parsing
-    const leftPreviousDebt = parseFloat(leftSale.previousDebt.toString()) || 0;
-    const rightPreviousDebt = rightSale ? (parseFloat(rightSale.previousDebt.toString()) || 0) : 0;
+    const leftPreviousDebt = parseFloat(leftSale.previousDebt?.toString() || '0');
+    const rightPreviousDebt = rightSale ? parseFloat(rightSale.previousDebt?.toString() || '0') : 0;
 
     const totalsRows = [
-      ['Ukupno:', '', '', '', leftTotal, '', 'Ukupno:', '', '', '', rightSale ? rightTotal : ''],
-      ['Dug iz prethodnog perioda:', '', '', '', leftPreviousDebt, '', 'Dug iz prethodnog perioda:', '', '', '', rightSale ? rightPreviousDebt : ''],
-      ['ZBIR:', '', '', '', (leftTotal + leftPreviousDebt), '', 'ZBIR:', '', '', '', rightSale ? (rightTotal + rightPreviousDebt) : ''],
-      ['potpis kupca', 'potpis vozaca', '', '', '', '', 'potpis kupca', 'potpis vozaca']
+      ['Ukupno:', '', '', leftTotal || '', '', 'Ukupno:', '', '', rightSale ? rightTotal : ''],
+      ['Dug iz prethodnog perioda:', '', '', leftPreviousDebt || '', '', 'Dug iz prethodnog perioda:', '', '', rightSale ? rightPreviousDebt : ''],
+      ['ZBIR:', '', '', (leftTotal + leftPreviousDebt) || '', '', 'ZBIR:', '', '', rightSale ? (rightTotal + rightPreviousDebt) : ''],
+      ['potpis kupca', 'potpis vozaca', '', '', '', 'potpis kupca', 'potpis vozaca']
     ];
 
     totalsRows.forEach((row, index) => {
@@ -149,7 +136,7 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     paper: 9, // A4
     scale: 1,
     fitToPage: true,
-    pageMargins: [0.05, 0.05, 0.05, 0.05]
+    pageMargins: [0.25, 0.25, 0.25, 0.25]
   };
 
   XLSX.utils.book_append_sheet(wb, ws, "Gotovinska prodaja");
