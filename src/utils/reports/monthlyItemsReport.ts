@@ -46,12 +46,16 @@ export const exportMonthlyItemsReport = async () => {
           };
         }
         
+        const quantity = parseFloat(item.quantity) || 0;
+        const price = parseFloat(item.price) || 0;
+        const value = quantity * price;
+        
         if (sale.payment_type === 'cash') {
-          acc[key].cashQuantity += Number(item.quantity);
-          acc[key].cashValue += Number(item.quantity) * Number(item.price);
+          acc[key].cashQuantity += quantity;
+          acc[key].cashValue += value;
         } else {
-          acc[key].invoiceQuantity += Number(item.quantity);
-          acc[key].invoiceValue += Number(item.quantity) * Number(item.price);
+          acc[key].invoiceQuantity += quantity;
+          acc[key].invoiceValue += value;
         }
         
         acc[key].totalQuantity = acc[key].cashQuantity + acc[key].invoiceQuantity;
@@ -67,25 +71,31 @@ export const exportMonthlyItemsReport = async () => {
         'Naziv artikla': item.name,
         'Proizvođač': item.manufacturer,
         'Jedinica mere': item.unit,
-        'Količina (gotovina)': Number(item.cashQuantity.toFixed(2)),
-        'Vrednost (gotovina)': Number(item.cashValue.toFixed(2)),
-        'Količina (račun)': Number(item.invoiceQuantity.toFixed(2)),
-        'Vrednost (račun)': Number(item.invoiceValue.toFixed(2)),
-        'Ukupna količina': Number(item.totalQuantity.toFixed(2)),
-        'Ukupna vrednost': Number(item.totalValue.toFixed(2))
+        'Količina (gotovina)': parseFloat(item.cashQuantity.toFixed(2)),
+        'Vrednost (gotovina)': parseFloat(item.cashValue.toFixed(2)),
+        'Količina (račun)': parseFloat(item.invoiceQuantity.toFixed(2)),
+        'Vrednost (račun)': parseFloat(item.invoiceValue.toFixed(2)),
+        'Ukupna količina': parseFloat(item.totalQuantity.toFixed(2)),
+        'Ukupna vrednost': parseFloat(item.totalValue.toFixed(2))
       }));
 
-    // Create workbook and worksheet
+    // Create workbook
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(reportData, { cellDates: true });
+    
+    // Create worksheet with specific options
+    const ws = XLSX.utils.json_to_sheet(reportData, {
+      cellDates: true,
+      cellStyles: true
+    });
 
-    // Format numbers to 2 decimal places
+    // Format numbers
     const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
         if (cell && typeof cell.v === 'number') {
-          cell.z = '#,##0.00';
+          cell.t = 'n'; // Set cell type to number
+          cell.z = '#,##0.00'; // Set number format
         }
       }
     }
