@@ -52,6 +52,9 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
       rightSale ? rightSale.items.length : 0
     );
 
+    let leftTotal = 0;
+    let rightTotal = 0;
+
     for (let j = 0; j < maxItems; j++) {
       const leftItem = leftSale.items[j] || { 
         product: { 
@@ -81,30 +84,42 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
       const leftUnitSize = getUnitSize(leftItem);
       const rightUnitSize = getUnitSize(rightItem);
 
+      // Calculate row totals
+      const leftRowTotal = leftItem.quantity * leftUnitSize * leftItem.product.Cena;
+      const rightRowTotal = rightItem.quantity * rightUnitSize * rightItem.product.Cena;
+      
+      // Add to running totals
+      leftTotal += leftRowTotal;
+      rightTotal += rightRowTotal;
+
       const row = [
         leftItem.product.Naziv,
         leftItem.quantity,
         leftUnitSize,
         leftItem.product.Cena,
-        leftItem.quantity * leftUnitSize * leftItem.product.Cena,
+        leftRowTotal,
         '',
         rightItem.product.Naziv,
         rightItem.quantity,
         rightUnitSize,
         rightItem.product.Cena,
-        rightItem.quantity * rightUnitSize * rightItem.product.Cena
+        rightRowTotal
       ];
 
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: rowIndex + j });
+      applyStyleToRange(ws, rowIndex + j, rowIndex + j);
     }
 
     rowIndex += maxItems;
 
-    // Add totals
+    // Add totals with proper number parsing
+    const leftPreviousDebt = parseFloat(leftSale.previousDebt.toString()) || 0;
+    const rightPreviousDebt = rightSale ? (parseFloat(rightSale.previousDebt.toString()) || 0) : 0;
+
     const totalsRows = [
-      ['Ukupno:', '', '', '', leftSale.total, '', 'Ukupno:', '', '', '', rightSale ? rightSale.total : ''],
-      ['Dug iz prethodnog perioda:', '', '', '', leftSale.previousDebt, '', 'Dug iz prethodnog perioda:', '', '', '', rightSale ? rightSale.previousDebt : ''],
-      ['ZBIR:', '', '', '', leftSale.total + leftSale.previousDebt, '', 'ZBIR:', '', '', '', rightSale ? (rightSale.total + rightSale.previousDebt) : ''],
+      ['Ukupno:', '', '', '', leftTotal, '', 'Ukupno:', '', '', '', rightSale ? rightTotal : ''],
+      ['Dug iz prethodnog perioda:', '', '', '', leftPreviousDebt, '', 'Dug iz prethodnog perioda:', '', '', '', rightSale ? rightPreviousDebt : ''],
+      ['ZBIR:', '', '', '', (leftTotal + leftPreviousDebt), '', 'ZBIR:', '', '', '', rightSale ? (rightTotal + rightPreviousDebt) : ''],
       ['potpis kupca', 'potpis vozaca', '', '', '', '', 'potpis kupca', 'potpis vozaca']
     ];
 
