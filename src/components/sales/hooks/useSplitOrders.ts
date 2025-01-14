@@ -58,9 +58,15 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
       throw new Error(`Customer not found in ${isUsingDarkoTable ? 'kupci_darko' : 'customers'} table`);
     }
 
+    // Insert the order
     const { data, error } = await supabase
       .from('sales')
-      .insert([orderData])
+      .insert([{
+        ...orderData,
+        // Set both foreign key fields, one will be null based on the table being used
+        customer_id: isUsingDarkoTable ? null : selectedCustomer.id,
+        darko_customer_id: isUsingDarkoTable ? selectedCustomer.id : null
+      }])
       .select();
 
     if (error) throw error;
