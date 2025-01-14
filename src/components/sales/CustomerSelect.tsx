@@ -1,12 +1,13 @@
 import { Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { OrderHistory } from "./OrderHistory";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { CustomerSearchResults } from "./CustomerSearchResults";
 import { HistoryButton } from "./HistoryButton";
 import { CustomerDropdown } from "./CustomerDropdown";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useCustomerSync } from "./hooks/useCustomerSync";
+import { useSalesData } from "@/hooks/useSalesData";
 
 interface CustomerSelectProps {
   customers: Customer[];
@@ -23,33 +24,15 @@ export const CustomerSelect = ({
 }: CustomerSelectProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const { refetch } = useSalesData();
 
   console.log("Total customers available:", customers?.length || 0);
   console.log("Current search term:", customerSearch);
 
-  // Subscribe to real-time updates for customers table
-  useEffect(() => {
-    const channel = supabase
-      .channel('customers-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'customers'
-        },
-        (payload) => {
-          console.log('Customer change detected:', payload);
-          // Refresh the page to show the new customer
-          window.location.reload();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  // Use the custom hook for real-time updates
+  useCustomerSync(() => {
+    refetch();
+  });
 
   const filteredCustomers = useMemo(() => {
     if (!customers || !customerSearch) return [];
@@ -58,7 +41,6 @@ export const CustomerSelect = ({
       const searchTerm = customerSearch.toLowerCase().trim();
       if (!searchTerm) return [];
 
-      // Simple search that matches any part of the customer data
       return customers.filter((customer) => {
         if (!customer) return false;
         
@@ -70,7 +52,6 @@ export const CustomerSelect = ({
           customer.naselje
         ].map(field => (field || '').toLowerCase());
 
-        // Return true if any field contains the search term
         return searchableFields.some(field => field.includes(searchTerm));
       });
     } catch (error) {
