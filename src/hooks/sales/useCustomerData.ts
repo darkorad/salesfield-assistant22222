@@ -8,21 +8,19 @@ export const useCustomerData = (userEmail: string) => {
 
   const fetchCustomers = async (userId: string) => {
     try {
-      let customersData;
-      let customersError;
+      console.log("Fetching customers from kupci_darko table");
+      const { data: customersData, error } = await supabase
+        .from('kupci_darko')
+        .select('*')
+        .order('name');
 
-      if (userEmail === 'zirmd.darko@gmail.com') {
-        console.log("Fetching customers from kupci_darko table");
-        const response = await supabase
-          .from('kupci_darko')
-          .select('*');
-        
-        if (response.error) {
-          throw new Error(`Error fetching customers: ${response.error.message}`);
-        }
+      if (error) {
+        throw new Error(`Error fetching customers: ${error.message}`);
+      }
 
-        customersData = response.data?.map(customer => ({
-          id: customer.id || crypto.randomUUID(),
+      if (customersData) {
+        const transformedCustomers = customersData.map(customer => ({
+          id: customer.id,
           user_id: userId,
           code: customer.code || '',
           name: customer.name || '',
@@ -37,24 +35,12 @@ export const useCustomerData = (userEmail: string) => {
           naselje: customer.naselje || null,
           email: customer.email || null
         }));
-      } else {
-        console.log("Fetching customers from regular customers table");
-        const response = await supabase
-          .from('customers')
-          .select('*')
-          .eq('user_id', userId);
-        
-        customersData = response.data;
-        customersError = response.error;
-      }
 
-      if (customersError) {
-        throw customersError;
+        console.log("Fetched customers:", transformedCustomers.length);
+        setCustomers(transformedCustomers);
+        return transformedCustomers;
       }
-
-      console.log("Fetched customers:", customersData?.length || 0);
-      setCustomers(customersData || []);
-      return customersData;
+      return [];
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast.error("Greška pri učitavanju kupaca");

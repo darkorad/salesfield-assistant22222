@@ -24,11 +24,7 @@ export const useSalesData = () => {
       if (!session) return;
 
       console.log("Fetching data for user:", session.user.id);
-
-      const userEmail = session.user.email;
-      if (!userEmail) {
-        throw new Error("User email not found");
-      }
+      console.log("Fetching data from kupci_darko and products tables");
 
       await Promise.all([
         fetchCustomers(session.user.id),

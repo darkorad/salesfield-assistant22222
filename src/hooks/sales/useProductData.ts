@@ -8,32 +8,14 @@ export const useProductData = (userEmail: string) => {
 
   const fetchProducts = async (userId: string) => {
     try {
-      let productsData;
-      let productsError;
-
-      if (userEmail === 'zirmd.darko@gmail.com') {
-        console.log("Fetching products from products_darko table");
-        const response = await supabase
-          .from('products_darko')
-          .select('*')
-          .not('Naziv', 'eq', '');
-        
-        productsData = response.data;
-        productsError = response.error;
-      } else {
-        console.log("Fetching products from regular products table");
-        const response = await supabase
-          .from('products')
-          .select('*')
-          .eq('user_id', userId)
-          .not('Naziv', 'eq', '');
-        
-        productsData = response.data;
-        productsError = response.error;
-      }
-
-      if (productsError) {
-        throw productsError;
+      console.log("Fetching products from products_darko table");
+      const { data: productsData, error } = await supabase
+        .from('products_darko')
+        .select('*')
+        .not('Naziv', 'eq', '');
+      
+      if (error) {
+        throw error;
       }
 
       console.log("Fetched products:", productsData?.length || 0);
