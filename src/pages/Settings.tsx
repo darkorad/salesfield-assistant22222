@@ -10,6 +10,7 @@ import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Reports } from "@/components/settings/Reports";
 import { ManageCustomers } from "@/components/settings/customer/ManageCustomers";
+import MonthlySales from "./MonthlySales";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -68,6 +69,7 @@ const Settings = () => {
         <TabsContent value="reports">
           <div className="space-y-8">
             <h2 className="text-2xl font-bold">Izveštaji</h2>
+            <MonthlySales />
             <Reports />
           </div>
         </TabsContent>
