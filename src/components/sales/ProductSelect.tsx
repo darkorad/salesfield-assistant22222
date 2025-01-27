@@ -23,6 +23,9 @@ export const ProductSelect = ({
   const { getProductPrice, fetchCustomerPrices } = useCustomerPrices(selectedCustomer);
   const filteredProducts = useProductFilter(products, searchTerm);
 
+  console.log("ProductSelect - Available products:", products?.length);
+  console.log("ProductSelect - Filtered products:", filteredProducts?.length);
+
   const handleAddProduct = (product: Product, quantity: number = 1, paymentType: 'cash' | 'invoice' = 'invoice') => {
     const price = getProductPrice(product, paymentType);
     const productWithPrice = { ...product, Cena: price };
