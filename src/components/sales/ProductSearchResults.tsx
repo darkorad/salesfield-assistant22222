@@ -31,9 +31,11 @@ export const ProductSearchResults = ({
           </div>
           <div className="text-right">
             <div className="text-sm font-medium">
-              Račun: {getProductPrice(product, 'invoice')} RSD
+              {product["Jedinica mere"]} | {product.Cena} RSD
             </div>
-            <div className="text-sm font-medium">
+            <div className="text-sm">
+              Račun: {getProductPrice(product, 'invoice')} RSD
+              <br />
               Gotovina: {getProductPrice(product, 'cash')} RSD
             </div>
           </div>

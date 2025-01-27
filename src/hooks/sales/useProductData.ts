@@ -18,9 +18,19 @@ export const useProductData = (userEmail: string) => {
         throw error;
       }
 
-      console.log("Fetched products:", productsData?.length || 0);
-      setProducts(productsData || []);
-      return productsData;
+      // Map the data to match our Product type
+      const mappedProducts = productsData?.map(product => ({
+        id: product.id,
+        Naziv: product.Naziv,
+        Proizvođač: product.Proizvođač,
+        Cena: product.Cena,
+        "Jedinica mere": product["Jedinica mere"],
+        created_at: product.created_at
+      })) || [];
+
+      console.log("Fetched products:", mappedProducts.length);
+      setProducts(mappedProducts);
+      return mappedProducts;
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error("Greška pri učitavanju proizvoda");
