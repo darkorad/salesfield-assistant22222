@@ -18,9 +18,9 @@ const Sales = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <ManufacturerSidebar products={products} />
-      <div className="flex-1 p-2 md:p-6 max-w-full">
+      <div className="flex-1 p-4 md:p-6 max-w-full bg-white rounded-lg shadow-sm">
         <Suspense fallback={<LoadingFallback />}>
           <SalesFormContainer customers={customers} products={products} />
         </Suspense>

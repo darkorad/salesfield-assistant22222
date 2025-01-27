@@ -31,11 +31,11 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
   };
 
   return (
-    <Card className="w-full max-w-5xl mx-auto">
-      <CardHeader>
-        <CardTitle>Nova porudžbina</CardTitle>
+    <Card className="w-full max-w-5xl mx-auto border-0 shadow-lg bg-white/50 backdrop-blur-sm">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-semibold text-primary">Nova porudžbina</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <OrderForm
           customers={customers}
           products={products}
@@ -48,7 +48,11 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
         />
-        {orderItems.length > 0 && <OrderSummary orderItems={orderItems} />}
+        {orderItems.length > 0 && (
+          <div className="mt-6">
+            <OrderSummary orderItems={orderItems} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -34,7 +34,7 @@ export default {
         },
         secondary: {
           DEFAULT: "#F1F1F1",
-          foreground: "#222222",
+          foreground: "#1A1F2C",
         },
         destructive: {
           DEFAULT: "#991B1B",
@@ -45,16 +45,16 @@ export default {
           foreground: "#403E43",
         },
         accent: {
-          DEFAULT: "#F1F1F1",
+          DEFAULT: "#9b87f5",
           foreground: "#1A1F2C",
         },
         popover: {
           DEFAULT: "#FFFFFF",
-          foreground: "#222222",
+          foreground: "#1A1F2C",
         },
         card: {
           DEFAULT: "#FFFFFF",
-          foreground: "#222222",
+          foreground: "#1A1F2C",
         },
       },
       borderRadius: {
