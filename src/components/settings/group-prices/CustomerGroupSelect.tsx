@@ -20,11 +20,10 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
           return;
         }
 
-        // First, get unique group names from kupci_darko table without filtering null values
+        // Get all group names from kupci_darko table
         const { data: darkoCustData, error: darkoError } = await supabase
           .from('kupci_darko')
-          .select('group_name')
-          .neq('group_name', '');  // Changed to exclude empty strings instead of null
+          .select('group_name');
 
         if (darkoError) {
           console.error('Error fetching darko customer groups:', darkoError);
@@ -34,11 +33,10 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
 
         console.log('Raw darko customer groups:', darkoCustData);
 
-        // Then get unique group names from customers table
+        // Get group names from customers table
         const { data: customersData, error: customersError } = await supabase
           .from('customers')
           .select('group_name')
-          .neq('group_name', '')
           .eq('user_id', session.user.id);
 
         if (customersError) {
