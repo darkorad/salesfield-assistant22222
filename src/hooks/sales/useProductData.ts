@@ -11,8 +11,7 @@ export const useProductData = (userEmail: string) => {
       console.log("Fetching products from products_darko table");
       const { data: productsData, error } = await supabase
         .from('products_darko')
-        .select('*')
-        .not('Naziv', 'eq', '');
+        .select('*');
       
       if (error) {
         console.error('Error fetching products:', error);
