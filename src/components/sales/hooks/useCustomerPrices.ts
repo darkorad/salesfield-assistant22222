@@ -107,20 +107,21 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             table: 'group_prices'
           },
           async (payload: RealtimePostgresChangesPayload<GroupPrice>) => {
-            console.log('Group price change detected');
+            console.log('Group price change detected:', payload);
+            
+            if (!selectedCustomer.group_name) return;
+
+            const { data: groupData } = await supabase
+              .from('customer_groups')
+              .select('id')
+              .eq('name', selectedCustomer.group_name)
+              .maybeSingle();
+
             const newData = payload.new as GroupPrice | null;
             
-            if (selectedCustomer.group_name && newData) {
-              const { data: groupData } = await supabase
-                .from('customer_groups')
-                .select('id')
-                .eq('name', selectedCustomer.group_name)
-                .maybeSingle();
-
-              if (groupData && newData.group_id === groupData.id) {
-                console.log('Group price change affects current customer, refreshing prices');
-                fetchCustomerPrices();
-              }
+            if (groupData && newData && newData.group_id === groupData.id) {
+              console.log('Group price change affects current customer, refreshing prices');
+              fetchCustomerPrices();
             }
           }
         )
