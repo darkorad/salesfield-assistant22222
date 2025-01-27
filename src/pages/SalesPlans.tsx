@@ -41,7 +41,7 @@ const SalesPlans = () => {
       }
       
       console.log("Fetched customers with visit days:", data?.length);
-      console.log("Customer data:", data); // Add this line to inspect the data
+      console.log("Customer data:", data);
       setCustomers(data || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -51,7 +51,6 @@ const SalesPlans = () => {
     }
   };
 
-  // Set up real-time subscription for customer updates
   useEffect(() => {
     const channel = supabase
       .channel('kupci_darko-changes')
@@ -77,12 +76,16 @@ const SalesPlans = () => {
     };
   }, []);
 
-  // Initial data fetch
   useEffect(() => {
     fetchCustomers();
   }, []);
 
-  const handleCustomerSelect = (customer: Customer) => {
+  const handleCustomerSelect = (customer: Customer, event?: React.MouseEvent) => {
+    // Prevent event propagation if the event exists
+    if (event) {
+      event.stopPropagation();
+    }
+    
     if (selectedCustomer?.id === customer.id) {
       setSelectedCustomer(null);
       setOrderItems([]);
@@ -92,7 +95,8 @@ const SalesPlans = () => {
     }
   };
 
-  const handleCompleteVisit = async () => {
+  const handleCompleteVisit = async (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event bubbling
     if (!selectedCustomer) return;
 
     try {
@@ -151,8 +155,8 @@ const SalesPlans = () => {
                     key={customer.id}
                     className={`relative bg-white p-4 rounded-lg shadow-sm border ${
                       completedVisits.includes(customer.id) ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                    } cursor-pointer`}
-                    onClick={() => handleCustomerSelect(customer)}
+                    }`}
+                    onClick={(e) => handleCustomerSelect(customer, e)}
                   >
                     <div className="absolute -right-3 -top-3 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
                       {index + 1}
@@ -186,7 +190,7 @@ const SalesPlans = () => {
                     )}
 
                     {selectedCustomer?.id === customer.id && (
-                      <div className="mt-4 border-t pt-4">
+                      <div className="mt-4 border-t pt-4" onClick={e => e.stopPropagation()}>
                         <ProductSelect
                           products={products}
                           orderItems={orderItems}
