@@ -1,30 +1,39 @@
 import { Outlet, useLocation } from "react-router-dom";
 import NavLogo from "./navigation/NavLogo";
-import NavLinks from "./navigation/NavLinks";
 import NavActions from "./navigation/NavActions";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { MainSidebar } from "./navigation/MainSidebar";
 
 export const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
 
+  if (isLoginPage) {
+    return (
+      <main className="container mx-auto">
+        {children || <Outlet />}
+      </main>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {!isLoginPage && (
+    <SidebarProvider>
+      <div className="min-h-screen w-full bg-gray-50">
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 w-full">
           <div className="max-w-full px-2 md:px-4">
-            <div className="flex flex-col md:flex-row md:justify-between md:h-20 items-center py-2 md:py-0">
-              <div className="flex flex-col md:flex-row items-center w-full md:w-auto space-y-2 md:space-y-0 md:space-x-4">
-                <NavLogo />
-                <NavLinks />
-              </div>
+            <div className="flex justify-between h-16 items-center">
+              <NavLogo />
               <NavActions />
             </div>
           </div>
         </nav>
-      )}
-      <main className={`container mx-auto ${!isLoginPage ? 'py-4 md:py-6' : ''}`}>
-        {children || <Outlet />}
-      </main>
-    </div>
+        <div className="flex">
+          <MainSidebar />
+          <main className="flex-1 container mx-auto py-4 md:py-6">
+            {children || <Outlet />}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
