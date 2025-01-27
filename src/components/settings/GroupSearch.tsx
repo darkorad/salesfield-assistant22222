@@ -56,19 +56,41 @@ export const GroupSearch = () => {
         return;
       }
 
-      const { data: members, error } = await supabase
+      // First, get the members count for this group
+      const { count, error: countError } = await supabase
         .from('customer_group_members')
-        .select('customer_id')
+        .select('*', { count: 'exact', head: true })
         .eq('group_id', group.id);
 
-      if (error) {
-        console.error('Error fetching group members:', error);
+      if (countError) {
+        console.error('Error counting group members:', countError);
         toast.error("Greška pri učitavanju članova grupe");
         return;
       }
 
-      const memberCount = members?.length || 0;
+      // Get the actual members data
+      const { data: members, error: membersError } = await supabase
+        .from('customer_group_members')
+        .select(`
+          customer_id,
+          customers (
+            id,
+            name
+          )
+        `)
+        .eq('group_id', group.id);
+
+      if (membersError) {
+        console.error('Error fetching group members:', membersError);
+        toast.error("Greška pri učitavanju članova grupe");
+        return;
+      }
+
+      const memberCount = count || 0;
       toast.success(`Grupa ${group.name} ima ${memberCount} kupaca`);
+
+      // Log the members for debugging
+      console.log('Group members:', members);
     } catch (error) {
       console.error('Error handling group click:', error);
       toast.error("Greška pri učitavanju informacija o grupi");
