@@ -1,6 +1,5 @@
 import { Suspense, lazy } from "react";
 import { SalesFormContainer } from "@/components/sales/SalesFormContainer";
-import { ManufacturerSidebar } from "@/components/sales/ManufacturerSidebar";
 import { useSalesData } from "@/hooks/useSalesData";
 
 const DailySalesSummary = lazy(() => import("@/components/sales/DailySalesSummary"));
@@ -14,20 +13,20 @@ const LoadingFallback = () => (
 
 const Sales = () => {
   const { customers, products, isLoading } = useSalesData();
+  
+  console.log("Sales page - Products loaded:", products?.length);
+  console.log("Sales page - Customers loaded:", customers?.length);
 
   if (isLoading) {
     return <LoadingFallback />;
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      <ManufacturerSidebar products={products} />
-      <main className="flex-1 p-4 md:p-6">
-        <Suspense fallback={<LoadingFallback />}>
-          <SalesFormContainer customers={customers} products={products} />
-          <DailySalesSummary />
-        </Suspense>
-      </main>
+    <div className="container mx-auto px-4 py-6">
+      <Suspense fallback={<LoadingFallback />}>
+        <SalesFormContainer customers={customers} products={products} />
+        <DailySalesSummary />
+      </Suspense>
     </div>
   );
 };

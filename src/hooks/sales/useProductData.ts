@@ -11,7 +11,8 @@ export const useProductData = (userEmail: string) => {
       console.log("Fetching products from products_darko table");
       const { data: productsData, error } = await supabase
         .from('products_darko')
-        .select('*');
+        .select('*')
+        .order('Naziv');
       
       if (error) {
         console.error('Error fetching products:', error);
@@ -25,6 +26,7 @@ export const useProductData = (userEmail: string) => {
       }
 
       console.log("Raw products data:", productsData.length, "products found");
+      console.log("Sample product:", productsData[0]);
 
       const mappedProducts = productsData.map(product => ({
         id: product.id,
@@ -37,6 +39,8 @@ export const useProductData = (userEmail: string) => {
       }));
 
       console.log("Mapped products:", mappedProducts.length, "products processed");
+      console.log("Sample mapped product:", mappedProducts[0]);
+      
       setProducts(mappedProducts);
       return mappedProducts;
     } catch (error) {

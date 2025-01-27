@@ -1,10 +1,8 @@
 import { Product, OrderItem, Customer } from "@/types";
-import { OrderItemsList } from "./OrderItemsList";
 import { useState } from "react";
 import { useCustomerPrices } from "./hooks/useCustomerPrices";
-import { useProductFilter } from "./hooks/useProductFilter";
-import { ProductSearchSection } from "./product-selection/ProductSearchSection";
-import { CustomerInfoSection } from "./product-selection/CustomerInfoSection";
+import { ProductSearchInput } from "./ProductSearchInput";
+import { ProductSearchResults } from "./ProductSearchResults";
 
 interface ProductSelectProps {
   products: Product[];
@@ -20,34 +18,38 @@ export const ProductSelect = ({
   onOrderItemsChange,
 }: ProductSelectProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { getProductPrice, fetchCustomerPrices } = useCustomerPrices(selectedCustomer);
-  const filteredProducts = useProductFilter(products, searchTerm);
+  const { getProductPrice } = useCustomerPrices(selectedCustomer);
 
   console.log("ProductSelect - Available products:", products?.length);
+  console.log("ProductSelect - Search term:", searchTerm);
+
+  const filteredProducts = products.filter(product =>
+    product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   console.log("ProductSelect - Filtered products:", filteredProducts?.length);
 
-  const handleAddProduct = (product: Product, quantity: number = 1, paymentType: 'cash' | 'invoice' = 'invoice') => {
-    const price = getProductPrice(product, paymentType);
+  const handleAddProduct = (product: Product) => {
+    const price = getProductPrice(product, 'invoice');
     const productWithPrice = { ...product, Cena: price };
 
     const existingItemIndex = orderItems.findIndex(
-      (item) => item.product.Naziv === product.Naziv && item.paymentType === paymentType
+      (item) => item.product.id === product.id
     );
 
     if (existingItemIndex !== -1) {
       const newItems = [...orderItems];
       newItems[existingItemIndex] = {
         ...newItems[existingItemIndex],
-        quantity: quantity,
-        paymentType: paymentType,
+        quantity: newItems[existingItemIndex].quantity + 1,
         product: productWithPrice
       };
       onOrderItemsChange(newItems);
     } else {
       const newItem: OrderItem = {
         product: productWithPrice,
-        quantity,
-        paymentType
+        quantity: 1,
+        paymentType: 'invoice'
       };
       onOrderItemsChange([...orderItems, newItem]);
     }
@@ -56,47 +58,19 @@ export const ProductSelect = ({
 
   return (
     <div className="space-y-4">
-      <CustomerInfoSection 
-        customer={selectedCustomer}
-        onSyncComplete={fetchCustomerPrices}
-      />
-
-      <ProductSearchSection
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filteredProducts={filteredProducts}
-        handleAddProduct={handleAddProduct}
-        getProductPrice={getProductPrice}
-      />
-
-      {orderItems.length > 0 && (
-        <OrderItemsList
-          items={orderItems}
-          onQuantityChange={(index, quantity) => {
-            const newItems = [...orderItems];
-            newItems[index] = {
-              ...newItems[index],
-              quantity: Math.max(1, quantity)
-            };
-            onOrderItemsChange(newItems);
-          }}
-          onPaymentTypeChange={(index, paymentType) => {
-            const newItems = [...orderItems];
-            const item = newItems[index];
-            const newPrice = getProductPrice(item.product, paymentType);
-            newItems[index] = {
-              ...item,
-              paymentType,
-              product: { ...item.product, Cena: newPrice }
-            };
-            onOrderItemsChange(newItems);
-          }}
-          onRemoveItem={(index) => {
-            const newItems = orderItems.filter((_, i) => i !== index);
-            onOrderItemsChange(newItems);
-          }}
+      <div className="relative">
+        <ProductSearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
         />
-      )}
+        {searchTerm && (
+          <ProductSearchResults
+            products={filteredProducts}
+            onSelect={handleAddProduct}
+            getProductPrice={getProductPrice}
+          />
+        )}
+      </div>
     </div>
   );
 };
