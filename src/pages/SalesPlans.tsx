@@ -50,7 +50,7 @@ const SalesPlans = () => {
   // Set up real-time subscription for customer updates
   useEffect(() => {
     const channel = supabase
-      .channel('customer-visit-changes')
+      .channel('kupci_darko-changes')
       .on(
         'postgres_changes',
         {
@@ -60,7 +60,7 @@ const SalesPlans = () => {
           filter: 'visit_day=neq.null'
         },
         (payload) => {
-          console.log('Customer visit day update received:', payload);
+          console.log('Real-time update received:', payload);
           fetchCustomers();
           toast.success('Plan poseta je ažuriran');
         }
