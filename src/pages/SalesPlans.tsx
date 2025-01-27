@@ -20,34 +20,62 @@ const SalesPlans = () => {
   const { products } = useSalesData();
   const { handleSubmitOrder, isSubmitting } = useSplitOrders(selectedCustomer);
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error("Niste prijavljeni");
-          return;
-        }
-
-        console.log("Fetching customers with visit days from kupci_darko table");
-        const { data, error } = await supabase
-          .from('kupci_darko')
-          .select('*')
-          .not('visit_day', 'is', null)
-          .order('name');
-
-        if (error) throw error;
-        
-        console.log("Fetched customers with visit days:", data?.length);
-        setCustomers(data || []);
-      } catch (error) {
-        console.error('Error fetching customers:', error);
-        toast.error("Greška pri učitavanju kupaca");
-      } finally {
-        setLoading(false);
+  const fetchCustomers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Niste prijavljeni");
+        return;
       }
-    };
 
+      console.log("Fetching customers with visit days from kupci_darko table");
+      const { data, error } = await supabase
+        .from('kupci_darko')
+        .select('*')
+        .not('visit_day', 'is', null)
+        .order('name');
+
+      if (error) throw error;
+      
+      console.log("Fetched customers with visit days:", data?.length);
+      setCustomers(data || []);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      toast.error("Greška pri učitavanju kupaca");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Set up real-time subscription for customer updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('customer-visit-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kupci_darko',
+          filter: 'visit_day=neq.null'
+        },
+        (payload) => {
+          console.log('Customer visit day update received:', payload);
+          fetchCustomers();
+          toast.success('Plan poseta je ažuriran');
+        }
+      )
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
     fetchCustomers();
   }, []);
 
