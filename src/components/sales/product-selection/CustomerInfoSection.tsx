@@ -7,10 +7,15 @@ interface CustomerInfoSectionProps {
   onSyncComplete: () => void;
 }
 
-export const CustomerInfoSection = ({ customer, onSyncComplete }: CustomerInfoSectionProps) => {
+export const CustomerInfoSection = ({ 
+  customer, 
+  onSyncComplete 
+}: CustomerInfoSectionProps) => {
   return (
-    <div className="flex justify-between items-center">
-      <CustomerInfoCard customer={customer} />
+    <div className="flex justify-between items-start gap-4">
+      <div className="flex-1">
+        <CustomerInfoCard customer={customer} />
+      </div>
       <SyncPricesButton 
         customerId={customer.id} 
         onSyncComplete={onSyncComplete}

@@ -5,7 +5,10 @@ interface ProductSearchBarProps {
   onSearchChange: (value: string) => void;
 }
 
-export const ProductSearchBar = ({ searchTerm, onSearchChange }: ProductSearchBarProps) => {
+export const ProductSearchBar = ({ 
+  searchTerm, 
+  onSearchChange 
+}: ProductSearchBarProps) => {
   return (
     <Input
       type="text"

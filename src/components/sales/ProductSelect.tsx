@@ -2,6 +2,7 @@ import { Product, OrderItem, Customer } from "@/types";
 import { OrderItemsList } from "./OrderItemsList";
 import { useState } from "react";
 import { useCustomerPrices } from "./hooks/useCustomerPrices";
+import { useProductFilter } from "./hooks/useProductFilter";
 import { ProductSearchSection } from "./product-selection/ProductSearchSection";
 import { CustomerInfoSection } from "./product-selection/CustomerInfoSection";
 
@@ -20,10 +21,7 @@ export const ProductSelect = ({
 }: ProductSelectProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const { getProductPrice, fetchCustomerPrices } = useCustomerPrices(selectedCustomer);
-
-  const filteredProducts = products.filter((product) =>
-    product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = useProductFilter(products, searchTerm);
 
   const handleAddProduct = (product: Product, quantity: number = 1, paymentType: 'cash' | 'invoice' = 'invoice') => {
     const price = getProductPrice(product, paymentType);
@@ -60,15 +58,13 @@ export const ProductSelect = ({
         onSyncComplete={fetchCustomerPrices}
       />
 
-      <div className="relative">
-        <ProductSearchSection
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filteredProducts={filteredProducts}
-          handleAddProduct={handleAddProduct}
-          getProductPrice={getProductPrice}
-        />
-      </div>
+      <ProductSearchSection
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filteredProducts={filteredProducts}
+        handleAddProduct={handleAddProduct}
+        getProductPrice={getProductPrice}
+      />
 
       {orderItems.length > 0 && (
         <OrderItemsList
