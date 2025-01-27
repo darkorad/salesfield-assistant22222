@@ -54,11 +54,17 @@ export const ProductSelect = ({
     setSearchTerm("");
   };
 
+  const handleCustomerUpdate = () => {
+    // Refresh prices after customer update
+    fetchCustomerPrices();
+  };
+
   return (
     <div className="space-y-4">
       <CustomerInfoSection 
         customer={selectedCustomer}
         onSyncComplete={fetchCustomerPrices}
+        onCustomerUpdate={handleCustomerUpdate}
       />
 
       <div className="relative">

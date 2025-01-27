@@ -1,13 +1,18 @@
 import { Customer } from "@/types";
+import { EditCustomerDialog } from "@/components/settings/EditCustomerDialog";
 
 interface CustomerInfoCardProps {
   customer: Customer;
+  onCustomerUpdate?: () => void;
 }
 
-export const CustomerInfoCard = ({ customer }: CustomerInfoCardProps) => {
+export const CustomerInfoCard = ({ customer, onCustomerUpdate }: CustomerInfoCardProps) => {
   return (
     <div className="bg-gray-50 p-4 rounded-md mb-4">
-      <h3 className="font-medium text-gray-700 mb-2">Izabrani kupac:</h3>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="font-medium text-gray-700">Izabrani kupac:</h3>
+        <EditCustomerDialog customer={customer} onCustomerUpdate={onCustomerUpdate} />
+      </div>
       <div className="text-sm">
         <p><span className="font-medium">Ime:</span> {customer.name}</p>
         <p><span className="font-medium">Adresa:</span> {customer.address}</p>
