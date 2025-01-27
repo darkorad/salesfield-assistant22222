@@ -1,5 +1,4 @@
 import { ExportData } from "@/components/settings/ExportData";
-import { CustomerGroupList } from "@/components/settings/customer-groups/CustomerGroupList";
 import { CustomerPriceForm } from "@/components/settings/customer-prices/CustomerPriceForm";
 import { GroupPriceForm } from "@/components/settings/group-prices/GroupPriceForm";
 import { useEffect, useState } from "react";
@@ -49,10 +48,6 @@ const Settings = () => {
 
             <div>
               <GroupPriceForm />
-            </div>
-
-            <div>
-              <CustomerGroupList />
             </div>
 
             <div>
