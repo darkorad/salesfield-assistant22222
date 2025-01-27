@@ -29,13 +29,15 @@ const SalesPlans = () => {
           return;
         }
 
+        console.log("Fetching customers from kupci_darko table");
         const { data, error } = await supabase
-          .from('customers')
+          .from('kupci_darko')
           .select('*')
-          .eq('user_id', user.id)
           .order('name');
 
         if (error) throw error;
+        
+        console.log("Fetched customers:", data?.length);
         setCustomers(data || []);
       } catch (error) {
         console.error('Error fetching customers:', error);
