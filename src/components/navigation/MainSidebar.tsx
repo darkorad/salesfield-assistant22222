@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Settings, ChevronRight } from "lucide-react";
+import { Settings, ChevronRight, ChevronLeft } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -48,7 +48,15 @@ export function MainSidebar() {
       <Sidebar>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Navigacija</SidebarGroupLabel>
+            <div className="flex items-center justify-between px-2 mb-2">
+              <SidebarGroupLabel>Navigacija</SidebarGroupLabel>
+              <button 
+                onClick={() => setOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded-md"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </div>
             <SidebarGroupContent>
               <SidebarMenu>
                 {menuItems.map((item) => (
