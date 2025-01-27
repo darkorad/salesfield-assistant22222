@@ -37,8 +37,8 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
       </CardHeader>
       <CardContent className="space-y-6">
         <OrderForm
-          customers={customers}
-          products={products}
+          customers={customers || []}
+          products={products || []}
           selectedCustomer={selectedCustomer}
           customerSearch={customerSearch}
           orderItems={orderItems}

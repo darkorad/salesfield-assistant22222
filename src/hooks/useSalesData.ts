@@ -21,7 +21,10 @@ export const useSalesData = () => {
       setError(null);
 
       const session = await checkAuth();
-      if (!session) return;
+      if (!session) {
+        setIsLoading(false);
+        return;
+      }
 
       console.log("Fetching data for user:", session.user.id);
       console.log("Fetching data from kupci_darko and products_darko tables");
@@ -31,11 +34,11 @@ export const useSalesData = () => {
         fetchProducts(session.user.id)
       ]);
 
+      setIsLoading(false);
     } catch (error) {
       console.error('Error:', error);
       toast.error("Greška pri učitavanju podataka");
       setError(error instanceof Error ? error.message : "Unknown error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
