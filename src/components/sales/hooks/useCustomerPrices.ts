@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
 import { toast } from "sonner";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export const useCustomerPrices = (selectedCustomer: Customer) => {
   const [customerPrices, setCustomerPrices] = useState<Record<string, { cash: number; invoice: number }>>({});
@@ -98,7 +99,12 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             schema: 'public',
             table: 'group_prices'
           },
-          async (payload) => {
+          async (payload: RealtimePostgresChangesPayload<{
+            group_id: string;
+            product_id: string;
+            cash_price: number;
+            invoice_price: number;
+          }>) => {
             console.log('Group price change detected');
             if (selectedCustomer.group_name) {
               const { data: groupData } = await supabase
@@ -107,7 +113,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
                 .eq('name', selectedCustomer.group_name)
                 .maybeSingle();
 
-              if (groupData && payload.new.group_id === groupData.id) {
+              if (groupData && payload.new && payload.new.group_id === groupData.id) {
                 console.log('Group price change affects current customer, refreshing prices');
                 fetchCustomerPrices();
               }
