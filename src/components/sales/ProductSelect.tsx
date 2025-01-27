@@ -20,9 +20,8 @@ export const ProductSelect = ({
 }: ProductSelectProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const { getProductPrice, fetchCustomerPrices } = useCustomerPrices(selectedCustomer);
-  const [localProducts, setLocalProducts] = useState(products);
 
-  const filteredProducts = localProducts.filter((product) =>
+  const filteredProducts = products.filter((product) =>
     product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -72,34 +71,32 @@ export const ProductSelect = ({
       </div>
 
       {orderItems.length > 0 && (
-        <div className="mt-4">
-          <OrderItemsList
-            items={orderItems}
-            onQuantityChange={(index, quantity) => {
-              const newItems = [...orderItems];
-              newItems[index] = {
-                ...newItems[index],
-                quantity: Math.max(1, quantity)
-              };
-              onOrderItemsChange(newItems);
-            }}
-            onPaymentTypeChange={(index, paymentType) => {
-              const newItems = [...orderItems];
-              const item = newItems[index];
-              const newPrice = getProductPrice(item.product, paymentType);
-              newItems[index] = {
-                ...item,
-                paymentType,
-                product: { ...item.product, Cena: newPrice }
-              };
-              onOrderItemsChange(newItems);
-            }}
-            onRemoveItem={(index) => {
-              const newItems = orderItems.filter((_, i) => i !== index);
-              onOrderItemsChange(newItems);
-            }}
-          />
-        </div>
+        <OrderItemsList
+          items={orderItems}
+          onQuantityChange={(index, quantity) => {
+            const newItems = [...orderItems];
+            newItems[index] = {
+              ...newItems[index],
+              quantity: Math.max(1, quantity)
+            };
+            onOrderItemsChange(newItems);
+          }}
+          onPaymentTypeChange={(index, paymentType) => {
+            const newItems = [...orderItems];
+            const item = newItems[index];
+            const newPrice = getProductPrice(item.product, paymentType);
+            newItems[index] = {
+              ...item,
+              paymentType,
+              product: { ...item.product, Cena: newPrice }
+            };
+            onOrderItemsChange(newItems);
+          }}
+          onRemoveItem={(index) => {
+            const newItems = orderItems.filter((_, i) => i !== index);
+            onOrderItemsChange(newItems);
+          }}
+        />
       )}
     </div>
   );
