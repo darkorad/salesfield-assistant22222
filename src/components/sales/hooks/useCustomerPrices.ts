@@ -11,6 +11,13 @@ interface GroupPrice {
   invoice_price: number;
 }
 
+interface CustomerPrice {
+  customer_id: string;
+  product_id: string;
+  cash_price: number;
+  invoice_price: number;
+}
+
 export const useCustomerPrices = (selectedCustomer: Customer) => {
   const [customerPrices, setCustomerPrices] = useState<Record<string, { cash: number; invoice: number }>>({});
 
@@ -53,7 +60,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         }
       }
 
-      // Then get customer-specific prices which will override group prices if they exist
+      // Then get customer-specific prices which will override group prices
       const { data: customerPrices, error: customerError } = await supabase
         .from('customer_prices')
         .select('*')
@@ -71,21 +78,22 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         });
       }
 
-      console.log('Updated customer prices:', pricesMap);
+      console.log('Updated prices map:', pricesMap);
       setCustomerPrices(pricesMap);
     } catch (error) {
       console.error('Error in fetchCustomerPrices:', error);
-      toast.error('Greška pri učitavanju cena');
+      toast.error("Greška pri učitavanju cena");
     }
   };
 
   useEffect(() => {
     if (selectedCustomer?.id) {
+      console.log('Selected customer changed, fetching prices');
       fetchCustomerPrices();
 
-      // Subscribe to changes in customer_prices
+      // Subscribe to customer_prices changes
       const pricesChannel = supabase
-        .channel('prices-changes')
+        .channel('customer-prices-changes')
         .on(
           'postgres_changes',
           {
@@ -94,49 +102,64 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             table: 'customer_prices',
             filter: `customer_id=eq.${selectedCustomer.id}`
           },
-          () => {
-            console.log('Customer price change detected, refreshing prices');
+          (payload: RealtimePostgresChangesPayload<CustomerPrice>) => {
+            console.log('Customer price change detected:', payload);
             fetchCustomerPrices();
           }
         )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'group_prices'
-          },
-          async (payload: RealtimePostgresChangesPayload<GroupPrice>) => {
-            console.log('Group price change detected:', payload);
-            
-            if (!selectedCustomer.group_name) return;
-
-            const { data: groupData } = await supabase
-              .from('customer_groups')
-              .select('id')
-              .eq('name', selectedCustomer.group_name)
-              .maybeSingle();
-
-            const newData = payload.new as GroupPrice | null;
-            
-            if (groupData && newData && newData.group_id === groupData.id) {
-              console.log('Group price change affects current customer, refreshing prices');
-              fetchCustomerPrices();
-            }
-          }
-        )
         .subscribe((status) => {
-          console.log('Price subscription status:', status);
+          console.log('Customer prices subscription status:', status);
         });
 
+      // Subscribe to group_prices changes if customer belongs to a group
+      let groupPricesChannel;
+      if (selectedCustomer.group_name) {
+        groupPricesChannel = supabase
+          .channel('group-prices-changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'group_prices'
+            },
+            async (payload: RealtimePostgresChangesPayload<GroupPrice>) => {
+              console.log('Group price change detected:', payload);
+              
+              if (!selectedCustomer.group_name) return;
+
+              const { data: groupData } = await supabase
+                .from('customer_groups')
+                .select('id')
+                .eq('name', selectedCustomer.group_name)
+                .maybeSingle();
+
+              const newData = payload.new as GroupPrice | null;
+              
+              if (groupData && newData && newData.group_id === groupData.id) {
+                console.log('Group price change affects current customer, refreshing prices');
+                await fetchCustomerPrices();
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('Group prices subscription status:', status);
+          });
+      }
+
+      // Cleanup subscriptions
       return () => {
         supabase.removeChannel(pricesChannel);
+        if (groupPricesChannel) {
+          supabase.removeChannel(groupPricesChannel);
+        }
       };
     }
   }, [selectedCustomer?.id, selectedCustomer?.group_name]);
 
   const getProductPrice = (product: Product, paymentType: 'cash' | 'invoice') => {
     const customPrice = customerPrices[product.id]?.[paymentType];
+    console.log(`Price for product ${product.id} (${paymentType}):`, customPrice || product.Cena);
     return customPrice || product.Cena;
   };
 
