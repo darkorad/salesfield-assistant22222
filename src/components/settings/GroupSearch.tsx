@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { CustomerGroupMembers } from "./customer-groups/CustomerGroupMembers";
 
 export const GroupSearch = () => {
   const [groupSearch, setGroupSearch] = useState("");
@@ -55,20 +56,19 @@ export const GroupSearch = () => {
         return;
       }
 
-      const { data: customers, error } = await supabase
-        .from('customers')
-        .select('name')
-        .eq('group_name', group.name)
-        .eq('user_id', session.user.id);
+      const { data: members, error } = await supabase
+        .from('customer_group_members')
+        .select('customer_id')
+        .eq('group_id', group.id);
 
       if (error) {
-        console.error('Error fetching group customers:', error);
-        toast.error("Greška pri učitavanju kupaca iz grupe");
+        console.error('Error fetching group members:', error);
+        toast.error("Greška pri učitavanju članova grupe");
         return;
       }
 
-      const customerCount = customers?.length || 0;
-      toast.success(`Grupa ${group.name} ima ${customerCount} kupaca`);
+      const memberCount = members?.length || 0;
+      toast.success(`Grupa ${group.name} ima ${memberCount} kupaca`);
     } catch (error) {
       console.error('Error handling group click:', error);
       toast.error("Greška pri učitavanju informacija o grupi");
@@ -98,6 +98,12 @@ export const GroupSearch = () => {
                 {group.name}
               </Button>
             ))}
+          </div>
+        )}
+        {selectedGroup && (
+          <div className="mt-6">
+            <h3 className="text-lg font-medium mb-4">Članovi grupe {selectedGroup.name}</h3>
+            <CustomerGroupMembers groupId={selectedGroup.id} />
           </div>
         )}
       </CardContent>
