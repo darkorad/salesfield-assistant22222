@@ -24,7 +24,8 @@ export const GroupPriceForm = () => {
     setProductSearch,
     setInvoicePrice,
     setCashPrice,
-    handleSubmit
+    handleSubmit,
+    isSubmitting
   } = useGroupPriceForm();
 
   return (
@@ -65,10 +66,10 @@ export const GroupPriceForm = () => {
 
         <Button 
           onClick={handleSubmit}
-          disabled={!selectedProduct || (!selectedGroup && !selectedCustomer) || !invoicePrice || !cashPrice}
+          disabled={!selectedProduct || (!selectedGroup && !selectedCustomer) || !invoicePrice || !cashPrice || isSubmitting}
           className="w-full"
         >
-          Sačuvaj cene
+          {isSubmitting ? "Čuvanje..." : "Sačuvaj cene"}
         </Button>
       </CardContent>
     </Card>

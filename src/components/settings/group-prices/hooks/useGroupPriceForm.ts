@@ -14,6 +14,7 @@ export const useGroupPriceForm = () => {
   const [cashPrice, setCashPrice] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -33,31 +34,6 @@ export const useGroupPriceForm = () => {
 
     fetchProducts();
   }, []);
-
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      if (!selectedGroup) {
-        setCustomers([]);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('group_name', selectedGroup.name)
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching customers:', error);
-        toast.error("Greška pri učitavanju kupaca");
-        return;
-      }
-
-      setCustomers(data || []);
-    };
-
-    fetchCustomers();
-  }, [selectedGroup]);
 
   useEffect(() => {
     const filtered = products.filter(product =>
@@ -84,27 +60,16 @@ export const useGroupPriceForm = () => {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast.error("Niste prijavljeni");
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
-      if (selectedCustomer) {
-        const { error } = await supabase
-          .from('customer_prices')
-          .upsert({
-            customer_id: selectedCustomer.id,
-            product_id: selectedProduct.id,
-            invoice_price: parseFloat(invoicePrice),
-            cash_price: parseFloat(cashPrice),
-            user_id: session.user.id
-          });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
 
-        if (error) throw error;
-        toast.success("Cena za kupca uspešno sačuvana");
-      } else if (selectedGroup) {
+      if (selectedGroup) {
         const { error } = await supabase
           .from('group_prices')
           .upsert({
@@ -112,14 +77,29 @@ export const useGroupPriceForm = () => {
             product_id: selectedProduct.id,
             invoice_price: parseFloat(invoicePrice),
             cash_price: parseFloat(cashPrice),
-            user_id: session.user.id
+            user_id: session.user.id,
+            last_changed: new Date().toISOString()
           });
 
         if (error) throw error;
         toast.success("Cena za grupu uspešno sačuvana");
+      } else if (selectedCustomer) {
+        const { error } = await supabase
+          .from('customer_prices')
+          .upsert({
+            customer_id: selectedCustomer.id,
+            product_id: selectedProduct.id,
+            invoice_price: parseFloat(invoicePrice),
+            cash_price: parseFloat(cashPrice),
+            user_id: session.user.id,
+            last_changed: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        toast.success("Cena za kupca uspešno sačuvana");
       }
 
-      // Reset form
+      // Reset form after successful submission
       setSelectedProduct(null);
       setSelectedCustomer(null);
       setProductSearch("");
@@ -129,6 +109,8 @@ export const useGroupPriceForm = () => {
     } catch (error) {
       console.error('Error saving prices:', error);
       toast.error("Greška pri čuvanju cena");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -142,6 +124,7 @@ export const useGroupPriceForm = () => {
     invoicePrice,
     cashPrice,
     filteredProducts,
+    isSubmitting,
     setSelectedGroup,
     handleProductSelect,
     handleCustomerSelect,
