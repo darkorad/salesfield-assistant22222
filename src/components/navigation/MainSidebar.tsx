@@ -32,7 +32,7 @@ const menuItems = [
 
 export function MainSidebar() {
   const location = useLocation();
-  const { setOpen } = useSidebar();
+  const { open, setOpen } = useSidebar();
 
   // Close sidebar by default on sales screen and set initial state
   useEffect(() => {
@@ -42,8 +42,10 @@ export function MainSidebar() {
 
   return (
     <>
-      <SidebarTrigger className="fixed top-20 left-0 z-40 h-12 w-6 flex items-center justify-center bg-white border border-l-0 border-gray-200 rounded-r-md shadow-sm hover:bg-gray-50">
-        <ChevronRight className="h-4 w-4" />
+      <SidebarTrigger asChild>
+        <button className="fixed top-20 left-0 z-40 h-12 w-6 flex items-center justify-center bg-white border border-l-0 border-gray-200 rounded-r-md shadow-sm hover:bg-gray-50">
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </SidebarTrigger>
       <Sidebar>
         <SidebarContent>
