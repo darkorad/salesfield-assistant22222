@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Product, Customer } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { Customer, Product } from "@/types";
 import { toast } from "sonner";
 
 export const useGroupPriceForm = () => {
@@ -69,6 +69,8 @@ export const useGroupPriceForm = () => {
         return;
       }
 
+      const timestamp = new Date().toISOString();
+
       if (selectedGroup) {
         const { error } = await supabase
           .from('group_prices')
@@ -78,11 +80,42 @@ export const useGroupPriceForm = () => {
             invoice_price: parseFloat(invoicePrice),
             cash_price: parseFloat(cashPrice),
             user_id: session.user.id,
-            last_changed: new Date().toISOString()
+            last_changed: timestamp
           });
 
         if (error) throw error;
-        toast.success("Cena za grupu uspešno sačuvana");
+
+        // Fetch all customers in the group
+        const { data: groupCustomers, error: customersError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('group_name', selectedGroup.name);
+
+        if (customersError) {
+          console.error('Error fetching group customers:', customersError);
+        } else {
+          // Update customer_prices for all customers in the group
+          const customerUpdates = groupCustomers?.map(customer => ({
+            customer_id: customer.id,
+            product_id: selectedProduct.id,
+            invoice_price: parseFloat(invoicePrice),
+            cash_price: parseFloat(cashPrice),
+            user_id: session.user.id,
+            last_changed: timestamp
+          }));
+
+          if (customerUpdates && customerUpdates.length > 0) {
+            const { error: updateError } = await supabase
+              .from('customer_prices')
+              .upsert(customerUpdates);
+
+            if (updateError) {
+              console.error('Error updating customer prices:', updateError);
+            }
+          }
+        }
+
+        toast.success("Cene za grupu uspešno sačuvane");
       } else if (selectedCustomer) {
         const { error } = await supabase
           .from('customer_prices')
@@ -92,7 +125,7 @@ export const useGroupPriceForm = () => {
             invoice_price: parseFloat(invoicePrice),
             cash_price: parseFloat(cashPrice),
             user_id: session.user.id,
-            last_changed: new Date().toISOString()
+            last_changed: timestamp
           });
 
         if (error) throw error;

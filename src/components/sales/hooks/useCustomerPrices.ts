@@ -14,8 +14,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
       const { data: customerSpecificPrices, error: customerError } = await supabase
         .from('customer_prices')
         .select('*')
-        .eq('customer_id', selectedCustomer.id)
-        .order('last_changed', { ascending: false });
+        .eq('customer_id', selectedCustomer.id);
 
       if (customerError) {
         console.error('Error fetching customer prices:', customerError);
@@ -29,7 +28,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           .from('customer_groups')
           .select('id')
           .eq('name', selectedCustomer.group_name)
-          .maybeSingle(); // Changed from .single() to .maybeSingle()
+          .maybeSingle();
 
         if (groupError) {
           console.error('Error fetching group ID:', groupError);
@@ -38,8 +37,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           const { data: prices, error: pricesError } = await supabase
             .from('group_prices')
             .select('*')
-            .eq('group_id', groupData.id)
-            .order('last_changed', { ascending: false });
+            .eq('group_id', groupData.id);
 
           if (pricesError) {
             console.error('Error fetching group prices:', pricesError);
@@ -80,7 +78,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
     if (selectedCustomer?.id) {
       fetchCustomerPrices();
 
-      // Subscribe to real-time changes for customer_prices table
+      // Subscribe to real-time changes for customer_prices and group_prices
       const pricesChannel = supabase
         .channel('prices-changes')
         .on(
@@ -91,8 +89,8 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             table: 'customer_prices',
             filter: `customer_id=eq.${selectedCustomer.id}`
           },
-          (payload) => {
-            console.log('Customer price change detected:', payload);
+          () => {
+            console.log('Customer price change detected, refreshing prices');
             fetchCustomerPrices();
           }
         )
@@ -103,12 +101,14 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             schema: 'public',
             table: 'group_prices'
           },
-          (payload) => {
-            console.log('Group price change detected:', payload);
+          () => {
+            console.log('Group price change detected, refreshing prices');
             fetchCustomerPrices();
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Price subscription status:', status);
+        });
 
       return () => {
         supabase.removeChannel(pricesChannel);
