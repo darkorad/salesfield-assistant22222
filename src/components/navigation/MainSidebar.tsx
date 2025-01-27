@@ -34,11 +34,10 @@ export function MainSidebar() {
   const location = useLocation();
   const { setOpen } = useSidebar();
 
-  // Close sidebar by default on sales screen
+  // Close sidebar by default on sales screen and set initial state
   useEffect(() => {
-    if (location.pathname === '/sales') {
-      setOpen(false);
-    }
+    const isSalesScreen = location.pathname === '/sales';
+    setOpen(!isSalesScreen);
   }, [location.pathname, setOpen]);
 
   return (

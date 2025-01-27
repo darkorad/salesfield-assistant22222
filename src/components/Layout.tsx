@@ -7,6 +7,7 @@ import { MainSidebar } from "./navigation/MainSidebar";
 export const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
+  const isSalesPage = location.pathname === "/sales";
 
   if (isLoginPage) {
     return (
@@ -17,7 +18,7 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={!isSalesPage}>
       <div className="min-h-screen w-full bg-gray-50">
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 w-full">
           <div className="max-w-full px-2 md:px-4">
