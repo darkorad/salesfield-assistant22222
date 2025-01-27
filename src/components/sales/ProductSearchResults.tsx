@@ -11,6 +11,8 @@ export const ProductSearchResults = ({
   onSelect,
   getProductPrice 
 }: ProductSearchResultsProps) => {
+  console.log("Rendering ProductSearchResults with", products?.length, "products");
+
   if (!products || products.length === 0) {
     return <div className="p-4 text-gray-500">Nema pronađenih proizvoda</div>;
   }

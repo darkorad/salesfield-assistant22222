@@ -16,6 +16,7 @@ export const ProductSearchBar = ({
       value={searchTerm}
       onChange={(e) => onSearchChange(e.target.value)}
       className="w-full"
+      autoComplete="off"
     />
   );
 };

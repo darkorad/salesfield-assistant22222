@@ -14,13 +14,13 @@ export const useProductFilter = (products: Product[], searchTerm: string) => {
       return products;
     }
     
-    console.log("Filtering products with term:", trimmedTerm);
+    console.log("Filtering", products.length, "products with term:", trimmedTerm);
     
     const filtered = products.filter((product) => 
       product.Naziv.toLowerCase().includes(trimmedTerm)
     );
 
-    console.log("Filtered products count:", filtered.length);
+    console.log("Found", filtered.length, "matching products");
     return filtered;
   }, [products, searchTerm]);
 };
