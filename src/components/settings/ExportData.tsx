@@ -4,12 +4,8 @@ import { FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 export const ExportData = () => {
-  const [groupSearch, setGroupSearch] = useState("");
-
   const handleExportBuyers = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -18,27 +14,10 @@ export const ExportData = () => {
         return;
       }
 
-      // First get filtered groups
-      const { data: groups, error: groupsError } = await supabase
-        .from('customer_groups')
-        .select('name')
-        .eq('user_id', session.user.id)
-        .ilike('name', `%${groupSearch}%`);
-
-      if (groupsError) {
-        console.error('Error fetching groups:', groupsError);
-        toast.error("Greška pri preuzimanju grupa");
-        return;
-      }
-
-      const groupNames = groups?.map(g => g.name) || [];
-
-      // Then get customers from those groups
       const { data: customers, error: customersError } = await supabase
         .from('customers')
         .select('*')
-        .eq('user_id', session.user.id)
-        .in('group_name', groupNames);
+        .eq('user_id', session.user.id);
 
       if (customersError) {
         console.error('Error fetching customers:', customersError);
@@ -47,7 +26,7 @@ export const ExportData = () => {
       }
 
       if (!customers || customers.length === 0) {
-        toast.error("Nema podataka o kupcima u izabranim grupama");
+        toast.error("Nema podataka o kupcima");
         return;
       }
 
@@ -109,21 +88,13 @@ export const ExportData = () => {
         <CardTitle>Izvoz podataka</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Input
-            placeholder="Pretraži grupe..."
-            value={groupSearch}
-            onChange={(e) => setGroupSearch(e.target.value)}
-            className="mb-2"
-          />
-          <Button
-            className="w-full py-6 text-lg font-medium"
-            onClick={handleExportBuyers}
-          >
-            <FileSpreadsheet className="mr-2 h-5 w-5" />
-            Izvezi listu kupaca
-          </Button>
-        </div>
+        <Button
+          className="w-full py-6 text-lg font-medium"
+          onClick={handleExportBuyers}
+        >
+          <FileSpreadsheet className="mr-2 h-5 w-5" />
+          Izvezi listu kupaca
+        </Button>
         <Button
           className="w-full py-6 text-lg font-medium"
           onClick={handleExportPrices}
