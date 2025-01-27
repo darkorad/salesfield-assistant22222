@@ -8,6 +8,10 @@ export interface CustomerFormData {
   gpsCoordinates: string;
   naselje: string;
   email?: string;
+  visit_day?: string;
+  visit_type?: 'visit' | 'call';
+  visit_duration?: number;
+  visit_notes?: string;
 }
 
 export const initialCustomerFormData: CustomerFormData = {
@@ -19,5 +23,9 @@ export const initialCustomerFormData: CustomerFormData = {
   isVatRegistered: false,
   gpsCoordinates: "",
   naselje: "",
-  email: ""
+  email: "",
+  visit_day: "",
+  visit_type: "visit",
+  visit_duration: 30,
+  visit_notes: ""
 };
