@@ -18,8 +18,7 @@ export const useProductFilter = (products: Product[], searchTerm: string) => {
     
     const filtered = products.filter((product) => {
       const productName = product.Naziv.toLowerCase();
-      const manufacturer = product.Proizvođač.toLowerCase();
-      return productName.includes(trimmedTerm) || manufacturer.includes(trimmedTerm);
+      return productName.includes(trimmedTerm);
     });
 
     console.log("Filtered products count:", filtered.length);

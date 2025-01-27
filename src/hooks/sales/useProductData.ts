@@ -31,7 +31,7 @@ export const useProductData = (userEmail: string) => {
         created_at: product.created_at
       })) || [];
 
-      console.log("Mapped products:", mappedProducts.length);
+      console.log("Mapped products:", mappedProducts);
       setProducts(mappedProducts);
       return mappedProducts;
     } catch (error) {
