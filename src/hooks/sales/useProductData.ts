@@ -11,19 +11,20 @@ export const useProductData = (userEmail: string) => {
       console.log("Fetching products from products_darko table");
       const { data: productsData, error } = await supabase
         .from('products_darko')
-        .select('*');
+        .select('*')
+        .order('Naziv');
       
       if (error) {
         console.error('Error fetching products:', error);
         throw error;
       }
 
-      console.log("Raw products data:", productsData);
+      console.log("Raw products data count:", productsData?.length);
 
       // Map the data to match our Product type
       const mappedProducts = productsData?.map(product => ({
         id: product.id,
-        user_id: userId,
+        user_id: userId, // Required by Product type
         Naziv: product.Naziv,
         Proizvođač: product.Proizvođač,
         Cena: product.Cena,
@@ -31,7 +32,7 @@ export const useProductData = (userEmail: string) => {
         created_at: product.created_at
       })) || [];
 
-      console.log("Mapped products:", mappedProducts);
+      console.log("Mapped products count:", mappedProducts.length);
       setProducts(mappedProducts);
       return mappedProducts;
     } catch (error) {

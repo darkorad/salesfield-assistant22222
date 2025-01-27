@@ -11,8 +11,6 @@ export const ProductSearchResults = ({
   onSelect,
   getProductPrice 
 }: ProductSearchResultsProps) => {
-  console.log("Rendering search results with products:", products?.length);
-
   if (!products || products.length === 0) {
     return <div className="p-4 text-gray-500">Nema pronađenih proizvoda</div>;
   }
@@ -33,7 +31,7 @@ export const ProductSearchResults = ({
             <div className="text-sm font-medium">
               {product["Jedinica mere"]} | {product.Cena} RSD
             </div>
-            <div className="text-sm">
+            <div className="text-xs text-gray-500">
               Račun: {getProductPrice(product, 'invoice')} RSD
               <br />
               Gotovina: {getProductPrice(product, 'cash')} RSD
