@@ -34,8 +34,31 @@ const NavActions = () => {
     }
   };
 
+  const menuItems = [
+    { path: "/sales", label: "Prodaja" },
+    { path: "/daily-orders", label: "Današnje porudžbine" },
+    { path: "/monthly-sales", label: "Mesečna prodaja u RSD" },
+    { path: "/settings", label: "Podešavanja i izveštaji", icon: Settings },
+  ];
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-4">
+      <div className="hidden md:flex items-center space-x-2">
+        {menuItems.map((item) => (
+          <Link 
+            key={item.path}
+            to={item.path}
+            className={`text-sm px-3 py-2 rounded-md transition-colors ${
+              location.pathname === item.path 
+                ? "bg-gray-100 text-gray-900" 
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
+
       <Button
         variant="ghost"
         className="text-sm hidden md:flex"
@@ -44,6 +67,7 @@ const NavActions = () => {
         <LogOut className="h-4 w-4 mr-2" />
         Odjava
       </Button>
+
       <div className="md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -52,36 +76,19 @@ const NavActions = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem asChild>
-              <Link 
-                to="/sales" 
-                className={`w-full cursor-pointer text-xs ${location.pathname === "/sales" ? "font-medium" : ""}`}
-              >
-                Prodaja
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link 
-                to="/daily-orders" 
-                className={`w-full cursor-pointer text-xs ${location.pathname === "/daily-orders" ? "font-medium" : ""}`}
-              >
-                Današnje porudžbine
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link 
-                to="/monthly-sales" 
-                className={`w-full cursor-pointer text-xs ${location.pathname === "/monthly-sales" ? "font-medium" : ""}`}
-              >
-                Mesečna prodaja u RSD
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings" className="w-full cursor-pointer text-xs">
-                <Settings className="h-3 w-3 mr-2" />
-                Podešavanja i izveštaji
-              </Link>
-            </DropdownMenuItem>
+            {menuItems.map((item) => (
+              <DropdownMenuItem key={item.path} asChild>
+                <Link 
+                  to={item.path} 
+                  className={`w-full cursor-pointer text-xs ${
+                    location.pathname === item.path ? "font-medium" : ""
+                  }`}
+                >
+                  {item.icon && <item.icon className="h-3 w-3 mr-2" />}
+                  {item.label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs">
               <LogOut className="h-3 w-3 mr-2" />
               Odjava
