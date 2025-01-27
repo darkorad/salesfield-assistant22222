@@ -31,6 +31,7 @@ interface ImportedCustomer {
 export const CustomerGroupList = () => {
   const [groups, setGroups] = useState<CustomerGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<CustomerGroup | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchGroups = async () => {
     try {
@@ -60,6 +61,10 @@ export const CustomerGroupList = () => {
       toast.error("Greška pri učitavanju grupa");
     }
   };
+
+  const filteredGroups = groups.filter(group => 
+    group.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleExportCustomers = async () => {
     try {
@@ -226,7 +231,6 @@ export const CustomerGroupList = () => {
   useEffect(() => {
     fetchGroups();
 
-    // Set up real-time subscription for customer_groups table
     const channel = supabase
       .channel('customer-groups-changes')
       .on(
@@ -238,7 +242,7 @@ export const CustomerGroupList = () => {
         },
         (payload) => {
           console.log('Real-time update received:', payload);
-          fetchGroups(); // Refresh groups when changes occur
+          fetchGroups();
         }
       )
       .subscribe();
@@ -273,9 +277,16 @@ export const CustomerGroupList = () => {
           </Button>
         </div>
       </div>
+
+      <Input
+        placeholder="Pretraži grupe..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="mb-4"
+      />
       
       <div className="grid gap-4">
-        {groups.map((group) => (
+        {filteredGroups.map((group) => (
           <div key={group.id} className="p-4 bg-white rounded-lg shadow-sm border">
             <div className="flex justify-between items-start mb-2">
               <div>
