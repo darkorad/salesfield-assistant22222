@@ -8,6 +8,7 @@ export interface CustomerFormData {
   gpsCoordinates: string;
   naselje: string;
   email?: string;
+  visitDay?: string;
 }
 
 export const initialCustomerFormData: CustomerFormData = {
@@ -19,5 +20,6 @@ export const initialCustomerFormData: CustomerFormData = {
   isVatRegistered: false,
   gpsCoordinates: "",
   naselje: "",
-  email: ""
+  email: "",
+  visitDay: ""
 };

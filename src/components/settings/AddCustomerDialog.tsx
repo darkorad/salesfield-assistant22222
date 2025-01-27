@@ -38,7 +38,8 @@ export const AddCustomerDialog = () => {
           pib: customer.pib,
           is_vat_registered: customer.isVatRegistered,
           gps_coordinates: customer.gpsCoordinates,
-          naselje: customer.naselje
+          naselje: customer.naselje,
+          visit_day: customer.visitDay
         }])
         .select()
         .single();

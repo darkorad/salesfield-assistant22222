@@ -20,6 +20,9 @@ export const CustomerInfoCard = ({ customer }: CustomerInfoCardProps) => {
         {customer.email && (
           <p><span className="font-medium">Email:</span> {customer.email}</p>
         )}
+        {customer.visit_day && (
+          <p><span className="font-medium">Dan obilaska:</span> {customer.visit_day}</p>
+        )}
       </div>
     </div>
   );

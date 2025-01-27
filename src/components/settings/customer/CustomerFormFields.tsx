@@ -3,12 +3,23 @@ import { Label } from "@/components/ui/label";
 import { CustomerFormData } from "../types";
 import { GPSCoordinatesInput } from "../GPSCoordinatesInput";
 import { VATStatusSelect } from "../VATStatusSelect";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CustomerFormFieldsProps {
   customer: CustomerFormData;
   handleInputChange: (field: keyof CustomerFormData) => (e: React.ChangeEvent<HTMLInputElement>) => void;
   setCustomer: (value: React.SetStateAction<CustomerFormData>) => void;
 }
+
+const visitDays = [
+  "Ponedeljak",
+  "Utorak",
+  "Sreda",
+  "Četvrtak",
+  "Petak",
+  "Subota",
+  "Nedelja"
+];
 
 export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }: CustomerFormFieldsProps) => {
   return (
@@ -87,6 +98,24 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
           onChange={handleInputChange("email")}
           className="w-full"
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="visit_day">Dan obilaska</Label>
+        <Select 
+          value={customer.visitDay || ''} 
+          onValueChange={(value) => setCustomer(prev => ({ ...prev, visitDay: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Izaberite dan" />
+          </SelectTrigger>
+          <SelectContent>
+            {visitDays.map((day) => (
+              <SelectItem key={day} value={day}>
+                {day}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="md:col-span-2">
         <GPSCoordinatesInput 

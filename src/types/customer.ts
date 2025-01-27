@@ -12,4 +12,5 @@ export interface Customer {
   naselje?: string;
   group_name?: string;
   email?: string;
+  visit_day?: string;
 }
