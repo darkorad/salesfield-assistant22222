@@ -31,10 +31,9 @@ const Settings = () => {
   return (
     <div className="container mx-auto p-4 space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="settings">Podešavanja</TabsTrigger>
           <TabsTrigger value="reports">Izveštaji</TabsTrigger>
-          <TabsTrigger value="monthly">Mesečna prodaja u RSD</TabsTrigger>
         </TabsList>
         
         <TabsContent value="settings">
@@ -66,13 +65,10 @@ const Settings = () => {
           <div className="space-y-8">
             <h2 className="text-2xl font-bold">Izveštaji</h2>
             <Reports />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="monthly">
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Mesečna prodaja u RSD</h2>
-            <MonthlySales />
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Mesečna prodaja u RSD</h3>
+              <MonthlySales />
+            </div>
           </div>
         </TabsContent>
       </Tabs>
