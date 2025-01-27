@@ -10,20 +10,12 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
     try {
       console.log('Fetching prices for customer:', selectedCustomer.id);
       
-      // First try to get customer-specific prices
-      const { data: customerSpecificPrices, error: customerError } = await supabase
-        .from('customer_prices')
-        .select('*')
-        .eq('customer_id', selectedCustomer.id);
+      let pricesMap: Record<string, { cash: number; invoice: number }> = {};
 
-      if (customerError) {
-        console.error('Error fetching customer prices:', customerError);
-        return;
-      }
-
-      // Get the group ID if customer belongs to a group
-      let groupPrices = null;
+      // If customer belongs to a group, first get group prices
       if (selectedCustomer.group_name) {
+        console.log('Customer belongs to group:', selectedCustomer.group_name);
+        
         const { data: groupData, error: groupError } = await supabase
           .from('customer_groups')
           .select('id')
@@ -33,38 +25,43 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         if (groupError) {
           console.error('Error fetching group ID:', groupError);
         } else if (groupData) {
-          // Then get group prices using the group's UUID
-          const { data: prices, error: pricesError } = await supabase
+          // Get group prices
+          const { data: groupPrices, error: pricesError } = await supabase
             .from('group_prices')
             .select('*')
             .eq('group_id', groupData.id);
 
           if (pricesError) {
             console.error('Error fetching group prices:', pricesError);
-          } else {
-            groupPrices = prices;
+          } else if (groupPrices) {
+            console.log('Found group prices:', groupPrices.length);
+            groupPrices.forEach(price => {
+              pricesMap[price.product_id] = {
+                cash: price.cash_price,
+                invoice: price.invoice_price
+              };
+            });
           }
         }
       }
 
-      // Combine prices, prioritizing customer-specific prices over group prices
-      const pricesMap: Record<string, { cash: number; invoice: number }> = {};
-      
-      // First add group prices as base
-      groupPrices?.forEach(price => {
-        pricesMap[price.product_id] = {
-          cash: price.cash_price,
-          invoice: price.invoice_price
-        };
-      });
+      // Then get customer-specific prices which will override group prices if they exist
+      const { data: customerPrices, error: customerError } = await supabase
+        .from('customer_prices')
+        .select('*')
+        .eq('customer_id', selectedCustomer.id);
 
-      // Then override with customer-specific prices
-      customerSpecificPrices?.forEach(price => {
-        pricesMap[price.product_id] = {
-          cash: price.cash_price,
-          invoice: price.invoice_price
-        };
-      });
+      if (customerError) {
+        console.error('Error fetching customer prices:', customerError);
+      } else if (customerPrices) {
+        console.log('Found customer-specific prices:', customerPrices.length);
+        customerPrices.forEach(price => {
+          pricesMap[price.product_id] = {
+            cash: price.cash_price,
+            invoice: price.invoice_price
+          };
+        });
+      }
 
       console.log('Updated customer prices:', pricesMap);
       setCustomerPrices(pricesMap);
@@ -78,7 +75,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
     if (selectedCustomer?.id) {
       fetchCustomerPrices();
 
-      // Subscribe to real-time changes for customer_prices and group_prices
+      // Subscribe to changes in customer_prices
       const pricesChannel = supabase
         .channel('prices-changes')
         .on(
@@ -101,9 +98,20 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             schema: 'public',
             table: 'group_prices'
           },
-          () => {
-            console.log('Group price change detected, refreshing prices');
-            fetchCustomerPrices();
+          async (payload) => {
+            console.log('Group price change detected');
+            if (selectedCustomer.group_name) {
+              const { data: groupData } = await supabase
+                .from('customer_groups')
+                .select('id')
+                .eq('name', selectedCustomer.group_name)
+                .maybeSingle();
+
+              if (groupData && payload.new.group_id === groupData.id) {
+                console.log('Group price change affects current customer, refreshing prices');
+                fetchCustomerPrices();
+              }
+            }
           }
         )
         .subscribe((status) => {

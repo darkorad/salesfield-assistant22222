@@ -72,7 +72,8 @@ export const useGroupPriceForm = () => {
       const timestamp = new Date().toISOString();
 
       if (selectedGroup) {
-        const { error } = await supabase
+        // First update group prices
+        const { error: groupError } = await supabase
           .from('group_prices')
           .upsert({
             group_id: selectedGroup.id,
@@ -83,9 +84,9 @@ export const useGroupPriceForm = () => {
             last_changed: timestamp
           });
 
-        if (error) throw error;
+        if (groupError) throw groupError;
 
-        // Fetch all customers in the group
+        // Then get all customers in the group
         const { data: groupCustomers, error: customersError } = await supabase
           .from('customers')
           .select('id')
@@ -93,9 +94,12 @@ export const useGroupPriceForm = () => {
 
         if (customersError) {
           console.error('Error fetching group customers:', customersError);
-        } else {
-          // Update customer_prices for all customers in the group
-          const customerUpdates = groupCustomers?.map(customer => ({
+          throw customersError;
+        }
+
+        // Update customer_prices for all customers in the group
+        if (groupCustomers && groupCustomers.length > 0) {
+          const customerUpdates = groupCustomers.map(customer => ({
             customer_id: customer.id,
             product_id: selectedProduct.id,
             invoice_price: parseFloat(invoicePrice),
@@ -104,14 +108,13 @@ export const useGroupPriceForm = () => {
             last_changed: timestamp
           }));
 
-          if (customerUpdates && customerUpdates.length > 0) {
-            const { error: updateError } = await supabase
-              .from('customer_prices')
-              .upsert(customerUpdates);
+          const { error: updateError } = await supabase
+            .from('customer_prices')
+            .upsert(customerUpdates);
 
-            if (updateError) {
-              console.error('Error updating customer prices:', updateError);
-            }
+          if (updateError) {
+            console.error('Error updating customer prices:', updateError);
+            throw updateError;
           }
         }
 
