@@ -1,10 +1,9 @@
 import { Customer, Product, OrderItem } from "@/types";
-import { Button } from "@/components/ui/button";
 import { CustomerSelect } from "./CustomerSelect";
 import { ProductSelect } from "./ProductSelect";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 interface OrderFormProps {
   customers: Customer[];
@@ -12,11 +11,11 @@ interface OrderFormProps {
   selectedCustomer: Customer | null;
   customerSearch: string;
   orderItems: OrderItem[];
-  isSubmitting: boolean;
   onCustomerSearchChange: (value: string) => void;
   onCustomerSelect: (customer: Customer) => void;
   onOrderItemsChange: (items: OrderItem[]) => void;
   onSubmit: (note?: string) => void;
+  isSubmitting?: boolean;
 }
 
 export const OrderForm = ({
@@ -25,75 +24,58 @@ export const OrderForm = ({
   selectedCustomer,
   customerSearch,
   orderItems,
-  isSubmitting,
   onCustomerSearchChange,
   onCustomerSelect,
   onOrderItemsChange,
   onSubmit,
+  isSubmitting
 }: OrderFormProps) => {
-  const [includeNote, setIncludeNote] = useState(false);
   const [note, setNote] = useState("");
 
-  const handleSubmit = () => {
-    onSubmit(includeNote ? note : undefined);
-  };
-
   return (
-    <div className="space-y-12">
-      <CustomerSelect
-        customers={customers}
-        customerSearch={customerSearch}
-        onCustomerSearchChange={onCustomerSearchChange}
-        onCustomerSelect={onCustomerSelect}
-      />
-
-      {selectedCustomer && (
-        <div className="space-y-4">
-          <ProductSelect
-            products={products}
-            orderItems={orderItems}
-            selectedCustomer={selectedCustomer}
-            onOrderItemsChange={onOrderItemsChange}
-          />
-        </div>
-      )}
-
+    <div className="space-y-6">
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="note"
-            checked={includeNote}
-            onCheckedChange={(checked) => setIncludeNote(checked as boolean)}
-          />
-          <label
-            htmlFor="note"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Napomena
-          </label>
-        </div>
+        <CustomerSelect
+          customers={customers}
+          customerSearch={customerSearch}
+          onCustomerSearchChange={onCustomerSearchChange}
+          onCustomerSelect={onCustomerSelect}
+        />
 
-        {includeNote && (
-          <Textarea
-            placeholder="Unesite napomenu"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="w-full resize-none"
-            maxLength={100}
-            rows={3}
-          />
+        {selectedCustomer && (
+          <div className="space-y-4 mt-6">
+            <div className="text-lg font-medium">Izbor artikala</div>
+            <ProductSelect
+              products={products}
+              orderItems={orderItems}
+              selectedCustomer={selectedCustomer}
+              onOrderItemsChange={onOrderItemsChange}
+            />
+          </div>
         )}
       </div>
 
-      <div className="flex justify-end">
-        <Button 
-          onClick={handleSubmit}
-          className="w-full md:w-auto"
-          disabled={!selectedCustomer || orderItems.length === 0 || isSubmitting}
-        >
-          {isSubmitting ? "Slanje..." : "Pošalji porudžbinu"}
-        </Button>
-      </div>
+      {orderItems.length > 0 && (
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Napomena</label>
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Unesite napomenu..."
+              className="mt-1"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => onSubmit(note)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Slanje..." : "Potvrdi porudžbinu"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
