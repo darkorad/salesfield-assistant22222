@@ -35,9 +35,13 @@ const SalesPlans = () => {
         .not('visit_day', 'is', null)
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching customers:', error);
+        throw error;
+      }
       
       console.log("Fetched customers with visit days:", data?.length);
+      console.log("Customer data:", data); // Add this line to inspect the data
       setCustomers(data || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -62,7 +66,6 @@ const SalesPlans = () => {
         (payload) => {
           console.log('Real-time update received:', payload);
           fetchCustomers();
-          toast.success('Plan poseta je ažuriran');
         }
       )
       .subscribe((status) => {

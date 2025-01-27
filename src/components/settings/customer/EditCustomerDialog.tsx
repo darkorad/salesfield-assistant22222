@@ -45,26 +45,54 @@ export const EditCustomerDialog = ({ selectedCustomer, onCustomerUpdate }: EditC
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('customers')
-        .update({
-          name: customer.name,
-          address: customer.address,
-          city: customer.city,
-          phone: customer.phone,
-          email: customer.email,
-          pib: customer.pib,
-          is_vat_registered: customer.isVatRegistered,
-          gps_coordinates: customer.gpsCoordinates,
-          naselje: customer.naselje,
-          visit_day: customer.visit_day,
-          visit_type: customer.visit_type,
-          visit_duration: customer.visit_duration,
-          visit_notes: customer.visit_notes
-        })
-        .eq('id', selectedCustomer.id);
+      // Update both tables to maintain consistency
+      const updatePromises = [
+        supabase
+          .from('customers')
+          .update({
+            name: customer.name,
+            address: customer.address,
+            city: customer.city,
+            phone: customer.phone,
+            email: customer.email,
+            pib: customer.pib,
+            is_vat_registered: customer.isVatRegistered,
+            gps_coordinates: customer.gpsCoordinates,
+            naselje: customer.naselje,
+            visit_day: customer.visit_day,
+            visit_type: customer.visit_type,
+            visit_duration: customer.visit_duration,
+            visit_notes: customer.visit_notes
+          })
+          .eq('id', selectedCustomer.id),
+        
+        supabase
+          .from('kupci_darko')
+          .update({
+            name: customer.name,
+            address: customer.address,
+            city: customer.city,
+            phone: customer.phone,
+            email: customer.email,
+            pib: customer.pib,
+            is_vat_registered: customer.isVatRegistered,
+            gps_coordinates: customer.gpsCoordinates,
+            naselje: customer.naselje,
+            visit_day: customer.visit_day,
+            visit_type: customer.visit_type,
+            visit_duration: customer.visit_duration,
+            visit_notes: customer.visit_notes
+          })
+          .eq('id', selectedCustomer.id)
+      ];
 
-      if (error) throw error;
+      const results = await Promise.all(updatePromises);
+      const errors = results.filter(result => result.error);
+
+      if (errors.length > 0) {
+        console.error('Errors updating customer:', errors);
+        throw new Error('Failed to update customer in all tables');
+      }
 
       toast.success("Kupac je uspešno ažuriran");
       setOpen(false);
