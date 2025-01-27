@@ -23,6 +23,16 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
         return false;
       }
 
+      // Map Excel column names to our field names
+      if (data.Naziv) data.name = data.Naziv;
+      if (data.Adresa) data.address = data.Adresa;
+      if (data.Grad) data.city = data.Grad;
+      if (data.Telefon) data.phone = data.Telefon;
+      if (data.PIB) data.pib = data.PIB;
+      if (data.Grupa) data.group_name = data.Grupa;
+      if (data.Naselje) data.naselje = data.Naselje;
+      if (data.Email) data.email = data.Email;
+
       const requiredFields = {
         name: 'string',
         address: 'string',
@@ -31,7 +41,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       };
 
       for (const [field, type] of Object.entries(requiredFields)) {
-        if (!data[field] || typeof data[field] !== type || !data[field].trim()) {
+        if (!data[field] || typeof data[field] !== type || !data[field].toString().trim()) {
           console.error(`Missing or invalid required field: ${field}`);
           return false;
         }
@@ -47,22 +57,22 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
 
     const customerData = {
       user_id: userId,
-      code: rawData.code?.trim() || Date.now().toString().slice(-6),
+      code: rawData.code?.toString().trim() || Date.now().toString().slice(-6),
       name: rawData.name.trim(),
       address: rawData.address.trim(),
       city: rawData.city.trim(),
-      phone: rawData.phone?.trim() || '',
-      pib: rawData.pib.trim(),
+      phone: rawData.phone?.toString().trim() || '',
+      pib: rawData.pib.toString().trim(),
       is_vat_registered: rawData.is_vat_registered || false,
-      gps_coordinates: rawData.gps_coordinates?.trim() || '',
-      group_name: rawData.group_name?.trim() || null,
-      naselje: rawData.naselje?.trim() || null,
-      email: rawData.email?.trim() || null
+      gps_coordinates: rawData.gps_coordinates?.toString().trim() || '',
+      group_name: rawData.group_name?.toString().trim() || null,
+      naselje: rawData.naselje?.toString().trim() || null,
+      email: rawData.email?.toString().trim() || null
     };
 
     // Check for existing customer with same PIB to prevent duplicates
     const { data: existingCustomer } = await supabase
-      .from('kupci_darko')
+      .from('customers')
       .select('id')
       .eq('user_id', userId)
       .eq('pib', customerData.pib)
@@ -71,7 +81,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     if (existingCustomer) {
       // Update existing customer
       const { error } = await supabase
-        .from('kupci_darko')
+        .from('customers')
         .update(customerData)
         .eq('id', existingCustomer.id);
 
@@ -79,7 +89,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     } else {
       // Insert new customer
       const { error } = await supabase
-        .from('kupci_darko')
+        .from('customers')
         .insert(customerData);
 
       if (error) throw error;
