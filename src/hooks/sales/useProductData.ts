@@ -21,6 +21,7 @@ export const useProductData = (userEmail: string) => {
       // Map the data to match our Product type
       const mappedProducts = productsData?.map(product => ({
         id: product.id,
+        user_id: userId, // Add the user_id field
         Naziv: product.Naziv,
         Proizvođač: product.Proizvođač,
         Cena: product.Cena,
