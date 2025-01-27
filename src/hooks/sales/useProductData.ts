@@ -18,10 +18,12 @@ export const useProductData = (userEmail: string) => {
         throw error;
       }
 
+      console.log("Raw products data:", productsData);
+
       // Map the data to match our Product type
       const mappedProducts = productsData?.map(product => ({
         id: product.id,
-        user_id: userId, // Add the user_id field
+        user_id: userId,
         Naziv: product.Naziv,
         Proizvođač: product.Proizvođač,
         Cena: product.Cena,
@@ -29,7 +31,7 @@ export const useProductData = (userEmail: string) => {
         created_at: product.created_at
       })) || [];
 
-      console.log("Fetched products:", mappedProducts.length);
+      console.log("Mapped products:", mappedProducts.length);
       setProducts(mappedProducts);
       return mappedProducts;
     } catch (error) {
