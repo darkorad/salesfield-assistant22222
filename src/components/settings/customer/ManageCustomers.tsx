@@ -9,42 +9,47 @@ import { toast } from "sonner";
 export const ManageCustomers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setCustomers([]);
+      return;
+    }
+
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Niste prijavljeni");
         return;
       }
 
-      console.log("Fetching customers from kupci_darko table");
+      console.log("Searching customers in kupci_darko table with query:", searchQuery);
       const { data, error } = await supabase
         .from('kupci_darko')
         .select('*')
+        .or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%`)
         .order('name');
 
       if (error) throw error;
-      console.log("Fetched customers:", data?.length);
+      console.log("Found customers:", data?.length);
       setCustomers(data || []);
     } catch (error) {
-      console.error('Error fetching customers:', error);
-      toast.error("Greška pri učitavanju kupaca");
+      console.error('Error searching customers:', error);
+      toast.error("Greška pri pretraživanju kupaca");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    const delayDebounce = setTimeout(() => {
+      fetchCustomers(searchTerm);
+    }, 300);
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.city.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
 
   return (
     <Card>
@@ -60,30 +65,40 @@ export const ManageCustomers = () => {
           />
           {loading ? (
             <div className="text-center py-4">Učitavanje...</div>
-          ) : (
+          ) : searchTerm.trim() ? (
             <div className="space-y-2">
-              {filteredCustomers.map((customer) => (
-                <div
-                  key={customer.id}
-                  className="flex justify-between items-start p-4 border rounded-lg"
-                >
-                  <div>
-                    <h3 className="font-medium">{customer.name}</h3>
-                    <p className="text-sm text-gray-600">
-                      {customer.address}, {customer.city}
-                    </p>
-                    {customer.visit_day && (
-                      <p className="text-sm text-blue-600">
-                        Dan posete: {customer.visit_day}
+              {customers.length > 0 ? (
+                customers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="flex justify-between items-start p-4 border rounded-lg"
+                  >
+                    <div>
+                      <h3 className="font-medium">{customer.name}</h3>
+                      <p className="text-sm text-gray-600">
+                        {customer.address}, {customer.city}
                       </p>
-                    )}
+                      {customer.visit_day && (
+                        <p className="text-sm text-blue-600">
+                          Dan posete: {customer.visit_day}
+                        </p>
+                      )}
+                    </div>
+                    <EditCustomerDialog
+                      selectedCustomer={customer}
+                      onCustomerUpdate={() => fetchCustomers(searchTerm)}
+                    />
                   </div>
-                  <EditCustomerDialog
-                    selectedCustomer={customer}
-                    onCustomerUpdate={fetchCustomers}
-                  />
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  Nema pronađenih kupaca
                 </div>
-              ))}
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              Unesite tekst za pretragu kupaca
             </div>
           )}
         </div>
