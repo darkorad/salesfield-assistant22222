@@ -10,7 +10,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { useEffect } from "react";
 
 const menuItems = [
   {
@@ -30,6 +32,14 @@ const menuItems = [
 
 export function MainSidebar() {
   const location = useLocation();
+  const { setOpen } = useSidebar();
+
+  // Close sidebar by default on sales screen
+  useEffect(() => {
+    if (location.pathname === '/sales') {
+      setOpen(false);
+    }
+  }, [location.pathname, setOpen]);
 
   return (
     <>
