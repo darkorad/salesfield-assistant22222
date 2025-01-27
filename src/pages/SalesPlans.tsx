@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Customer } from "@/types/customer";
+import { Customer, OrderItem, Product } from "@/types";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { sr } from "date-fns/locale";
+import { ProductSelect } from "@/components/sales/ProductSelect";
+import { Button } from "@/components/ui/button";
+import { useSalesData } from "@/hooks/useSalesData";
+import { useSplitOrders } from "@/components/sales/hooks/useSplitOrders";
 
 const SalesPlans = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState(format(new Date(), 'EEEE', { locale: sr }).toLowerCase());
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [completedVisits, setCompletedVisits] = useState<string[]>([]);
+  const { products } = useSalesData();
+  const { handleSubmitOrder, isSubmitting } = useSplitOrders(selectedCustomer);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -39,6 +48,37 @@ const SalesPlans = () => {
     fetchCustomers();
   }, []);
 
+  const handleCustomerSelect = (customer: Customer) => {
+    if (selectedCustomer?.id === customer.id) {
+      setSelectedCustomer(null);
+      setOrderItems([]);
+    } else {
+      setSelectedCustomer(customer);
+      setOrderItems([]);
+    }
+  };
+
+  const handleCompleteVisit = async () => {
+    if (!selectedCustomer) return;
+
+    try {
+      const success = await handleSubmitOrder(orderItems);
+      if (success) {
+        setCompletedVisits(prev => [...prev, selectedCustomer.id]);
+        setSelectedCustomer(null);
+        setOrderItems([]);
+        toast.success("Poseta je uspešno završena");
+      }
+    } catch (error) {
+      console.error('Error completing visit:', error);
+      toast.error("Greška pri završetku posete");
+    }
+  };
+
+  const filteredCustomers = customers.filter(customer => 
+    customer.visit_day === activeDay
+  );
+
   const daysOfWeek = [
     { id: 'monday', label: 'Ponedeljak' },
     { id: 'tuesday', label: 'Utorak' },
@@ -48,10 +88,6 @@ const SalesPlans = () => {
     { id: 'saturday', label: 'Subota' },
     { id: 'sunday', label: 'Nedelja' },
   ];
-
-  const filteredCustomers = customers.filter(customer => 
-    customer.visit_day === activeDay
-  );
 
   return (
     <div className="container mx-auto p-4">
@@ -76,11 +112,17 @@ const SalesPlans = () => {
                   Nema zakazanih poseta za {day.label.toLowerCase()}
                 </div>
               ) : (
-                filteredCustomers.map((customer) => (
+                filteredCustomers.map((customer, index) => (
                   <div
                     key={customer.id}
-                    className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+                    className={`relative bg-white p-4 rounded-lg shadow-sm border ${
+                      completedVisits.includes(customer.id) ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                    } cursor-pointer`}
+                    onClick={() => handleCustomerSelect(customer)}
                   >
+                    <div className="absolute -right-3 -top-3 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
+                      {index + 1}
+                    </div>
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-medium">{customer.name}</h3>
@@ -107,6 +149,27 @@ const SalesPlans = () => {
                       <p className="mt-2 text-sm text-gray-600 border-t pt-2">
                         {customer.visit_notes}
                       </p>
+                    )}
+
+                    {selectedCustomer?.id === customer.id && (
+                      <div className="mt-4 border-t pt-4">
+                        <ProductSelect
+                          products={products}
+                          orderItems={orderItems}
+                          selectedCustomer={customer}
+                          onOrderItemsChange={setOrderItems}
+                        />
+                        {orderItems.length > 0 && (
+                          <div className="mt-4 flex justify-end">
+                            <Button
+                              onClick={handleCompleteVisit}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? "Završavanje..." : "Završi posetu"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))
