@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Settings, Menu } from "lucide-react";
+import { Settings, ChevronRight } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -42,8 +42,8 @@ export function MainSidebar() {
 
   return (
     <>
-      <SidebarTrigger className="fixed top-20 left-2 z-40 md:hidden">
-        <Menu className="h-4 w-4" />
+      <SidebarTrigger className="fixed top-20 left-0 z-40 h-12 w-6 flex items-center justify-center bg-white border border-l-0 border-gray-200 rounded-r-md shadow-sm hover:bg-gray-50">
+        <ChevronRight className="h-4 w-4" />
       </SidebarTrigger>
       <Sidebar>
         <SidebarContent>
