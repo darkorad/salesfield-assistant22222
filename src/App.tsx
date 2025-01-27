@@ -4,7 +4,7 @@ import Sales from "./pages/Sales";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import DailyOrders from "./pages/DailyOrders";
-import SalesPlans from "./pages/SalesPlans";
+import MonthlySales from "./pages/MonthlySales";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
           <Route path="/daily-orders" element={<DailyOrders />} />
-          <Route path="/sales-plans" element={<SalesPlans />} />
+          <Route path="/monthly-sales" element={<MonthlySales />} />
         </Routes>
       </Layout>
       <Toaster />

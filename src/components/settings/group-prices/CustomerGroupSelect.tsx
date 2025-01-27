@@ -20,23 +20,11 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
           return;
         }
 
-        // Get all group names from kupci_darko table
-        const { data: darkoCustData, error: darkoError } = await supabase
-          .from('kupci_darko')
-          .select('group_name');
-
-        if (darkoError) {
-          console.error('Error fetching darko customer groups:', darkoError);
-          toast.error("Greška pri učitavanju grupa");
-          return;
-        }
-
-        console.log('Raw darko customer groups:', darkoCustData);
-
-        // Get group names from customers table
+        // First, get unique group names from customers table
         const { data: customersData, error: customersError } = await supabase
           .from('customers')
           .select('group_name')
+          .not('group_name', 'is', null)
           .eq('user_id', session.user.id);
 
         if (customersError) {
@@ -45,14 +33,8 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
           return;
         }
 
-        // Combine and get unique group names
-        const allGroupNames = [
-          ...(darkoCustData?.map(c => c.group_name) || []),
-          ...(customersData?.map(c => c.group_name) || [])
-        ];
-        
-        // Filter out null, undefined, and empty strings, then get unique values
-        const uniqueGroups = [...new Set(allGroupNames.filter(name => name && name.trim() !== ''))];
+        // Get unique group names
+        const uniqueGroups = [...new Set(customersData?.map(c => c.group_name))];
         console.log('Unique groups found:', uniqueGroups);
         
         // For each unique group name, ensure it exists in customer_groups table
@@ -60,7 +42,7 @@ export const CustomerGroupSelect = ({ selectedGroup, onGroupSelect }: CustomerGr
           if (!groupName) continue;
 
           try {
-            // Check if group already exists
+            // Check if group already exists using proper query structure
             const { data: existingGroups, error: checkError } = await supabase
               .from('customer_groups')
               .select('id')

@@ -11,14 +11,8 @@ export const ProductSearchResults = ({
   onSelect,
   getProductPrice 
 }: ProductSearchResultsProps) => {
-  console.log("Rendering ProductSearchResults with", products?.length, "products");
-
-  if (!products || products.length === 0) {
-    return (
-      <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg p-4 text-gray-500">
-        Nema pronađenih proizvoda
-      </div>
-    );
+  if (products.length === 0) {
+    return <div className="p-4 text-gray-500">Nema pronađenih proizvoda</div>;
   }
 
   return (
@@ -26,23 +20,19 @@ export const ProductSearchResults = ({
       {products.map((product) => (
         <div
           key={product.id}
-          className="p-3 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+          className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
           onClick={() => onSelect(product)}
         >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <div className="font-medium">{product.Naziv}</div>
-              <div className="text-sm text-gray-500">{product.Proizvođač}</div>
+          <div className="flex flex-col">
+            <span className="font-medium">{product.Naziv}</span>
+            <span className="text-sm text-gray-500">{product.Proizvođač}</span>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-medium">
+              Račun: {getProductPrice(product, 'invoice')} RSD
             </div>
-            <div className="text-right">
-              <div className="text-sm font-medium">
-                {product["Jedinica mere"]} | {product.Cena} RSD
-              </div>
-              <div className="text-xs text-gray-500">
-                Račun: {getProductPrice(product, 'invoice')} RSD
-                <br />
-                Gotovina: {getProductPrice(product, 'cash')} RSD
-              </div>
+            <div className="text-sm font-medium">
+              Gotovina: {getProductPrice(product, 'cash')} RSD
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
-import { Product } from "@/types";
-import { ProductSearchBar } from "./ProductSearchBar";
+import { Product, Customer } from "@/types";
+import { Input } from "@/components/ui/input";
 import { ProductSearchResults } from "../ProductSearchResults";
 
 interface ProductSearchSectionProps {
@@ -19,11 +19,14 @@ export const ProductSearchSection = ({
 }: ProductSearchSectionProps) => {
   return (
     <div className="relative">
-      <ProductSearchBar 
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+      <Input
+        type="text"
+        placeholder="Pretraži proizvode..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full"
       />
-      {searchTerm.trim() !== "" && (
+      {searchTerm && (
         <ProductSearchResults
           products={filteredProducts}
           onSelect={handleAddProduct}

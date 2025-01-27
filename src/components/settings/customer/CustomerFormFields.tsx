@@ -3,7 +3,6 @@ import { Label } from "@/components/ui/label";
 import { CustomerFormData } from "../types";
 import { GPSCoordinatesInput } from "../GPSCoordinatesInput";
 import { VATStatusSelect } from "../VATStatusSelect";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CustomerFormFieldsProps {
   customer: CustomerFormData;
@@ -12,16 +11,6 @@ interface CustomerFormFieldsProps {
 }
 
 export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }: CustomerFormFieldsProps) => {
-  const daysOfWeek = [
-    { id: 'monday', label: 'Ponedeljak' },
-    { id: 'tuesday', label: 'Utorak' },
-    { id: 'wednesday', label: 'Sreda' },
-    { id: 'thursday', label: 'Četvrtak' },
-    { id: 'friday', label: 'Petak' },
-    { id: 'saturday', label: 'Subota' },
-    { id: 'sunday', label: 'Nedelja' },
-  ];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -98,24 +87,6 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
           onChange={handleInputChange("email")}
           className="w-full"
         />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="visit_day">Dan posete</Label>
-        <Select 
-          value={customer.visit_day || ''} 
-          onValueChange={(value) => setCustomer(prev => ({ ...prev, visit_day: value }))}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Izaberite dan posete" />
-          </SelectTrigger>
-          <SelectContent>
-            {daysOfWeek.map((day) => (
-              <SelectItem key={day.id} value={day.id}>
-                {day.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
       <div className="md:col-span-2">
         <GPSCoordinatesInput 

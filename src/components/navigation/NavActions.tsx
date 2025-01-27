@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Settings, LogOut, Calendar } from "lucide-react";
+import { Menu, Settings, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
@@ -37,7 +37,7 @@ const NavActions = () => {
   const menuItems = [
     { path: "/sales", label: "Prodaja" },
     { path: "/daily-orders", label: "Današnje porudžbine" },
-    { path: "/sales-plans", label: "Planovi prodaje", icon: Calendar },
+    { path: "/monthly-sales", label: "Mesečna prodaja u RSD" },
     { path: "/settings", label: "Podešavanja i izveštaji", icon: Settings },
   ];
 
@@ -54,7 +54,6 @@ const NavActions = () => {
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
             }`}
           >
-            {item.icon && <item.icon className="h-4 w-4 inline-block mr-2" />}
             {item.label}
           </Link>
         ))}

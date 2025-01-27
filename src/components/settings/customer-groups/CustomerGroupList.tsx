@@ -150,18 +150,41 @@ export const CustomerGroupList = () => {
             }
           }
 
-          // Update or insert customers with default values for missing fields
+          // Update or insert customers
           for (const customer of jsonData) {
-            // Generate default values for missing required fields
-            const customerData = {
-              id: customer.id || crypto.randomUUID(),
+            // Skip if required fields are missing
+            if (!customer.name || !customer.address || !customer.city || !customer.pib) {
+              console.error('Skipping customer due to missing required fields:', customer);
+              toast.error(`Preskočen kupac "${customer.name || 'Nepoznat'}" - nedostaju obavezna polja`);
+              continue;
+            }
+
+            // Generate UUID if missing
+            if (!customer.id) {
+              customer.id = crypto.randomUUID();
+            }
+
+            // Generate code if missing
+            if (!customer.code) {
+              customer.code = Date.now().toString().slice(-6);
+            }
+
+            // Ensure PIB is not null or empty
+            if (!customer.pib?.trim()) {
+              console.error('Skipping customer due to missing PIB:', customer);
+              toast.error(`Preskočen kupac "${customer.name}" - nedostaje PIB`);
+              continue;
+            }
+
+            const updateData = {
+              id: customer.id,
               user_id: session.user.id,
-              code: customer.code?.toString() || Date.now().toString().slice(-6),
-              name: customer.name || 'Nepoznat kupac',
-              address: customer.address || 'Nepoznata adresa',
-              city: customer.city || 'Nepoznat grad',
+              code: customer.code,
+              name: customer.name,
+              address: customer.address,
+              city: customer.city,
               phone: customer.phone || '',
-              pib: customer.pib || Date.now().toString().slice(-8), // Generate a temporary PIB
+              pib: customer.pib.trim(),
               is_vat_registered: typeof customer.is_vat_registered === 'string' 
                 ? customer.is_vat_registered.toUpperCase() === 'DA' || customer.is_vat_registered.toLowerCase() === 'true'
                 : Boolean(customer.is_vat_registered),
@@ -173,11 +196,11 @@ export const CustomerGroupList = () => {
 
             const { error: upsertError } = await supabase
               .from('customers')
-              .upsert(customerData);
+              .upsert(updateData);
 
             if (upsertError) {
-              console.error('Error updating customer:', customerData.name, upsertError);
-              toast.error(`Greška pri ažuriranju kupca: ${customerData.name}`);
+              console.error('Error updating customer:', customer.name, upsertError);
+              toast.error(`Greška pri ažuriranju kupca: ${customer.name}`);
             }
           }
 

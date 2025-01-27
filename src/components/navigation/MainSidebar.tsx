@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Settings, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
+import { Settings, ChevronRight, ChevronLeft } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,11 +25,6 @@ const menuItems = [
     path: "/daily-orders",
   },
   {
-    title: "Planovi prodaje",
-    path: "/sales-plans",
-    icon: Calendar,
-  },
-  {
     title: "Podešavanja i izveštaji",
     path: "/settings",
     icon: Settings,
@@ -40,6 +35,7 @@ export function MainSidebar() {
   const location = useLocation();
   const { open, setOpen } = useSidebar();
 
+  // Close sidebar by default on sales screen and set initial state
   useEffect(() => {
     const isSalesScreen = location.pathname === '/sales';
     setOpen(!isSalesScreen);

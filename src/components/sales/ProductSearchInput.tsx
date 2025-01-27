@@ -11,9 +11,8 @@ export const ProductSearchInput = ({ value, onChange }: ProductSearchInputProps)
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Pretraži proizvod po nazivu..."
+        placeholder="Pretraži proizvod..."
         className="w-full"
-        autoComplete="off"
       />
     </div>
   );
