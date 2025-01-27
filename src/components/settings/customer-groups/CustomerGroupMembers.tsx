@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { Customer } from "@/types";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Customer } from "@/types";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CustomerGroupMembersProps {
   groupId: string;
@@ -11,45 +10,44 @@ interface CustomerGroupMembersProps {
 
 export const CustomerGroupMembers = ({ groupId }: CustomerGroupMembersProps) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [members, setMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log("Fetching customers and group members");
+        const [customersResponse, membersResponse] = await Promise.all([
+          supabase.from('kupci_darko').select('*').order('name'),
+          supabase.from('customer_group_members')
+            .select('customer_id')
+            .eq('group_id', groupId)
+        ]);
+
+        if (customersResponse.error) throw customersResponse.error;
+        if (membersResponse.error) throw membersResponse.error;
+
+        console.log("Fetched customers:", customersResponse.data?.length);
+        console.log("Fetched members:", membersResponse.data?.length);
+
+        setCustomers(customersResponse.data || []);
+        setMembers(membersResponse.data.map(m => m.customer_id));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error("Greška pri učitavanju podataka");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchData();
   }, [groupId]);
 
-  const fetchData = async () => {
+  const toggleMember = async (customerId: string) => {
     try {
-      // Fetch all customers
-      const { data: customersData, error: customersError } = await supabase
-        .from('customers')
-        .select('*')
-        .order('name');
-
-      if (customersError) throw customersError;
-
-      // Fetch existing group members
-      const { data: membersData, error: membersError } = await supabase
-        .from('customer_group_members')
-        .select('customer_id')
-        .eq('group_id', groupId);
-
-      if (membersError) throw membersError;
-
-      setCustomers(customersData || []);
-      setSelectedCustomers(membersData?.map(m => m.customer_id) || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error("Greška pri učitavanju podataka");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCustomerToggle = async (customerId: string) => {
-    try {
-      if (selectedCustomers.includes(customerId)) {
-        // Remove from group
+      const isMember = members.includes(customerId);
+      
+      if (isMember) {
         const { error } = await supabase
           .from('customer_group_members')
           .delete()
@@ -57,47 +55,48 @@ export const CustomerGroupMembers = ({ groupId }: CustomerGroupMembersProps) => 
           .eq('customer_id', customerId);
 
         if (error) throw error;
-        setSelectedCustomers(prev => prev.filter(id => id !== customerId));
+        setMembers(members.filter(id => id !== customerId));
         toast.success("Kupac je uklonjen iz grupe");
       } else {
-        // Add to group
         const { error } = await supabase
           .from('customer_group_members')
           .insert({ group_id: groupId, customer_id: customerId });
 
         if (error) throw error;
-        setSelectedCustomers(prev => [...prev, customerId]);
+        setMembers([...members, customerId]);
         toast.success("Kupac je dodat u grupu");
       }
     } catch (error) {
-      console.error('Error updating group members:', error);
+      console.error('Error toggling member:', error);
       toast.error("Greška pri ažuriranju članova grupe");
     }
   };
 
   if (loading) {
-    return <div>Učitavanje...</div>;
+    return <div className="text-center py-4">Učitavanje...</div>;
   }
 
   return (
-    <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-      <div className="space-y-2">
-        {customers.map((customer) => (
-          <div key={customer.id} className="flex items-center space-x-2">
-            <Checkbox
-              id={customer.id}
-              checked={selectedCustomers.includes(customer.id)}
-              onCheckedChange={() => handleCustomerToggle(customer.id)}
-            />
-            <label
-              htmlFor={customer.id}
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              {customer.name} - {customer.code}
-            </label>
+    <div className="mt-4 space-y-2">
+      {customers.map((customer) => (
+        <div
+          key={customer.id}
+          className="flex justify-between items-center p-2 hover:bg-gray-50 rounded-lg"
+        >
+          <div>
+            <div className="font-medium">{customer.name}</div>
+            <div className="text-sm text-gray-600">
+              {customer.address}, {customer.city}
+            </div>
           </div>
-        ))}
-      </div>
-    </ScrollArea>
+          <Button
+            variant={members.includes(customer.id) ? "default" : "outline"}
+            onClick={() => toggleMember(customer.id)}
+          >
+            {members.includes(customer.id) ? "Ukloni" : "Dodaj"}
+          </Button>
+        </div>
+      ))}
+    </div>
   );
 };

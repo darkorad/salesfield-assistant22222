@@ -36,13 +36,17 @@ export const CustomerPriceForm = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
+        console.log("Fetching data from kupci_darko and products tables");
         const [customersResponse, productsResponse] = await Promise.all([
-          supabase.from("customers").select("*").eq('user_id', session.user.id),
+          supabase.from("kupci_darko").select("*"),
           supabase.from('products').select("*").eq('user_id', session.user.id)
         ]);
 
         if (customersResponse.error) throw customersResponse.error;
         if (productsResponse.error) throw productsResponse.error;
+
+        console.log("Fetched customers:", customersResponse.data?.length);
+        console.log("Fetched products:", productsResponse.data?.length);
 
         setCustomers(customersResponse.data || []);
         setProducts(productsResponse.data || []);
