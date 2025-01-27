@@ -37,7 +37,6 @@ const NavActions = () => {
   const menuItems = [
     { path: "/sales", label: "Prodaja" },
     { path: "/daily-orders", label: "Današnje porudžbine" },
-    { path: "/monthly-sales", label: "Mesečna prodaja u RSD" },
     { path: "/settings", label: "Podešavanja i izveštaji", icon: Settings },
   ];
 
