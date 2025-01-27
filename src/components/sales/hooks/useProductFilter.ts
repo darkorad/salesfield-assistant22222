@@ -3,10 +3,16 @@ import { Product } from "@/types";
 
 export const useProductFilter = (products: Product[], searchTerm: string) => {
   return useMemo(() => {
-    if (!searchTerm.trim()) return [];
+    if (!products) return [];
+    const trimmedTerm = searchTerm.trim().toLowerCase();
+    if (!trimmedTerm) return [];
     
-    return products.filter((product) =>
-      product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    console.log("Filtering products:", products.length, "with term:", trimmedTerm);
+    
+    return products.filter((product) => {
+      const productName = product.Naziv.toLowerCase();
+      const manufacturer = product.Proizvođač.toLowerCase();
+      return productName.includes(trimmedTerm) || manufacturer.includes(trimmedTerm);
+    });
   }, [products, searchTerm]);
 };

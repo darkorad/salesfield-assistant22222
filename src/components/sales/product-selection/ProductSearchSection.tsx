@@ -17,13 +17,15 @@ export const ProductSearchSection = ({
   handleAddProduct,
   getProductPrice
 }: ProductSearchSectionProps) => {
+  console.log("ProductSearchSection - filtered products:", filteredProducts?.length);
+  
   return (
     <div className="relative">
       <ProductSearchBar 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
       />
-      {searchTerm && (
+      {searchTerm.trim() !== "" && (
         <ProductSearchResults
           products={filteredProducts}
           onSelect={handleAddProduct}
