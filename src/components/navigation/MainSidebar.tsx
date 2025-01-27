@@ -13,6 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   {
@@ -42,10 +43,14 @@ export function MainSidebar() {
 
   return (
     <>
-      <SidebarTrigger asChild>
-        <div className="fixed top-20 left-0 z-40 h-12 w-6 flex items-center justify-center bg-white border border-l-0 border-gray-200 rounded-r-md shadow-sm hover:bg-gray-50">
+      <SidebarTrigger>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-20 left-0 z-40 h-12 w-6 flex items-center justify-center bg-white border border-l-0 border-gray-200 rounded-r-md shadow-sm hover:bg-gray-50"
+        >
           <ChevronRight className="h-4 w-4" />
-        </div>
+        </Button>
       </SidebarTrigger>
       <Sidebar>
         <SidebarContent>
