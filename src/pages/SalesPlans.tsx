@@ -29,15 +29,16 @@ const SalesPlans = () => {
           return;
         }
 
-        console.log("Fetching customers from kupci_darko table");
+        console.log("Fetching customers with visit days from kupci_darko table");
         const { data, error } = await supabase
           .from('kupci_darko')
           .select('*')
+          .not('visit_day', 'is', null)
           .order('name');
 
         if (error) throw error;
         
-        console.log("Fetched customers:", data?.length);
+        console.log("Fetched customers with visit days:", data?.length);
         setCustomers(data || []);
       } catch (error) {
         console.error('Error fetching customers:', error);
@@ -78,7 +79,7 @@ const SalesPlans = () => {
   };
 
   const filteredCustomers = customers.filter(customer => 
-    customer.visit_day === activeDay
+    customer.visit_day?.toLowerCase() === activeDay
   );
 
   const daysOfWeek = [
