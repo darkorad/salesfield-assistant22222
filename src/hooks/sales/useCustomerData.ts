@@ -19,26 +19,9 @@ export const useCustomerData = (userEmail: string) => {
       }
 
       if (customersData) {
-        const transformedCustomers = customersData.map(customer => ({
-          id: customer.id,
-          user_id: userId,
-          code: customer.code || '',
-          name: customer.name || '',
-          address: customer.address || '',
-          city: customer.city || '',
-          phone: customer.phone || '',
-          pib: customer.pib || '',
-          is_vat_registered: customer.is_vat_registered || false,
-          gps_coordinates: customer.gps_coordinates || '',
-          created_at: customer.created_at || new Date().toISOString(),
-          group_name: customer.group_name || null,
-          naselje: customer.naselje || null,
-          email: customer.email || null
-        }));
-
-        console.log("Fetched customers:", transformedCustomers.length);
-        setCustomers(transformedCustomers);
-        return transformedCustomers;
+        console.log("Fetched customers count:", customersData.length);
+        setCustomers(customersData);
+        return customersData;
       }
       return [];
     } catch (error) {

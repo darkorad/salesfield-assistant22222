@@ -24,7 +24,7 @@ export const useSalesData = () => {
       if (!session) return;
 
       console.log("Fetching data for user:", session.user.id);
-      console.log("Fetching data from kupci_darko and products tables");
+      console.log("Fetching data from kupci_darko and products_darko tables");
 
       await Promise.all([
         fetchCustomers(session.user.id),
