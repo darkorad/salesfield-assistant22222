@@ -15,6 +15,7 @@ export const useProductData = (userEmail: string) => {
         .not('Naziv', 'eq', '');
       
       if (error) {
+        console.error('Error fetching products:', error);
         throw error;
       }
 

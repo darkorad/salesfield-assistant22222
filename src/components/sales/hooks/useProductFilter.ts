@@ -5,7 +5,7 @@ export const useProductFilter = (products: Product[], searchTerm: string) => {
   return useMemo(() => {
     if (!products) return [];
     const trimmedTerm = searchTerm.trim().toLowerCase();
-    if (!trimmedTerm) return [];
+    if (!trimmedTerm) return products; // Return all products if no search term
     
     console.log("Filtering products:", products.length, "with term:", trimmedTerm);
     
