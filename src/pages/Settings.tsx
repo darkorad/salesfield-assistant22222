@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Reports } from "@/components/settings/Reports";
+import { ManageCustomers } from "@/components/settings/customer/ManageCustomers";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -40,6 +41,10 @@ const Settings = () => {
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Podešavanja</h2>
               <AddCustomerDialog />
+            </div>
+
+            <div>
+              <ManageCustomers />
             </div>
 
             <div>
