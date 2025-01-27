@@ -29,7 +29,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           .from('customer_groups')
           .select('id')
           .eq('name', selectedCustomer.group_name)
-          .single();
+          .maybeSingle(); // Changed from .single() to .maybeSingle()
 
         if (groupError) {
           console.error('Error fetching group ID:', groupError);
