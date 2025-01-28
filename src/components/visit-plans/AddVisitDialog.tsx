@@ -58,7 +58,7 @@ export const AddVisitDialog = ({ isOpen, onOpenChange, onVisitAdded }: AddVisitD
           dan_obilaska: today,
           notes: orderItems.length > 0 ? `Planirana prodaja: ${orderItems.length} proizvoda` : undefined,
           user_id: user.id,
-          visit_day: today // Adding this as it's required by the schema
+          visit_day: today
         });
 
       if (visitError) throw visitError;
@@ -67,7 +67,7 @@ export const AddVisitDialog = ({ isOpen, onOpenChange, onVisitAdded }: AddVisitD
         const { error: salesError } = await supabase
           .from('sales')
           .insert({
-            customer_id: selectedCustomer.id,
+            darko_customer_id: selectedCustomer.id, // Changed from customer_id to darko_customer_id
             items: orderItems,
             total: orderItems.reduce((sum, item) => {
               const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
