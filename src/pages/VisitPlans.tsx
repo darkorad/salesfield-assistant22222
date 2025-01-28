@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, List, MapPin } from "lucide-react";
+import { Calendar, List, MapPin, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -11,6 +11,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 interface VisitPlan {
   id: string;
@@ -18,6 +21,7 @@ interface VisitPlan {
   visit_day: string;
   visit_time: string | null;
   notes: string | null;
+  dan_obilaska: string | null;
   customer: {
     name: string;
     address: string;
@@ -28,6 +32,7 @@ interface VisitPlan {
 const VisitPlans = () => {
   const [visitPlans, setVisitPlans] = useState<VisitPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchVisitPlans = async () => {
@@ -48,7 +53,8 @@ const VisitPlans = () => {
               city
             )
           `)
-          .eq("user_id", session.session?.user.id);
+          .eq("user_id", session.session?.user.id)
+          .order("dan_obilaska", { ascending: true });
 
         if (error) {
           console.error("Error fetching visit plans:", error);
@@ -67,6 +73,16 @@ const VisitPlans = () => {
 
     fetchVisitPlans();
   }, []);
+
+  // Group visits by day
+  const groupedVisits = visitPlans.reduce((acc, visit) => {
+    const day = visit.dan_obilaska || visit.visit_day;
+    if (!acc[day]) {
+      acc[day] = [];
+    }
+    acc[day].push(visit);
+    return acc;
+  }, {} as Record<string, VisitPlan[]>);
 
   return (
     <div className="container mx-auto p-4">
@@ -98,30 +114,54 @@ const VisitPlans = () => {
               <div className="h-32 bg-gray-200 rounded"></div>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Dan</TableHead>
-                  <TableHead>Kupac</TableHead>
-                  <TableHead>Adresa</TableHead>
-                  <TableHead>Vreme</TableHead>
-                  <TableHead>Napomene</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visitPlans.map((plan) => (
-                  <TableRow key={plan.id}>
-                    <TableCell>{plan.visit_day}</TableCell>
-                    <TableCell>{plan.customer?.name}</TableCell>
-                    <TableCell>
-                      {plan.customer?.address}, {plan.customer?.city}
-                    </TableCell>
-                    <TableCell>{plan.visit_time}</TableCell>
-                    <TableCell>{plan.notes}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-6">
+              {Object.entries(groupedVisits).map(([day, visits]) => (
+                <div key={day} className="bg-white rounded-lg shadow p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold">{day}</h2>
+                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Dodaj posetu
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Dodaj novu posetu</DialogTitle>
+                        </DialogHeader>
+                        {/* Add visit form will be implemented here */}
+                        <div className="p-4">
+                          <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Kupac</TableHead>
+                        <TableHead>Adresa</TableHead>
+                        <TableHead>Vreme</TableHead>
+                        <TableHead>Napomene</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visits.map((visit) => (
+                        <TableRow key={visit.id}>
+                          <TableCell>{visit.customer?.name}</TableCell>
+                          <TableCell>
+                            {visit.customer?.address}, {visit.customer?.city}
+                          </TableCell>
+                          <TableCell>{visit.visit_time}</TableCell>
+                          <TableCell>{visit.notes}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ))}
+            </div>
           )}
         </TabsContent>
 
