@@ -4,6 +4,7 @@ import Sales from "./pages/Sales";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import DailyOrders from "./pages/DailyOrders";
+import VisitPlans from "./pages/VisitPlans";
 import { Toaster } from "./components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 
@@ -18,6 +19,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/login" element={<Login />} />
             <Route path="/daily-orders" element={<DailyOrders />} />
+            <Route path="/visit-plans" element={<VisitPlans />} />
           </Routes>
         </Layout>
         <Toaster />

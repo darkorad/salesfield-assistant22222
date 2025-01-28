@@ -173,7 +173,7 @@ export type Database = {
             foreignKeyName: "customer_prices_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "products_darko"
             referencedColumns: ["id"]
           },
           {

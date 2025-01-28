@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Settings, ChevronRight, ChevronLeft } from "lucide-react";
+import { Settings, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,11 @@ const menuItems = [
   {
     title: "Današnje porudžbine",
     path: "/daily-orders",
+  },
+  {
+    title: "Plan poseta",
+    path: "/visit-plans",
+    icon: Calendar,
   },
   {
     title: "Podešavanja i izveštaji",
