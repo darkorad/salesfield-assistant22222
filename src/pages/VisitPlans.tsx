@@ -13,7 +13,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { format } from "date-fns";
 
 interface VisitPlan {
   id: string;
@@ -128,9 +127,8 @@ const VisitPlans = () => {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Dodaj novu posetu</DialogTitle>
+                          <DialogTitle>Dodaj novu posetu za {day}</DialogTitle>
                         </DialogHeader>
-                        {/* Add visit form will be implemented here */}
                         <div className="p-4">
                           <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
                         </div>
