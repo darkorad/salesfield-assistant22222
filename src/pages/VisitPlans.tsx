@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 interface VisitPlan {
   id: string;
@@ -32,6 +33,7 @@ const VisitPlans = () => {
   const [visitPlans, setVisitPlans] = useState<VisitPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   useEffect(() => {
     const fetchVisitPlans = async () => {
@@ -53,7 +55,8 @@ const VisitPlans = () => {
             )
           `)
           .eq("user_id", session.session?.user.id)
-          .order("dan_obilaska", { ascending: true });
+          .eq("dan_obilaska", today)
+          .order("visit_time", { ascending: true });
 
         if (error) {
           console.error("Error fetching visit plans:", error);
@@ -71,23 +74,13 @@ const VisitPlans = () => {
     };
 
     fetchVisitPlans();
-  }, []);
-
-  // Group visits by day
-  const groupedVisits = visitPlans.reduce((acc, visit) => {
-    const day = visit.dan_obilaska || visit.visit_day;
-    if (!acc[day]) {
-      acc[day] = [];
-    }
-    acc[day].push(visit);
-    return acc;
-  }, {} as Record<string, VisitPlan[]>);
+  }, [today]);
 
   return (
     <div className="container mx-auto p-4">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Plan poseta</h1>
-        <p className="text-gray-600">Pregled nedeljnih planova poseta</p>
+        <h1 className="text-2xl font-bold mb-2">Plan poseta za {format(new Date(), 'dd.MM.yyyy.')}</h1>
+        <p className="text-gray-600">Pregled današnjih poseta</p>
       </div>
 
       <Tabs defaultValue="list" className="w-full">
@@ -113,52 +106,48 @@ const VisitPlans = () => {
               <div className="h-32 bg-gray-200 rounded"></div>
             </div>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedVisits).map(([day, visits]) => (
-                <div key={day} className="bg-white rounded-lg shadow p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold">{day}</h2>
-                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Dodaj posetu
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Dodaj novu posetu za {day}</DialogTitle>
-                        </DialogHeader>
-                        <div className="p-4">
-                          <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Kupac</TableHead>
-                        <TableHead>Adresa</TableHead>
-                        <TableHead>Vreme</TableHead>
-                        <TableHead>Napomene</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {visits.map((visit) => (
-                        <TableRow key={visit.id}>
-                          <TableCell>{visit.customer?.name}</TableCell>
-                          <TableCell>
-                            {visit.customer?.address}, {visit.customer?.city}
-                          </TableCell>
-                          <TableCell>{visit.visit_time}</TableCell>
-                          <TableCell>{visit.notes}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ))}
+            <div className="bg-white rounded-lg shadow p-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Kupac</TableHead>
+                    <TableHead>Adresa</TableHead>
+                    <TableHead>Vreme</TableHead>
+                    <TableHead>Napomene</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visitPlans.map((visit) => (
+                    <TableRow key={visit.id}>
+                      <TableCell>{visit.customer?.name}</TableCell>
+                      <TableCell>
+                        {visit.customer?.address}, {visit.customer?.city}
+                      </TableCell>
+                      <TableCell>{visit.visit_time}</TableCell>
+                      <TableCell>{visit.notes}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <div className="mt-4">
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Dodaj posetu
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Dodaj novu posetu za {format(new Date(), 'dd.MM.yyyy.')}</DialogTitle>
+                    </DialogHeader>
+                    <div className="p-4">
+                      <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           )}
         </TabsContent>
