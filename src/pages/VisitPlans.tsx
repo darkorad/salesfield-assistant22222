@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, List, MapPin, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
@@ -83,87 +82,58 @@ const VisitPlans = () => {
         <p className="text-gray-600">Pregled današnjih poseta</p>
       </div>
 
-      <Tabs defaultValue="list" className="w-full">
-        <TabsList>
-          <TabsTrigger value="list">
-            <List className="h-4 w-4 mr-2" />
-            Lista
-          </TabsTrigger>
-          <TabsTrigger value="calendar">
-            <Calendar className="h-4 w-4 mr-2" />
-            Kalendar
-          </TabsTrigger>
-          <TabsTrigger value="map">
-            <MapPin className="h-4 w-4 mr-2" />
-            Mapa
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list">
-          {isLoading ? (
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow p-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Kupac</TableHead>
-                    <TableHead>Adresa</TableHead>
-                    <TableHead>Vreme</TableHead>
-                    <TableHead>Napomene</TableHead>
+      <div className="bg-white rounded-lg shadow p-4">
+        {isLoading ? (
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Kupac</TableHead>
+                  <TableHead>Adresa</TableHead>
+                  <TableHead>Vreme</TableHead>
+                  <TableHead>Napomene</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visitPlans.map((visit) => (
+                  <TableRow key={visit.id}>
+                    <TableCell>{visit.customer?.name}</TableCell>
+                    <TableCell>
+                      {visit.customer?.address}, {visit.customer?.city}
+                    </TableCell>
+                    <TableCell>{visit.visit_time}</TableCell>
+                    <TableCell>{visit.notes}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visitPlans.map((visit) => (
-                    <TableRow key={visit.id}>
-                      <TableCell>{visit.customer?.name}</TableCell>
-                      <TableCell>
-                        {visit.customer?.address}, {visit.customer?.city}
-                      </TableCell>
-                      <TableCell>{visit.visit_time}</TableCell>
-                      <TableCell>{visit.notes}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                ))}
+              </TableBody>
+            </Table>
 
-              <div className="mt-4">
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Dodaj posetu
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Dodaj novu posetu za {format(new Date(), 'dd.MM.yyyy.')}</DialogTitle>
-                    </DialogHeader>
-                    <div className="p-4">
-                      <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
+            <div className="mt-4">
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Dodaj posetu
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Dodaj novu posetu za {format(new Date(), 'dd.MM.yyyy.')}</DialogTitle>
+                  </DialogHeader>
+                  <div className="p-4">
+                    <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="calendar">
-          <div className="text-center py-12 text-gray-500">
-            Kalendarski prikaz će biti dostupan uskoro
-          </div>
-        </TabsContent>
-
-        <TabsContent value="map">
-          <div className="text-center py-12 text-gray-500">
-            Prikaz na mapi će biti dostupan uskoro
-          </div>
-        </TabsContent>
-      </Tabs>
+          </>
+        )}
+      </div>
     </div>
   );
 };
