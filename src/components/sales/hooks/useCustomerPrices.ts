@@ -42,40 +42,22 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         } else if (groupData) {
           console.log('Found group:', groupData.id);
           
-          // First check group_price_changes table
-          const { data: groupPriceChanges, error: changesError } = await supabase
-            .from('group_price_changes')
+          // Get group prices
+          const { data: groupPrices, error: pricesError } = await supabase
+            .from('group_prices')
             .select('*')
             .eq('group_id', groupData.id);
 
-          if (changesError) {
-            console.error('Error fetching group price changes:', changesError);
-          } else if (groupPriceChanges && groupPriceChanges.length > 0) {
-            console.log('Found group price changes:', groupPriceChanges.length);
-            groupPriceChanges.forEach(price => {
+          if (pricesError) {
+            console.error('Error fetching group prices:', pricesError);
+          } else if (groupPrices) {
+            console.log('Found group prices:', groupPrices.length);
+            groupPrices.forEach(price => {
               pricesMap[price.product_id] = {
                 cash: price.cash_price,
                 invoice: price.invoice_price
               };
             });
-          } else {
-            // If no changes found, check regular group_prices
-            const { data: groupPrices, error: pricesError } = await supabase
-              .from('group_prices')
-              .select('*')
-              .eq('group_id', groupData.id);
-
-            if (pricesError) {
-              console.error('Error fetching group prices:', pricesError);
-            } else if (groupPrices) {
-              console.log('Found group prices:', groupPrices.length);
-              groupPrices.forEach(price => {
-                pricesMap[price.product_id] = {
-                  cash: price.cash_price,
-                  invoice: price.invoice_price
-                };
-              });
-            }
           }
         }
       }
@@ -109,7 +91,6 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
   useEffect(() => {
     let pricesChannel: any = null;
     let groupPricesChannel: any = null;
-    let groupPriceChangesChannel: any = null;
 
     const setupSubscriptions = async () => {
       if (!selectedCustomer?.id) return;
@@ -148,27 +129,6 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         if (groupData) {
           console.log('Setting up group prices subscription for group:', groupData.id);
           
-          // Subscribe to group_price_changes
-          groupPriceChangesChannel = supabase
-            .channel('group-price-changes-changes')
-            .on(
-              'postgres_changes',
-              {
-                event: '*',
-                schema: 'public',
-                table: 'group_price_changes',
-                filter: `group_id=eq.${groupData.id}`
-              },
-              async (payload: RealtimePostgresChangesPayload<GroupPrice>) => {
-                console.log('Group price change detected:', payload);
-                await fetchCustomerPrices();
-              }
-            )
-            .subscribe((status) => {
-              console.log('Group price changes subscription status:', status);
-            });
-
-          // Also subscribe to regular group_prices
           groupPricesChannel = supabase
             .channel('group-prices-changes')
             .on(
@@ -201,9 +161,6 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
       }
       if (groupPricesChannel) {
         supabase.removeChannel(groupPricesChannel);
-      }
-      if (groupPriceChangesChannel) {
-        supabase.removeChannel(groupPriceChangesChannel);
       }
     };
   }, [selectedCustomer?.id, selectedCustomer?.group_name]);
