@@ -16,8 +16,8 @@ interface VisitPlan {
   id: string;
   customer_id: string;
   visit_day: string;
-  visit_time: string;
-  notes: string;
+  visit_time: string | null;
+  notes: string | null;
   customer: {
     name: string;
     address: string;
@@ -42,7 +42,7 @@ const VisitPlans = () => {
           .from("visit_plans")
           .select(`
             *,
-            customer:customer_id (
+            customer:kupci_darko!visit_plans_customer_id_fkey (
               name,
               address,
               city
@@ -67,16 +67,6 @@ const VisitPlans = () => {
 
     fetchVisitPlans();
   }, []);
-
-  const daysOfWeek = [
-    "Ponedeljak",
-    "Utorak",
-    "Sreda",
-    "Četvrtak",
-    "Petak",
-    "Subota",
-    "Nedelja",
-  ];
 
   return (
     <div className="container mx-auto p-4">

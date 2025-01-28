@@ -655,6 +655,51 @@ export type Database = {
           },
         ]
       }
+      visit_plans: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          id: string
+          notes: string | null
+          user_id: string | null
+          visit_day: string
+          visit_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+          visit_day: string
+          visit_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+          visit_day?: string
+          visit_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_plans_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "kupci_darko"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
