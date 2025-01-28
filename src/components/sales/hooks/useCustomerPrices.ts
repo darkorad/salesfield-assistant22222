@@ -40,6 +40,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         if (groupError) {
           console.error('Error fetching group ID:', groupError);
         } else if (groupData) {
+          console.log('Found group:', groupData.id);
           // Get group prices
           const { data: groupPrices, error: pricesError } = await supabase
             .from('group_prices')
@@ -112,7 +113,9 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             await fetchCustomerPrices();
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Customer prices subscription status:', status);
+        });
 
       // Subscribe to group_prices changes if customer belongs to a group
       if (selectedCustomer.group_name) {
@@ -123,6 +126,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           .maybeSingle();
 
         if (groupData) {
+          console.log('Setting up group prices subscription for group:', groupData.id);
           groupPricesChannel = supabase
             .channel('group-prices-changes')
             .on(
@@ -138,7 +142,9 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
                 await fetchCustomerPrices();
               }
             )
-            .subscribe();
+            .subscribe((status) => {
+              console.log('Group prices subscription status:', status);
+            });
         }
       }
     };
@@ -147,6 +153,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
 
     // Cleanup subscriptions
     return () => {
+      console.log('Cleaning up price subscriptions');
       if (pricesChannel) {
         supabase.removeChannel(pricesChannel);
       }
