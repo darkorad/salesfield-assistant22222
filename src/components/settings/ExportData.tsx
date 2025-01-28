@@ -17,13 +17,28 @@ export const ExportData = () => {
         return;
       }
 
-      const { data: customers, error: customersError } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('user_id', session.user.id);
+      // Get user email to determine which table to query
+      const userEmail = session.user.email;
+      let customers;
+      let error;
 
-      if (customersError) {
-        console.error('Error fetching customers:', customersError);
+      if (userEmail === 'zirmd.darko@gmail.com') {
+        const response = await supabase
+          .from('kupci_darko')
+          .select('*');
+        customers = response.data;
+        error = response.error;
+      } else {
+        const response = await supabase
+          .from('customers')
+          .select('*')
+          .eq('user_id', session.user.id);
+        customers = response.data;
+        error = response.error;
+      }
+
+      if (error) {
+        console.error('Error fetching customers:', error);
         toast.error("Greška pri preuzimanju podataka");
         return;
       }
