@@ -42,6 +42,13 @@ export const AddVisitDialog = ({ isOpen, onOpenChange, onVisitAdded }: AddVisitD
 
     try {
       setIsSubmitting(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
       const today = format(new Date(), "yyyy-MM-dd");
       
       const { error: visitError } = await supabase
@@ -49,13 +56,14 @@ export const AddVisitDialog = ({ isOpen, onOpenChange, onVisitAdded }: AddVisitD
         .insert({
           customer_id: selectedCustomer.id,
           dan_obilaska: today,
-          notes: orderItems.length > 0 ? `Planirana prodaja: ${orderItems.length} proizvoda` : undefined
+          notes: orderItems.length > 0 ? `Planirana prodaja: ${orderItems.length} proizvoda` : undefined,
+          user_id: user.id,
+          visit_day: today // Adding this as it's required by the schema
         });
 
       if (visitError) throw visitError;
 
       if (orderItems.length > 0) {
-        // Create sales records if products were selected
         const { error: salesError } = await supabase
           .from('sales')
           .insert({
@@ -66,7 +74,8 @@ export const AddVisitDialog = ({ isOpen, onOpenChange, onVisitAdded }: AddVisitD
               return sum + (item.product.Cena * item.quantity * unitSize);
             }, 0),
             payment_type: 'invoice',
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            user_id: user.id
           });
 
         if (salesError) throw salesError;
