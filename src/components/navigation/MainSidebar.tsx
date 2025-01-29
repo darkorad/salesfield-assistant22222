@@ -75,7 +75,7 @@ export function MainSidebar() {
   }, [setOpen]);
 
   return (
-    <Sidebar className="fixed inset-y-0 left-0 z-50">
+    <Sidebar className="fixed inset-y-0 left-0 z-50 mt-14">
       <SidebarContent>
         <SidebarGroup>
           <div className="flex items-center justify-between px-2 mb-2">
