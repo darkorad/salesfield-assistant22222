@@ -74,6 +74,13 @@ export function MainSidebar() {
     return () => window.removeEventListener('resize', handleResize);
   }, [setOpen]);
 
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setOpen(false);
+    }
+  }, [location.pathname, setOpen]);
+
   return (
     <Sidebar className="fixed inset-y-0 left-0 z-50 mt-14">
       <SidebarContent>
