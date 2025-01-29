@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import { Settings, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Settings, ChevronLeft, Calendar, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +12,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const menuItems = [
   {
@@ -36,7 +38,27 @@ const menuItems = [
 
 export function MainSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { open, setOpen } = useSidebar();
+
+  const handleLogout = async () => {
+    try {
+      localStorage.clear();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Logout error:", error);
+        navigate("/login");
+        return;
+      }
+      
+      navigate("/login");
+      toast.success("Uspešno ste se odjavili");
+    } catch (error) {
+      console.error("Logout error:", error);
+      navigate("/login");
+      toast.error("Greška prilikom odjavljivanja");
+    }
+  };
 
   // Close sidebar by default on mobile
   useEffect(() => {
@@ -81,6 +103,15 @@ export function MainSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={handleLogout}
+                  className="text-sm text-red-600 hover:text-red-700"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Odjava</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
