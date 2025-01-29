@@ -9,11 +9,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 
 const menuItems = [
   {
@@ -40,54 +38,53 @@ export function MainSidebar() {
   const location = useLocation();
   const { open, setOpen } = useSidebar();
 
-  // Close sidebar by default on sales screen and set initial state
+  // Close sidebar by default on mobile
   useEffect(() => {
-    const isSalesScreen = location.pathname === '/sales';
-    setOpen(!isSalesScreen);
-  }, [location.pathname, setOpen]);
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setOpen]);
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-20 left-0 z-40 h-12 w-6 flex items-center justify-center bg-white border border-l-0 border-gray-200 rounded-r-md shadow-sm hover:bg-gray-50"
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-      </Button>
-      <Sidebar>
-        <SidebarContent>
-          <SidebarGroup>
-            <div className="flex items-center justify-between px-2 mb-2">
-              <SidebarGroupLabel>Navigacija</SidebarGroupLabel>
-              <button 
-                onClick={() => setOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded-md"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            </div>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === item.path}
-                    >
-                      <Link to={item.path}>
-                        {item.icon && <item.icon className="h-4 w-4 mr-2" />}
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-    </>
+    <Sidebar className="fixed inset-y-0 left-0 z-50">
+      <SidebarContent>
+        <SidebarGroup>
+          <div className="flex items-center justify-between px-2 mb-2">
+            <SidebarGroupLabel>Navigacija</SidebarGroupLabel>
+            <button 
+              onClick={() => setOpen(false)}
+              className="p-1 hover:bg-gray-100 rounded-md"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          </div>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.path}
+                    className="text-sm"
+                  >
+                    <Link to={item.path}>
+                      {item.icon && <item.icon className="h-4 w-4 mr-2" />}
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 }

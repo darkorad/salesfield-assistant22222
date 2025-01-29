@@ -6,7 +6,7 @@ const NavLogo = () => {
       <img 
         src="/lovable-uploads/46d09936-801a-49ed-b585-95bccf81c0c8.png" 
         alt="ŽIR-MD COMPANY Logo" 
-        className="h-12 w-auto md:h-16 md:mr-2 animate-[scale-in_0.2s_ease-out]"
+        className="h-8 w-auto md:h-12 md:mr-2"
       />
     </Link>
   );

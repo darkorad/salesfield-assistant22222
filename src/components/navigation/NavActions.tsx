@@ -6,14 +6,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Settings, LogOut, Calendar } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const NavActions = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setOpen } = useSidebar();
 
   const handleLogout = async () => {
     try {
@@ -34,30 +36,16 @@ const NavActions = () => {
     }
   };
 
-  const menuItems = [
-    { path: "/sales", label: "Prodaja" },
-    { path: "/daily-orders", label: "Današnje porudžbine" },
-    { path: "/visit-plans", label: "Plan poseta", icon: Calendar },
-    { path: "/settings", label: "Podešavanja i izveštaji", icon: Settings },
-  ];
-
   return (
-    <div className="flex items-center space-x-4">
-      <div className="hidden md:flex items-center space-x-2">
-        {menuItems.map((item) => (
-          <Link 
-            key={item.path}
-            to={item.path}
-            className={`text-sm px-3 py-2 rounded-md transition-colors ${
-              location.pathname === item.path 
-                ? "bg-gray-100 text-gray-900" 
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
+    <div className="flex items-center space-x-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden"
+        onClick={() => setOpen(true)}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
 
       <Button
         variant="ghost"
@@ -72,23 +60,10 @@ const NavActions = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
+              <LogOut className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            {menuItems.map((item) => (
-              <DropdownMenuItem key={item.path} asChild>
-                <Link 
-                  to={item.path} 
-                  className={`w-full cursor-pointer text-xs ${
-                    location.pathname === item.path ? "font-medium" : ""
-                  }`}
-                >
-                  {item.icon && <item.icon className="h-3 w-3 mr-2" />}
-                  {item.label}
-                </Link>
-              </DropdownMenuItem>
-            ))}
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs">
               <LogOut className="h-3 w-3 mr-2" />
               Odjava
