@@ -12,8 +12,5 @@
       "keystorePassword": null,
       "keystoreAliasPassword": null
     }
-  },
-  "engines": {
-    "node": ">=20.0.0"
   }
 }

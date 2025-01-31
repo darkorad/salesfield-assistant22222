@@ -3,11 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// Ensure Node.js version compatibility
-if (process.version.slice(1).split('.')[0] < '20') {
-  console.warn('This project requires Node.js version 20 or higher');
-}
-
 export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",

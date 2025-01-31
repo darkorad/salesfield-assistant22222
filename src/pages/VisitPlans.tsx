@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { LoadingState } from "@/components/visit-plans/LoadingState";
-import { VisitPlansTable } from "@/components/visit-plans/VisitPlansTable";
-import { AddVisitDialog } from "@/components/visit-plans/AddVisitDialog";
 
 interface VisitPlan {
   id: string;
@@ -24,7 +32,7 @@ const VisitPlans = () => {
   const [visitPlans, setVisitPlans] = useState<VisitPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   useEffect(() => {
     const fetchVisitPlans = async () => {
@@ -70,23 +78,58 @@ const VisitPlans = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">
-          Plan poseta za {format(new Date(), "dd.MM.yyyy.")}
-        </h1>
+        <h1 className="text-2xl font-bold mb-2">Plan poseta za {format(new Date(), 'dd.MM.yyyy.')}</h1>
         <p className="text-gray-600">Pregled današnjih poseta</p>
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
         {isLoading ? (
-          <LoadingState />
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
         ) : (
           <>
-            <VisitPlansTable visitPlans={visitPlans} />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Kupac</TableHead>
+                  <TableHead>Adresa</TableHead>
+                  <TableHead>Vreme</TableHead>
+                  <TableHead>Napomene</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visitPlans.map((visit) => (
+                  <TableRow key={visit.id}>
+                    <TableCell>{visit.customer?.name}</TableCell>
+                    <TableCell>
+                      {visit.customer?.address}, {visit.customer?.city}
+                    </TableCell>
+                    <TableCell>{visit.visit_time}</TableCell>
+                    <TableCell>{visit.notes}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
             <div className="mt-4">
-              <AddVisitDialog
-                isOpen={isAddDialogOpen}
-                onOpenChange={setIsAddDialogOpen}
-              />
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Dodaj posetu
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Dodaj novu posetu za {format(new Date(), 'dd.MM.yyyy.')}</DialogTitle>
+                  </DialogHeader>
+                  <div className="p-4">
+                    <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </>
         )}
