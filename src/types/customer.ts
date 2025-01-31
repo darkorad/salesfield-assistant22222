@@ -13,4 +13,5 @@ export interface Customer {
   group_name?: string;
   email?: string;
   visit_day?: string;
+  dan_obilaska?: string;
 }

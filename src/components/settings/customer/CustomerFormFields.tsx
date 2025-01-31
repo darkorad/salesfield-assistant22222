@@ -100,10 +100,28 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="visit_day">Dan obilaska</Label>
+        <Label htmlFor="visit_day">Dan obilaska (stari)</Label>
         <Select 
           value={customer.visitDay || ''} 
           onValueChange={(value) => setCustomer(prev => ({ ...prev, visitDay: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Izaberite dan" />
+          </SelectTrigger>
+          <SelectContent>
+            {visitDays.map((day) => (
+              <SelectItem key={day} value={day}>
+                {day}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="dan_obilaska">Dan obilaska (novi)</Label>
+        <Select 
+          value={customer.danObilaska || ''} 
+          onValueChange={(value) => setCustomer(prev => ({ ...prev, danObilaska: value }))}
         >
           <SelectTrigger>
             <SelectValue placeholder="Izaberite dan" />

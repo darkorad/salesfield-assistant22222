@@ -26,7 +26,8 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
     isVatRegistered: customer.is_vat_registered || false,
     gpsCoordinates: customer.gps_coordinates || "",
     naselje: customer.naselje || "",
-    visitDay: customer.visit_day || ""
+    visitDay: customer.visit_day || "",
+    danObilaska: customer.dan_obilaska || ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +47,8 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
           is_vat_registered: customerData.isVatRegistered,
           gps_coordinates: customerData.gpsCoordinates,
           naselje: customerData.naselje,
-          visit_day: customerData.visitDay
+          visit_day: customerData.visitDay,
+          dan_obilaska: customerData.danObilaska
         })
         .eq('id', customer.id);
 

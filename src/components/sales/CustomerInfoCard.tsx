@@ -28,6 +28,9 @@ export const CustomerInfoCard = ({ customer, onCustomerUpdate }: CustomerInfoCar
         {customer.visit_day && (
           <p><span className="font-medium">Dan obilaska:</span> {customer.visit_day}</p>
         )}
+        {customer.dan_obilaska && (
+          <p><span className="font-medium">Dan obilaska (novi):</span> {customer.dan_obilaska}</p>
+        )}
       </div>
     </div>
   );
