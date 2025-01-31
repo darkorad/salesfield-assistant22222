@@ -50,18 +50,43 @@ export const ExportButtons = () => {
         return;
       }
 
-      const ws = XLSX.utils.json_to_sheet(customers);
+      // Transform data to match import format
+      const exportData = customers.map(customer => ({
+        id: customer.id,
+        code: customer.code,
+        Naziv: customer.name,
+        Adresa: customer.address,
+        Grad: customer.city,
+        Telefon: customer.phone || '',
+        PIB: customer.pib,
+        "PDV Obveznik": customer.is_vat_registered ? "DA" : "NE",
+        "GPS Koordinate": customer.gps_coordinates || '',
+        Grupa: customer.group_name || '',
+        Naselje: customer.naselje || '',
+        Email: customer.email || '',
+        "Dan obilaska (stari)": customer.visit_day || '',
+        "Dan obilaska (novi)": customer.dan_obilaska || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Kupci");
       
       const colWidths = [
+        { wch: 40 }, // id
         { wch: 15 }, // code
         { wch: 30 }, // name
         { wch: 40 }, // address
         { wch: 20 }, // city
-        { wch: 20 }, // naselje
         { wch: 15 }, // phone
         { wch: 15 }, // pib
+        { wch: 15 }, // pdv
+        { wch: 30 }, // gps
+        { wch: 20 }, // group
+        { wch: 20 }, // naselje
+        { wch: 30 }, // email
+        { wch: 20 }, // visit_day
+        { wch: 20 }, // dan_obilaska
       ];
       ws['!cols'] = colWidths;
 
