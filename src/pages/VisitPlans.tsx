@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { format, addDays, startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface VisitPlan {
@@ -56,9 +56,14 @@ const VisitPlans = () => {
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const getDayCustomers = (day: string) => {
-    return customers.filter(customer => 
-      customer.dan_obilaska?.toLowerCase() === day.toLowerCase()
-    );
+    console.log('Filtering customers for day:', day);
+    console.log('Available customers:', customers);
+    return customers.filter(customer => {
+      const normalizedCustomerDay = customer.dan_obilaska?.toLowerCase().trim();
+      const normalizedDay = day.toLowerCase().trim();
+      console.log(`Comparing customer day: "${normalizedCustomerDay}" with selected day: "${normalizedDay}"`);
+      return normalizedCustomerDay === normalizedDay;
+    });
   };
 
   useEffect(() => {
@@ -103,6 +108,7 @@ const VisitPlans = () => {
           return;
         }
 
+        console.log("Fetched customers:", customersData);
         setVisitPlans(plansData || []);
         setCustomers(customersData || []);
       } catch (error) {
