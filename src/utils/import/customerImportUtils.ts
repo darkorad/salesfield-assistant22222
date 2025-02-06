@@ -69,33 +69,37 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       email: data.email?.toString().trim() || null
     };
 
-    // Check for existing customer with same PIB to prevent duplicates
+    // First try to find if a customer with this code already exists
     const { data: existingCustomer } = await supabase
       .from('customers')
       .select('id')
       .eq('user_id', userId)
-      .eq('pib', customerData.pib)
+      .eq('code', customerData.code)
       .maybeSingle();
 
     if (existingCustomer) {
       // Update existing customer
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('customers')
         .update(customerData)
         .eq('id', existingCustomer.id);
 
-      if (error) {
-        console.error('Error updating customer:', error);
+      if (updateError) {
+        console.error('Error updating customer:', updateError);
         return false;
       }
     } else {
+      // Generate a unique code if needed
+      const timestamp = Date.now();
+      customerData.code = `${timestamp.toString().slice(-6)}-${Math.random().toString(36).substring(7)}`;
+      
       // Insert new customer
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('customers')
         .insert(customerData);
 
-      if (error) {
-        console.error('Error inserting customer:', error);
+      if (insertError) {
+        console.error('Error inserting customer:', insertError);
         return false;
       }
     }
