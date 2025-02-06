@@ -57,7 +57,23 @@ const VisitPlans = () => {
 
         const { data: customersData, error: customersError } = await supabase
           .from("kupci_darko")
-          .select("id, name, address, city, dan_obilaska")
+          .select(`
+            id,
+            user_id,
+            code,
+            name,
+            address,
+            city,
+            phone,
+            pib,
+            is_vat_registered,
+            gps_coordinates,
+            naselje,
+            group_name,
+            email,
+            visit_day,
+            dan_obilaska
+          `)
           .order("name");
 
         if (customersError) {
