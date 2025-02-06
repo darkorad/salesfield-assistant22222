@@ -407,6 +407,7 @@ export type Database = {
           city: string
           code: string
           dan_obilaska: string | null
+          dan_posete: string | null
           email: string | null
           gps_coordinates: string | null
           group_name: string | null
@@ -427,6 +428,7 @@ export type Database = {
           city: string
           code: string
           dan_obilaska?: string | null
+          dan_posete?: string | null
           email?: string | null
           gps_coordinates?: string | null
           group_name?: string | null
@@ -447,6 +449,7 @@ export type Database = {
           city?: string
           code?: string
           dan_obilaska?: string | null
+          dan_posete?: string | null
           email?: string | null
           gps_coordinates?: string | null
           group_name?: string | null

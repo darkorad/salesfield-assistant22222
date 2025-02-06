@@ -65,7 +65,8 @@ export const ExportButtons = () => {
         Naselje: customer.naselje || '',
         Email: customer.email || '',
         "Dan obilaska (stari)": customer.visit_day || '',
-        "Dan obilaska (novi)": customer.dan_obilaska || ''
+        "Dan obilaska (novi)": customer.dan_obilaska || '',
+        "Dan posete": customer.dan_posete || ''
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);
@@ -87,6 +88,7 @@ export const ExportButtons = () => {
         { wch: 30 }, // email
         { wch: 20 }, // visit_day
         { wch: 20 }, // dan_obilaska
+        { wch: 20 }, // dan_posete
       ];
       ws['!cols'] = colWidths;
 

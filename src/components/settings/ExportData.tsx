@@ -61,7 +61,9 @@ export const ExportData = () => {
         "GPS Koordinate": customer.gps_coordinates || '',
         Grupa: customer.group_name || '',
         Naselje: customer.naselje || '',
-        Email: customer.email || ''
+        Email: customer.email || '',
+        "Dan obilaska": customer.visit_day || '',
+        "Dan posete": customer.dan_posete || ''
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);
@@ -81,6 +83,8 @@ export const ExportData = () => {
         { wch: 20 }, // group
         { wch: 20 }, // naselje
         { wch: 30 }, // email
+        { wch: 20 }, // visit_day
+        { wch: 20 }, // dan_posete
       ];
       ws['!cols'] = colWidths;
 
