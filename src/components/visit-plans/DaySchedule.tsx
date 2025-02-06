@@ -1,54 +1,56 @@
 import { Customer } from "@/types";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Calendar } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Check } from "lucide-react";
+import { useState } from "react";
 
 interface DayScheduleProps {
   day: string;
   customers: Customer[];
+  onCustomerSelect: (customer: Customer) => void;
 }
 
-export const DaySchedule = ({ day, customers }: DayScheduleProps) => {
-  return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold flex items-center">
-          <Calendar className="mr-2 h-5 w-5" />
-          {day}
-        </h2>
-      </div>
+export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
+  const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Kupac</TableHead>
-            <TableHead>Adresa</TableHead>
-            <TableHead>Grad</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {customers.map((customer) => (
-            <TableRow key={customer.id}>
-              <TableCell>{customer.name}</TableCell>
-              <TableCell>{customer.address}</TableCell>
-              <TableCell>{customer.city}</TableCell>
-            </TableRow>
-          ))}
-          {customers.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={3} className="text-center text-gray-500">
-                Nema planiranih poseta za ovaj dan
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+  const handleCustomerClick = (customer: Customer) => {
+    onCustomerSelect(customer);
+  };
+
+  const markAsCompleted = (customerId: string) => {
+    setCompletedCustomers(prev => {
+      const newSet = new Set(prev);
+      newSet.add(customerId);
+      return newSet;
+    });
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {customers.map((customer) => (
+        <Card
+          key={customer.id}
+          className={`p-4 cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${
+            completedCustomers.has(customer.id) ? 'bg-green-100' : ''
+          }`}
+          onClick={() => handleCustomerClick(customer)}
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-medium">{customer.name}</h3>
+              <p className="text-sm text-gray-600">{customer.address}</p>
+              <p className="text-sm text-gray-600">{customer.city}</p>
+            </div>
+            {completedCustomers.has(customer.id) && (
+              <Check className="text-green-500 h-5 w-5" />
+            )}
+          </div>
+        </Card>
+      ))}
+      {customers.length === 0 && (
+        <div className="col-span-full text-center text-gray-500 py-8">
+          Nema planiranih poseta za ovaj dan
+        </div>
+      )}
     </div>
   );
 };
