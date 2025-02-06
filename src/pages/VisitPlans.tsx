@@ -56,13 +56,10 @@ const VisitPlans = () => {
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const getDayCustomers = (day: string) => {
-    console.log('Filtering customers for day:', day);
-    console.log('Available customers:', customers);
     return customers.filter(customer => {
-      const normalizedCustomerDay = customer.dan_obilaska?.toLowerCase().trim();
-      const normalizedDay = day.toLowerCase().trim();
-      console.log(`Comparing customer day: "${normalizedCustomerDay}" with selected day: "${normalizedDay}"`);
-      return normalizedCustomerDay === normalizedDay;
+      const customerDay = customer.dan_obilaska?.toLowerCase().trim();
+      const searchDay = day.toLowerCase().trim();
+      return customerDay === searchDay;
     });
   };
 
@@ -108,7 +105,6 @@ const VisitPlans = () => {
           return;
         }
 
-        console.log("Fetched customers:", customersData);
         setVisitPlans(plansData || []);
         setCustomers(customersData || []);
       } catch (error) {
@@ -130,12 +126,12 @@ const VisitPlans = () => {
       </div>
 
       <Tabs defaultValue={selectedDay} onValueChange={setSelectedDay} className="w-full">
-        <TabsList className="w-full justify-start mb-6 overflow-x-auto">
+        <TabsList className="w-full flex flex-wrap gap-1 justify-start mb-6">
           {DAYS_OF_WEEK.map((day) => (
             <TabsTrigger 
               key={day} 
               value={day.toLowerCase()}
-              className="min-w-[120px]"
+              className="flex-1 min-w-0 px-2"
             >
               {day}
             </TabsTrigger>
