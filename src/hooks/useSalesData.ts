@@ -99,7 +99,7 @@ export const useSalesData = () => {
       } else {
         console.log("Fetching products from regular products table");
         const response = await supabase
-          .from('products')
+          .from('products_darko')  // Changed from 'products' to 'products_darko'
           .select('*')
           .eq('user_id', session.user.id)
           .not('Naziv', 'eq', '');
@@ -159,7 +159,7 @@ export const useSalesData = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'products'
+          table: 'products_darko'  // Changed from 'products' to 'products_darko'
         },
         (payload) => {
           console.log('Real-time product update received:', payload);
