@@ -23,7 +23,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     // Map Excel column names to our field names
     const data = {
       ...rawData as any,
-      name: (rawData as any)["Naziv kupca"] || (rawData as any).name,
+      name: (rawData as any)["Naziv kupca"] || (rawData as any).Naziv || (rawData as any).name,
       address: (rawData as any).Adresa || (rawData as any).address,
       city: (rawData as any).Grad || (rawData as any).city,
       phone: (rawData as any).Telefon || (rawData as any).phone,
@@ -37,6 +37,11 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       gps_coordinates: (rawData as any)["GPS Koordinate"] || (rawData as any).gps_coordinates,
       code: (rawData as any)["Šifra kupca"] || (rawData as any).code
     };
+
+    // Extract name from object if it's in that format
+    if (data.name && typeof data.name === 'object' && 'value' in data.name) {
+      data.name = (data.name as any).value || '';
+    }
 
     // Validate required fields
     if (!data.name?.trim()) {
