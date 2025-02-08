@@ -8,8 +8,8 @@ interface TotalsSummaryProps {
 
 export const TotalsSummary = ({ sales }: TotalsSummaryProps) => {
   const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
-  const gotovinaSales = sales.filter(sale => sale.payment_status === 'gotovina');
-  const racunSales = sales.filter(sale => sale.payment_status === 'racun');
+  const gotovinaSales = sales.filter(sale => sale.payment_type === 'cash');
+  const racunSales = sales.filter(sale => sale.payment_type === 'invoice');
   const totalGotovina = gotovinaSales.reduce((sum, sale) => sum + sale.total, 0);
   const totalRacun = racunSales.reduce((sum, sale) => sum + sale.total, 0);
 

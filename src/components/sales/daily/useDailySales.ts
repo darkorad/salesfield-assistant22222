@@ -28,7 +28,8 @@ export const useDailySales = () => {
         .from('sales')
         .select(`
           *,
-          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
+          darko_customer:kupci_darko(*),
+          customer:customers(*)
         `)
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
@@ -43,7 +44,8 @@ export const useDailySales = () => {
 
       const transformedSales = salesData?.map(sale => ({
         ...sale,
-        customer: sale.darko_customer
+        customer: sale.darko_customer || sale.customer,
+        payment_status: sale.payment_type === 'cash' ? 'gotovina' : 'racun'
       }));
 
       console.log("Fetched sales data:", transformedSales);

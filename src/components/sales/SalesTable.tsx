@@ -36,7 +36,7 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
             <TableRow 
               key={sale.id}
               className={`${sentOrderIds.includes(sale.id) ? "text-red-500" : ""} ${
-                sale.payment_status === 'gotovina' ? "bg-blue-50" : ""
+                sale.payment_type === 'cash' ? "bg-blue-50" : ""
               }`}
             >
               <TableCell className="whitespace-nowrap text-sm font-medium">
@@ -51,7 +51,7 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
                   : 'N/A'}
               </TableCell>
               <TableCell className="whitespace-nowrap text-sm font-medium">
-                {sale.payment_status === 'gotovina' ? 'Gotovina' : 'Račun'}
+                {sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'}
               </TableCell>
               <TableCell className="text-right whitespace-nowrap text-sm">
                 {sale.total} RSD
