@@ -2,7 +2,9 @@
 import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DayScheduleProps {
   day: string;
@@ -13,9 +15,30 @@ interface DayScheduleProps {
 export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
   const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    const loadCompletedCustomers = async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const { data: sales } = await supabase
+        .from('sales')
+        .select('darko_customer_id')
+        .gte('date', today.toISOString())
+        .lt('date', tomorrow.toISOString());
+
+      if (sales) {
+        const completedIds = new Set(sales.map(sale => sale.darko_customer_id));
+        setCompletedCustomers(completedIds);
+      }
+    };
+
+    loadCompletedCustomers();
+  }, []);
+
   const handleCustomerClick = (customer: Customer) => {
     onCustomerSelect(customer);
-    markAsCompleted(customer.id);
   };
 
   const markAsCompleted = (customerId: string) => {

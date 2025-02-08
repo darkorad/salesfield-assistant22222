@@ -39,7 +39,7 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
 
       const orderData = {
         user_id: session.session.user.id,
-        customer_id: customer.id,
+        darko_customer_id: customer.id,
         items: orderItems,
         total,
         payment_type: 'invoice',
