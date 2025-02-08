@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Order } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,7 +28,6 @@ export const useDailySales = () => {
         .from('sales')
         .select(`
           *,
-          customer:customers(*),
           darko_customer:kupci_darko!sales_kupci_darko_fkey(*)
         `)
         .eq('user_id', session.user.id)
@@ -43,7 +43,7 @@ export const useDailySales = () => {
 
       const transformedSales = salesData?.map(sale => ({
         ...sale,
-        customer: sale.customer || sale.darko_customer
+        customer: sale.darko_customer
       }));
 
       console.log("Fetched sales data:", transformedSales);
