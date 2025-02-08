@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Customer, Product, OrderItem } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -62,8 +63,8 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
   };
 
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Nova porudžbina - {customer.name}</h3>
+    <Card className="p-3">
+      <h3 className="text-sm font-medium mb-2">Nova porudžbina - {customer.name}</h3>
       
       <ProductSelect
         products={products}
@@ -72,11 +73,11 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
         onOrderItemsChange={setOrderItems}
       />
 
-      <div className="mt-4">
+      <div className="mt-3">
         <Button 
           onClick={handleSubmit}
           disabled={isSubmitting || orderItems.length === 0}
-          className="w-full"
+          className="w-full text-sm py-1"
         >
           {isSubmitting ? "Slanje..." : "Pošalji porudžbinu"}
         </Button>

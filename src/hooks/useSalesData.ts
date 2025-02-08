@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Customer, Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,7 +62,8 @@ export const useSalesData = () => {
           created_at: customer.created_at || new Date().toISOString(),
           group_name: customer.group_name || null,
           naselje: customer.naselje || null,
-          email: customer.email || null
+          email: customer.email || null,
+          dan_posete: customer.dan_posete || null
         }));
       } else {
         console.log("Fetching customers from regular customers table");
