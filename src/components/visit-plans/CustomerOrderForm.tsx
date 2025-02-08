@@ -16,7 +16,7 @@ interface CustomerOrderFormProps {
 export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFormProps) => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { products } = useSalesData();
+  const { products, isLoading } = useSalesData();
 
   const handleSubmit = async () => {
     if (orderItems.length === 0) {
@@ -62,16 +62,24 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
     }
   };
 
+  if (isLoading) {
+    return <div className="text-sm text-gray-500">Učitavanje proizvoda...</div>;
+  }
+
   return (
     <Card className="p-3">
       <h3 className="text-sm font-medium mb-2">Nova porudžbina - {customer.name}</h3>
       
-      <ProductSelect
-        products={products}
-        orderItems={orderItems}
-        selectedCustomer={customer}
-        onOrderItemsChange={setOrderItems}
-      />
+      {products && products.length > 0 ? (
+        <ProductSelect
+          products={products}
+          orderItems={orderItems}
+          selectedCustomer={customer}
+          onOrderItemsChange={setOrderItems}
+        />
+      ) : (
+        <div className="text-sm text-gray-500">Nema dostupnih proizvoda</div>
+      )}
 
       <div className="mt-3">
         <Button 
