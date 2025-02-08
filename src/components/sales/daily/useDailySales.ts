@@ -28,7 +28,7 @@ export const useDailySales = () => {
         .from('sales')
         .select(`
           *,
-          darko_customer:kupci_darko!sales_kupci_darko_fkey(*)
+          darko_customer:kupci_darko(*)
         `)
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
