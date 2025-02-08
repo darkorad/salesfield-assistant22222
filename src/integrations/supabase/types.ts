@@ -142,6 +142,63 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          address: string
+          city: string
+          code: string
+          created_at: string | null
+          dan_obilaska: string | null
+          email: string | null
+          gps_coordinates: string | null
+          group_name: string | null
+          id: string
+          is_vat_registered: boolean | null
+          name: string
+          naselje: string | null
+          phone: string | null
+          pib: string
+          user_id: string
+          visit_day: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          code: string
+          created_at?: string | null
+          dan_obilaska?: string | null
+          email?: string | null
+          gps_coordinates?: string | null
+          group_name?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name: string
+          naselje?: string | null
+          phone?: string | null
+          pib: string
+          user_id: string
+          visit_day?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          code?: string
+          created_at?: string | null
+          dan_obilaska?: string | null
+          email?: string | null
+          gps_coordinates?: string | null
+          group_name?: string | null
+          id?: string
+          is_vat_registered?: boolean | null
+          name?: string
+          naselje?: string | null
+          phone?: string | null
+          pib?: string
+          user_id?: string
+          visit_day?: string | null
+        }
+        Relationships: []
+      }
       group_price_changes: {
         Row: {
           cash_price: number
@@ -345,6 +402,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          Cena: number
+          created_at: string | null
+          id: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+          user_id: string
+        }
+        Insert: {
+          Cena: number
+          created_at?: string | null
+          id?: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+          user_id: string
+        }
+        Update: {
+          Cena?: number
+          created_at?: string | null
+          id?: string
+          "Jedinica mere"?: string
+          Naziv?: string
+          Proizvođač?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       products_darko: {
         Row: {
