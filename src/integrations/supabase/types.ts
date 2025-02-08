@@ -254,6 +254,39 @@ export type Database = {
           },
         ]
       }
+      group_price_history: {
+        Row: {
+          cash_price: number
+          created_at: string | null
+          effective_from: string | null
+          group_id: string
+          id: string
+          invoice_price: number
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          cash_price: number
+          created_at?: string | null
+          effective_from?: string | null
+          group_id: string
+          id?: string
+          invoice_price: number
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          cash_price?: number
+          created_at?: string | null
+          effective_from?: string | null
+          group_id?: string
+          id?: string
+          invoice_price?: number
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       group_prices: {
         Row: {
           cash_price: number
