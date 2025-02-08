@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,23 +58,7 @@ const VisitPlans = () => {
 
         const { data: customersData, error: customersError } = await supabase
           .from("kupci_darko")
-          .select(`
-            id,
-            user_id,
-            code,
-            name,
-            address,
-            city,
-            phone,
-            pib,
-            is_vat_registered,
-            gps_coordinates,
-            naselje,
-            group_name,
-            email,
-            visit_day,
-            dan_obilaska
-          `)
+          .select("*")
           .order("name");
 
         if (customersError) {
@@ -81,6 +66,9 @@ const VisitPlans = () => {
           toast.error("Greška pri učitavanju kupaca");
           return;
         }
+
+        console.log("Fetched customers:", customersData?.length);
+        console.log("Sample customer dan_posete:", customersData?.[0]?.dan_posete);
 
         setVisitPlans(plansData || []);
         setCustomers(customersData || []);
@@ -96,10 +84,10 @@ const VisitPlans = () => {
   }, [today]);
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Plan poseta za {format(new Date(), 'dd.MM.yyyy.')}</h1>
-        <p className="text-gray-600">Pregled današnjih poseta i rasporeda po danima</p>
+    <div className="container mx-auto p-2">
+      <div className="mb-4">
+        <h1 className="text-lg font-bold mb-1">Plan poseta za {format(new Date(), 'dd.MM.yyyy.')}</h1>
+        <p className="text-xs text-gray-600">Pregled današnjih poseta i rasporeda po danima</p>
       </div>
 
       <VisitPlanTabs 
@@ -108,8 +96,8 @@ const VisitPlans = () => {
         customers={customers}
       />
 
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Današnje posete</h2>
+      <div className="mt-6">
+        <h2 className="text-sm font-semibold mb-2">Današnje posete</h2>
         <TodayVisits 
           isLoading={isLoading}
           visitPlans={visitPlans}

@@ -12,13 +12,13 @@ interface VisitPlanTabsProps {
 }
 
 const DAYS_OF_WEEK = [
-  "Ponedeljak",
-  "Utorak",
-  "Sreda",
-  "Četvrtak",
-  "Petak",
-  "Subota",
-  "Nedelja"
+  "ponedeljak",
+  "utorak",
+  "sreda",
+  "četvrtak",
+  "petak",
+  "subota",
+  "nedelja"
 ];
 
 export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
@@ -27,20 +27,19 @@ export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlan
   const getDayCustomers = (day: string) => {
     return customers.filter(customer => {
       const customerDay = customer.dan_posete?.toLowerCase().trim();
-      const searchDay = day.toLowerCase().trim();
-      return customerDay === searchDay;
+      return customerDay === day.toLowerCase().trim();
     });
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <Tabs defaultValue={selectedDay} onValueChange={onDayChange} className="w-full">
-        <TabsList className="w-full flex flex-wrap gap-1 justify-start mb-4">
+        <TabsList className="w-full flex flex-wrap gap-1 justify-start mb-2">
           {DAYS_OF_WEEK.map((day) => (
             <TabsTrigger 
               key={day} 
-              value={day.toLowerCase()}
-              className="flex-1 min-w-0 px-1 py-1 text-xs sm:text-sm"
+              value={day}
+              className="flex-1 min-w-0 px-1 py-0.5 text-[11px] sm:text-xs capitalize"
             >
               {day}
             </TabsTrigger>
@@ -48,7 +47,7 @@ export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlan
         </TabsList>
 
         {DAYS_OF_WEEK.map((day) => (
-          <TabsContent key={day} value={day.toLowerCase()}>
+          <TabsContent key={day} value={day}>
             <DaySchedule 
               day={day} 
               customers={getDayCustomers(day)}

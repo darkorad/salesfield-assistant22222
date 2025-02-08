@@ -406,7 +406,6 @@ export type Database = {
           address: string
           city: string
           code: string
-          dan_obilaska: string | null
           dan_posete: string | null
           email: string | null
           gps_coordinates: string | null
@@ -418,16 +417,11 @@ export type Database = {
           phone: string | null
           pib: string
           user_id: string | null
-          visit_day: string | null
-          visit_duration: number | null
-          visit_notes: string | null
-          visit_type: string | null
         }
         Insert: {
           address: string
           city: string
           code: string
-          dan_obilaska?: string | null
           dan_posete?: string | null
           email?: string | null
           gps_coordinates?: string | null
@@ -439,16 +433,11 @@ export type Database = {
           phone?: string | null
           pib: string
           user_id?: string | null
-          visit_day?: string | null
-          visit_duration?: number | null
-          visit_notes?: string | null
-          visit_type?: string | null
         }
         Update: {
           address?: string
           city?: string
           code?: string
-          dan_obilaska?: string | null
           dan_posete?: string | null
           email?: string | null
           gps_coordinates?: string | null
@@ -460,10 +449,6 @@ export type Database = {
           phone?: string | null
           pib?: string
           user_id?: string | null
-          visit_day?: string | null
-          visit_duration?: number | null
-          visit_notes?: string | null
-          visit_type?: string | null
         }
         Relationships: [
           {
