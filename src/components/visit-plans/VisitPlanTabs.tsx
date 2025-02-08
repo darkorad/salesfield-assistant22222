@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Customer } from "@/types";
 import { DaySchedule } from "./DaySchedule";
-import { CustomerOrderForm } from "./CustomerOrderForm";
 
 interface VisitPlanTabsProps {
   selectedDay: string;
@@ -26,8 +25,6 @@ const FIRST_ROW = DAYS_OF_WEEK.slice(0, 4); // Mon-Thu
 const SECOND_ROW = DAYS_OF_WEEK.slice(4); // Fri-Sun
 
 export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-
   const getDayCustomers = (day: string) => {
     return customers.filter(customer => {
       const customerDay = customer.dan_posete?.toLowerCase().trim();
@@ -71,18 +68,11 @@ export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlan
             <DaySchedule 
               day={day} 
               customers={getDayCustomers(day)}
-              onCustomerSelect={setSelectedCustomer}
+              onCustomerSelect={() => {}}
             />
           </TabsContent>
         ))}
       </Tabs>
-
-      {selectedCustomer && (
-        <CustomerOrderForm 
-          customer={selectedCustomer}
-          onOrderComplete={() => setSelectedCustomer(null)}
-        />
-      )}
     </div>
   );
 };
