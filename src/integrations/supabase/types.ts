@@ -9,35 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      categories: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categories_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       CenovnikVeljko: {
         Row: {
           Cena: number
@@ -82,13 +53,6 @@ export type Database = {
           id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "customer_group_members_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "customer_group_members_group_id_fkey"
             columns: ["group_id"]
@@ -163,13 +127,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "customer_prices_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "customer_prices_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -178,74 +135,6 @@ export type Database = {
           },
           {
             foreignKeyName: "customer_prices_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customers: {
-        Row: {
-          address: string
-          city: string
-          code: string
-          email: string | null
-          gps_coordinates: string | null
-          group_name: string | null
-          id: string
-          is_vat_registered: boolean | null
-          name: string
-          naselje: string | null
-          phone: string | null
-          pib: string
-          user_id: string | null
-          visit_day: string | null
-          visit_duration: number | null
-          visit_notes: string | null
-          visit_type: string | null
-        }
-        Insert: {
-          address: string
-          city: string
-          code: string
-          email?: string | null
-          gps_coordinates?: string | null
-          group_name?: string | null
-          id?: string
-          is_vat_registered?: boolean | null
-          name: string
-          naselje?: string | null
-          phone?: string | null
-          pib: string
-          user_id?: string | null
-          visit_day?: string | null
-          visit_duration?: number | null
-          visit_notes?: string | null
-          visit_type?: string | null
-        }
-        Update: {
-          address?: string
-          city?: string
-          code?: string
-          email?: string | null
-          gps_coordinates?: string | null
-          group_name?: string | null
-          id?: string
-          is_vat_registered?: boolean | null
-          name?: string
-          naselje?: string | null
-          phone?: string | null
-          pib?: string
-          user_id?: string | null
-          visit_day?: string | null
-          visit_duration?: number | null
-          visit_notes?: string | null
-          visit_type?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -363,44 +252,6 @@ export type Database = {
           },
         ]
       }
-      imported_products: {
-        Row: {
-          Cena: number
-          created_at: string
-          id: string
-          "Jedinica mere": string
-          Naziv: string
-          Proizvođač: string
-          user_id: string | null
-        }
-        Insert: {
-          Cena: number
-          created_at?: string
-          id?: string
-          "Jedinica mere": string
-          Naziv: string
-          Proizvođač: string
-          user_id?: string | null
-        }
-        Update: {
-          Cena?: number
-          created_at?: string
-          id?: string
-          "Jedinica mere"?: string
-          Naziv?: string
-          Proizvođač?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_duplicate_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       kupci_darko: {
         Row: {
           address: string
@@ -492,54 +343,6 @@ export type Database = {
           },
         ]
       }
-      products: {
-        Row: {
-          category_id: string | null
-          Cena: number
-          created_at: string
-          id: string
-          "Jedinica mere": string
-          Naziv: string
-          Proizvođač: string
-          user_id: string | null
-        }
-        Insert: {
-          category_id?: string | null
-          Cena: number
-          created_at?: string
-          id?: string
-          "Jedinica mere": string
-          Naziv: string
-          Proizvođač: string
-          user_id?: string | null
-        }
-        Update: {
-          category_id?: string | null
-          Cena?: number
-          created_at?: string
-          id?: string
-          "Jedinica mere"?: string
-          Naziv?: string
-          Proizvođač?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       products_darko: {
         Row: {
           Cena: number
@@ -623,13 +426,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "sales_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "sales_kupci_darko_fkey"
             columns: ["darko_customer_id"]
