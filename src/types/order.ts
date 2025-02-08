@@ -1,3 +1,4 @@
+
 import { Customer } from './customer';
 import { OrderItem } from './product';
 
@@ -9,5 +10,6 @@ export interface Order {
   date: string;
   userId: string;
   payment_type: 'cash' | 'invoice';
+  payment_status: 'gotovina' | 'racun';
   sent?: boolean;
 }
