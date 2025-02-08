@@ -1,3 +1,4 @@
+
 import { Product, OrderItem, Customer } from "@/types";
 import { OrderItemsList } from "./OrderItemsList";
 import { useState } from "react";
@@ -63,7 +64,6 @@ export const ProductSelect = ({
     <div className="space-y-4">
       <CustomerInfoSection 
         customer={selectedCustomer}
-        onSyncComplete={fetchCustomerPrices}
         onCustomerUpdate={handleCustomerUpdate}
       />
 
