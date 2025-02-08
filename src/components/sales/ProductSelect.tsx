@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Product, OrderItem } from "@/types";
+import { Product, OrderItem, Customer } from "@/types";
 import { ProductSearchInput } from "./ProductSearchInput";
 import { ProductSearchResults } from "./ProductSearchResults";
 
