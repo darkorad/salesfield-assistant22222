@@ -4,11 +4,12 @@ import { Customer } from "@/types";
 
 interface CustomerInfoCardProps {
   customer: Customer;
+  onCustomerUpdate?: () => void;
 }
 
-export const CustomerInfoCard = ({ customer }: CustomerInfoCardProps) => {
+export const CustomerInfoCard = ({ customer, onCustomerUpdate }: CustomerInfoCardProps) => {
   return (
-    <Card>
+    <Card onClick={onCustomerUpdate} className={onCustomerUpdate ? "cursor-pointer" : ""}>
       <CardContent className="p-4">
         <div className="space-y-2">
           <div className="text-lg font-medium">{customer.name}</div>

@@ -5,9 +5,10 @@ import { format } from "date-fns";
 
 interface SalesTableProps {
   sales: Order[];
+  sentOrderIds: string[];
 }
 
-export const SalesTable = ({ sales }: SalesTableProps) => {
+export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
   return (
     <Table>
       <TableHeader>
@@ -20,7 +21,10 @@ export const SalesTable = ({ sales }: SalesTableProps) => {
       </TableHeader>
       <TableBody>
         {sales.map((sale) => (
-          <TableRow key={sale.id}>
+          <TableRow 
+            key={sale.id}
+            className={sentOrderIds.includes(sale.id) ? "opacity-50" : ""}
+          >
             <TableCell>{format(new Date(sale.date || ''), 'HH:mm')}</TableCell>
             <TableCell>{sale.customer?.name || 'Nepoznat kupac'}</TableCell>
             <TableCell>{sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'}</TableCell>

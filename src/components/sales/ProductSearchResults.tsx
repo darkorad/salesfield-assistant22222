@@ -4,7 +4,7 @@ import { Product } from "@/types";
 interface ProductSearchResultsProps {
   products: Product[];
   onSelect: (product: Product) => void;
-  getProductPrice: (product: Product) => number;
+  getProductPrice: (product: Product, paymentType: 'cash' | 'invoice') => number;
 }
 
 export const ProductSearchResults = ({ products, onSelect, getProductPrice }: ProductSearchResultsProps) => {
@@ -26,7 +26,7 @@ export const ProductSearchResults = ({ products, onSelect, getProductPrice }: Pr
         >
           <div className="text-sm font-medium">{product.Naziv}</div>
           <div className="text-xs text-gray-500">
-            {product.Proizvođač} - {getProductPrice(product)} RSD
+            {product.Proizvođač} - {getProductPrice(product, 'cash')} RSD
           </div>
         </button>
       ))}

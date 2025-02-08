@@ -1,4 +1,5 @@
-import DailySalesSummary from "@/components/sales/DailySalesSummary";
+
+import { DailySalesSummary } from "@/components/sales/DailySalesSummary";
 
 const DailyOrders = () => {
   return <DailySalesSummary />;
