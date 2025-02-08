@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import Sales from "./pages/Sales";
@@ -14,7 +15,7 @@ function App() {
       <Router>
         <Layout>
           <Routes>
-            <Route path="/" element={<Navigate to="/sales" replace />} />
+            <Route path="/" element={<Navigate to="/visit-plans" replace />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/login" element={<Login />} />
