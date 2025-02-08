@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -21,7 +22,12 @@ export const formatCustomerData = (customers: any[]) => {
     "Telefon": customer.phone || "",
     "PIB": customer.pib,
     "PDV Obveznik": customer.is_vat_registered ? "DA" : "NE",
-    "GPS Koordinate": customer.gps_coordinates || ""
+    "GPS Koordinate": customer.gps_coordinates || "",
+    "Dan posete": customer.dan_posete || "",
+    "Dan obilaska": customer.dan_obilaska || "",
+    "Grupa": customer.group_name || "",
+    "Naselje": customer.naselje || "",
+    "Email": customer.email || ""
   }));
 };
 

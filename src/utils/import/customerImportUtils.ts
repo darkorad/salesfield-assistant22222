@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -13,6 +14,8 @@ export interface ImportCustomer {
   group_name?: string;
   naselje?: string;
   email?: string;
+  dan_posete?: string;
+  dan_obilaska?: string;
 }
 
 export const processCustomerData = async (rawData: unknown, userId: string) => {
@@ -20,7 +23,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     // Map Excel column names to our field names
     const data = {
       ...rawData as any,
-      name: (rawData as any).Naziv || (rawData as any).name,
+      name: (rawData as any)["Naziv kupca"] || (rawData as any).name,
       address: (rawData as any).Adresa || (rawData as any).address,
       city: (rawData as any).Grad || (rawData as any).city,
       phone: (rawData as any).Telefon || (rawData as any).phone,
@@ -28,8 +31,11 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       group_name: (rawData as any).Grupa || (rawData as any).group_name,
       naselje: (rawData as any).Naselje || (rawData as any).naselje,
       email: (rawData as any).Email || (rawData as any).email,
+      dan_posete: (rawData as any)["Dan posete"] || (rawData as any).dan_posete,
+      dan_obilaska: (rawData as any)["Dan obilaska"] || (rawData as any).dan_obilaska,
       is_vat_registered: ((rawData as any)["PDV Obveznik"] === "DA" || (rawData as any).is_vat_registered === true),
-      gps_coordinates: (rawData as any)["GPS Koordinate"] || (rawData as any).gps_coordinates
+      gps_coordinates: (rawData as any)["GPS Koordinate"] || (rawData as any).gps_coordinates,
+      code: (rawData as any)["Šifra kupca"] || (rawData as any).code
     };
 
     // Validate required fields
@@ -54,6 +60,14 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       console.log(`Generated temporary PIB for ${data.name}`);
     }
 
+    // Normalize dan_posete and dan_obilaska to lowercase
+    if (data.dan_posete) {
+      data.dan_posete = data.dan_posete.toLowerCase().trim();
+    }
+    if (data.dan_obilaska) {
+      data.dan_obilaska = data.dan_obilaska.toLowerCase().trim();
+    }
+
     const customerData = {
       user_id: userId,
       code: data.code?.toString().trim() || Date.now().toString().slice(-6),
@@ -66,12 +80,14 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       gps_coordinates: data.gps_coordinates?.toString().trim() || '',
       group_name: data.group_name?.toString().trim() || null,
       naselje: data.naselje?.toString().trim() || null,
-      email: data.email?.toString().trim() || null
+      email: data.email?.toString().trim() || null,
+      dan_posete: data.dan_posete || null,
+      dan_obilaska: data.dan_obilaska || null
     };
 
     // First try to find if a customer with this code already exists
     const { data: existingCustomer } = await supabase
-      .from('customers')
+      .from('kupci_darko')
       .select('id')
       .eq('user_id', userId)
       .eq('code', customerData.code)
@@ -80,7 +96,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     if (existingCustomer) {
       // Update existing customer
       const { error: updateError } = await supabase
-        .from('customers')
+        .from('kupci_darko')
         .update(customerData)
         .eq('id', existingCustomer.id);
 
@@ -95,7 +111,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       
       // Insert new customer
       const { error: insertError } = await supabase
-        .from('customers')
+        .from('kupci_darko')
         .insert(customerData);
 
       if (insertError) {
