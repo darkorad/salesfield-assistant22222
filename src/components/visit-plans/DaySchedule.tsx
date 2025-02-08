@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerOrderForm } from "./CustomerOrderForm";
+import { toast } from "sonner";
 
 interface DayScheduleProps {
   day: string;
@@ -15,23 +16,48 @@ interface DayScheduleProps {
 export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
   const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadCompletedCustomers = async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      try {
+        setIsLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Niste prijavljeni");
+          return;
+        }
 
-      const { data: sales } = await supabase
-        .from('sales')
-        .select('darko_customer_id')
-        .gte('date', today.toISOString())
-        .lt('date', tomorrow.toISOString());
+        // Get today's date at start of day in local timezone
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      if (sales) {
-        const completedIds = new Set(sales.map(sale => sale.darko_customer_id));
-        setCompletedCustomers(completedIds);
+        // Get tomorrow's date at start of day in local timezone
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const { data: sales, error } = await supabase
+          .from('sales')
+          .select('darko_customer_id')
+          .eq('user_id', session.user.id)
+          .gte('date', today.toISOString())
+          .lt('date', tomorrow.toISOString());
+
+        if (error) {
+          console.error("Error loading sales:", error);
+          toast.error("Greška pri učitavanju prodaje");
+          return;
+        }
+
+        if (sales) {
+          const completedIds = new Set(sales.map(sale => sale.darko_customer_id));
+          setCompletedCustomers(completedIds);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        toast.error("Greška pri učitavanju podataka");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -51,6 +77,16 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     });
     setSelectedCustomerId(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+        <div className="col-span-full text-center text-gray-500 py-2 text-xs">
+          Učitavanje...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
