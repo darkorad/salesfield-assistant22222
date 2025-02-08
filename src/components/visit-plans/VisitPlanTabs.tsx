@@ -21,6 +21,10 @@ const DAYS_OF_WEEK = [
   "nedelja"
 ];
 
+// Split days into two rows for better mobile display
+const FIRST_ROW = DAYS_OF_WEEK.slice(0, 4); // Mon-Thu
+const SECOND_ROW = DAYS_OF_WEEK.slice(4); // Fri-Sun
+
 export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
@@ -34,17 +38,33 @@ export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlan
   return (
     <div className="space-y-2">
       <Tabs defaultValue={selectedDay} onValueChange={onDayChange} className="w-full">
-        <TabsList className="w-full flex flex-wrap gap-1 justify-start mb-2">
-          {DAYS_OF_WEEK.map((day) => (
-            <TabsTrigger 
-              key={day} 
-              value={day}
-              className="flex-1 min-w-0 px-1 py-0.5 text-[11px] sm:text-xs capitalize"
-            >
-              {day}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="space-y-1">
+          {/* First row of days */}
+          <TabsList className="w-full flex gap-1 justify-start">
+            {FIRST_ROW.map((day) => (
+              <TabsTrigger 
+                key={day} 
+                value={day}
+                className="flex-1 min-w-0 px-1 py-0.5 text-[11px] sm:text-xs capitalize"
+              >
+                {day}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          {/* Second row of days */}
+          <TabsList className="w-full flex gap-1 justify-start">
+            {SECOND_ROW.map((day) => (
+              <TabsTrigger 
+                key={day} 
+                value={day}
+                className="flex-1 min-w-0 px-1 py-0.5 text-[11px] sm:text-xs capitalize"
+              >
+                {day}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         {DAYS_OF_WEEK.map((day) => (
           <TabsContent key={day} value={day}>
