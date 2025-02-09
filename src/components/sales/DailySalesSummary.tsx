@@ -1,17 +1,27 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDailySales } from "./daily/useDailySales";
+import { LoadingState } from "./daily/LoadingState";
+import { startOfDay, endOfDay } from "date-fns";
 
-export const DailySalesSummary = () => {
-  const { todaySales, isLoading } = useDailySales();
+interface DailySalesSummaryProps {
+  selectedDate: Date;
+}
 
-  const totalSales = todaySales.reduce((acc, sale) => acc + sale.total, 0);
-  const cashSales = todaySales.filter(sale => sale.payment_type === 'cash').reduce((acc, sale) => acc + sale.total, 0);
-  const invoiceSales = todaySales.filter(sale => sale.payment_type === 'invoice').reduce((acc, sale) => acc + sale.total, 0);
+export const DailySalesSummary = ({ selectedDate }: DailySalesSummaryProps) => {
+  const { todaySales, isLoading } = useDailySales(selectedDate);
 
   if (isLoading) {
-    return <div>Učitavanje...</div>;
+    return <LoadingState />;
   }
+
+  const totalSales = todaySales.reduce((acc, sale) => acc + sale.total, 0);
+  const cashSales = todaySales
+    .filter(sale => sale.payment_type === 'cash')
+    .reduce((acc, sale) => acc + sale.total, 0);
+  const invoiceSales = todaySales
+    .filter(sale => sale.payment_type === 'invoice')
+    .reduce((acc, sale) => acc + sale.total, 0);
 
   return (
     <div className="grid gap-4 md:grid-cols-3">

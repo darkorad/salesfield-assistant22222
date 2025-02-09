@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { Order } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { startOfDay, endOfDay } from "date-fns";
 
-export const useDailySales = () => {
+export const useDailySales = (selectedDate: Date) => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -16,13 +17,10 @@ export const useDailySales = () => {
         return;
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const start = startOfDay(selectedDate);
+      const end = endOfDay(selectedDate);
 
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
+      console.log("Fetching sales between:", start.toISOString(), "and", end.toISOString());
 
       const { data: salesData, error } = await supabase
         .from('sales')
@@ -31,8 +29,8 @@ export const useDailySales = () => {
           darko_customer:kupci_darko!fk_sales_kupci_darko(*)
         `)
         .eq('user_id', session.user.id)
-        .gte('date', today.toISOString())
-        .lt('date', tomorrow.toISOString())
+        .gte('date', start.toISOString())
+        .lt('date', end.toISOString())
         .order('date', { ascending: false });
 
       if (error) {
@@ -59,9 +57,12 @@ export const useDailySales = () => {
 
   useEffect(() => {
     loadTodaySales();
-    const interval = setInterval(loadTodaySales, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    // Only set up interval if we're looking at today's date
+    if (startOfDay(selectedDate).getTime() === startOfDay(new Date()).getTime()) {
+      const interval = setInterval(loadTodaySales, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedDate]);
 
   return {
     todaySales,

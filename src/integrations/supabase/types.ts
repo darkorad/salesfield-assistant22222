@@ -594,6 +594,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      reset_daily_sales: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
