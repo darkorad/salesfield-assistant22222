@@ -24,10 +24,7 @@ export const useDailySales = (selectedDate: Date) => {
 
       const { data: salesData, error } = await supabase
         .from('sales')
-        .select(`
-          *,
-          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
-        `)
+        .select('*, darko_customer:kupci_darko(*)')
         .eq('user_id', session.user.id)
         .gte('date', start.toISOString())
         .lt('date', end.toISOString())
@@ -42,7 +39,6 @@ export const useDailySales = (selectedDate: Date) => {
       const transformedSales = salesData?.map(sale => ({
         ...sale,
         customer: sale.darko_customer,
-        payment_status: sale.payment_type === 'cash' ? 'gotovina' : 'racun'
       }));
 
       console.log("Fetched sales data:", transformedSales);
