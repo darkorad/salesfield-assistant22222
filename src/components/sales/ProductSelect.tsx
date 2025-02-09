@@ -4,21 +4,29 @@ import { Product, OrderItem, Customer } from "@/types";
 import { ProductSearchSection } from "./product-selection/ProductSearchSection";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSalesData } from "@/hooks/useSalesData";
 
 interface ProductSelectProps {
-  products: Product[];
   orderItems: OrderItem[];
   selectedCustomer: Customer;
   onOrderItemsChange: React.Dispatch<React.SetStateAction<OrderItem[]>>;
 }
 
 export const ProductSelect = ({ 
-  products, 
   orderItems, 
   selectedCustomer, 
   onOrderItemsChange 
 }: ProductSelectProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { products, isLoading } = useSalesData();
+
+  if (isLoading) {
+    return <div className="text-sm text-gray-500">Učitavanje proizvoda...</div>;
+  }
+
+  if (!products || products.length === 0) {
+    return <div className="text-sm text-gray-500">Nema dostupnih proizvoda</div>;
+  }
 
   const filteredProducts = products.filter(product =>
     product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
