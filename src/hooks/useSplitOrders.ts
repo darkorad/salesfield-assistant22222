@@ -48,6 +48,13 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
       date: new Date().toISOString()
     };
 
+    console.log('Submitting order:', {
+      ...orderData,
+      customerType: isUsingDarkoTable ? 'darko' : 'regular',
+      customerId: selectedCustomer.id,
+      paymentType
+    });
+
     // First verify the customer exists in the appropriate table
     const { data: customerExists, error: customerCheckError } = await supabase
       .from(isUsingDarkoTable ? 'kupci_darko' : 'customers')
@@ -58,13 +65,6 @@ export const useSplitOrders = (selectedCustomer: Customer | null) => {
     if (customerCheckError || !customerExists) {
       throw new Error(`Customer not found in ${isUsingDarkoTable ? 'kupci_darko' : 'customers'} table`);
     }
-
-    console.log('Submitting order:', {
-      ...orderData,
-      customerType: isUsingDarkoTable ? 'darko' : 'regular',
-      customerId: selectedCustomer.id,
-      paymentType
-    });
 
     // Insert the order
     const { data, error } = await supabase
