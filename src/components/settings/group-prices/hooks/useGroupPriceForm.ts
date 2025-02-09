@@ -1,7 +1,10 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Customer, Product } from "@/types";
 import { usePriceHistory } from "@/hooks/usePriceHistory";
 import { usePriceManagement } from "@/hooks/usePriceManagement";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useGroupPriceForm = () => {
   const [selectedGroup, setSelectedGroup] = useState<{ id: string; name: string } | null>(null);
