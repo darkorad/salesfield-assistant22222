@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Customer, Product, OrderItem } from "@/types";
+import { Customer, OrderItem } from "@/types";
 import { Card } from "@/components/ui/card";
 import { ProductSelect } from "../sales/ProductSelect";
 import { Button } from "@/components/ui/button";
