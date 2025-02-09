@@ -13,8 +13,23 @@ interface CustomerPurchaseHistoryProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type SaleData = {
+  id: string;
+  date: string;
+  total: number;
+  payment_type: string;
+  items: Array<{
+    product: {
+      Naziv: string;
+      "Jedinica mere": string;
+    };
+    quantity: number;
+  }>;
+  darko_customer: Customer;
+}
+
 export const CustomerPurchaseHistory = ({ customer, open, onOpenChange }: CustomerPurchaseHistoryProps) => {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<SaleData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -44,12 +59,7 @@ export const CustomerPurchaseHistory = ({ customer, open, onOpenChange }: Custom
           return;
         }
 
-        const transformedSales = salesData?.map(sale => ({
-          ...sale,
-          customer: sale.darko_customer,
-        }));
-
-        setOrders(transformedSales || []);
+        setOrders(salesData || []);
       } catch (error) {
         console.error("Error loading orders:", error);
         toast.error("Greška pri učitavanju podataka");
