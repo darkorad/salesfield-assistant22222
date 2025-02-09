@@ -25,3 +25,4 @@ fs.copyFileSync(
 );
 
 console.log('WordPress plugin built successfully!');
+

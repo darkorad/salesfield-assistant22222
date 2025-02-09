@@ -91,3 +91,4 @@ function sales_app_get_settings() {
         )
     );
 }
+
