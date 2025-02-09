@@ -12,7 +12,7 @@ interface GroupPriceUpdate {
 }
 
 type GroupPricePayload = RealtimePostgresChangesPayload<{
-  [key: string]: any;
+  old: GroupPriceUpdate | null;
   new: GroupPriceUpdate | null;
 }>;
 
