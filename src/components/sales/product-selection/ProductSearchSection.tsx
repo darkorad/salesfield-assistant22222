@@ -1,3 +1,4 @@
+
 import { Product, Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { ProductSearchResults } from "../ProductSearchResults";
@@ -17,6 +18,11 @@ export const ProductSearchSection = ({
   handleAddProduct,
   getProductPrice
 }: ProductSearchSectionProps) => {
+  // Create a wrapper function that uses 'cash' as default payment type
+  const getDisplayPrice = (product: Product) => {
+    return getProductPrice(product, 'cash');
+  };
+
   return (
     <div className="relative">
       <Input
@@ -30,7 +36,7 @@ export const ProductSearchSection = ({
         <ProductSearchResults
           products={filteredProducts}
           onSelect={handleAddProduct}
-          getProductPrice={getProductPrice}
+          getProductPrice={getDisplayPrice}
         />
       )}
     </div>
