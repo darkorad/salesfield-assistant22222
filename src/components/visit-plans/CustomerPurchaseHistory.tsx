@@ -1,6 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Customer, Order } from "@/types";
+import { Customer } from "@/types";
 import { useEffect, useState } from "react";
 import { format, startOfYear } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
