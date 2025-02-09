@@ -4,6 +4,17 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/wp-content/plugins/sales-app/' : '/',
+  build: {
+    outDir: 'build',
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].js`,
+        chunkFileNames: `assets/[name].js`,
+        assetFileNames: `assets/[name].[ext]`
+      }
+    }
+  },
   server: {
     host: "0.0.0.0",
     port: 8080,
@@ -32,26 +43,5 @@ export default defineConfig(({ mode }) => ({
     esbuildOptions: {
       target: 'esnext'
     }
-  },
-  build: {
-    target: 'esnext',
-    minify: 'esbuild',
-    cssMinify: true,
-    modulePreload: {
-      polyfill: false
-    },
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-slot', '@radix-ui/react-toast'],
-          'data-vendor': ['@tanstack/react-query'],
-          'form-vendor': ['react-hook-form', 'zod'],
-          'utils-vendor': ['date-fns', 'xlsx']
-        }
-      }
-    },
-    chunkSizeWarningLimit: 1000,
-    reportCompressedSize: false
   }
 }));
