@@ -47,6 +47,10 @@ export const ProductSelect = ({
     setFilteredProducts([]);
   };
 
+  const getProductPrice = (product: Product) => {
+    return product.Cena;
+  };
+
   return (
     <div className="relative">
       <ProductSearchInput
@@ -57,7 +61,7 @@ export const ProductSelect = ({
         <ProductSearchResults
           products={filteredProducts}
           onSelect={handleProductSelect}
-          getProductPrice={(product) => product.Cena}
+          getProductPrice={getProductPrice}
         />
       )}
     </div>
