@@ -102,22 +102,27 @@ export const useGroupPriceForm = () => {
 
     if (selectedGroup) {
       console.log('Fetching prices for product:', product.id, 'and group:', selectedGroup.id);
-      const { data: existingPrice, error } = await supabase
+      const { data: existingPrices, error } = await supabase
         .from('group_prices')
         .select('*')
         .eq('group_id', selectedGroup.id)
         .eq('product_id', product.id)
-        .single();
+        .limit(1);
 
       if (error) {
         console.error('Error fetching existing price:', error);
         // If no price exists, use product's default price
         setInvoicePrice(product.Cena.toString());
         setCashPrice(product.Cena.toString());
-      } else if (existingPrice) {
-        console.log('Found existing price:', existingPrice);
-        setInvoicePrice(existingPrice.invoice_price.toString());
-        setCashPrice(existingPrice.cash_price.toString());
+      } else if (existingPrices && existingPrices.length > 0) {
+        const latestPrice = existingPrices[0];
+        console.log('Found existing price:', latestPrice);
+        setInvoicePrice(latestPrice.invoice_price.toString());
+        setCashPrice(latestPrice.cash_price.toString());
+      } else {
+        // If no price exists, use product's default price
+        setInvoicePrice(product.Cena.toString());
+        setCashPrice(product.Cena.toString());
       }
     } else {
       setInvoicePrice(product.Cena.toString());
