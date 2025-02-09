@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
@@ -42,11 +43,32 @@ export const useGroupPriceForm = () => {
     setFilteredProducts(filtered);
   }, [productSearch, products]);
 
-  const handleProductSelect = (product: Product) => {
+  const handleProductSelect = async (product: Product) => {
     setSelectedProduct(product);
     setProductSearch(product.Naziv);
-    setInvoicePrice(product.Cena.toString());
-    setCashPrice(product.Cena.toString());
+
+    if (selectedGroup) {
+      // Fetch existing prices for this product and group
+      const { data: existingPrice, error } = await supabase
+        .from('group_prices')
+        .select('*')
+        .eq('group_id', selectedGroup.id)
+        .eq('product_id', product.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching existing price:', error);
+      } else if (existingPrice) {
+        setInvoicePrice(existingPrice.invoice_price.toString());
+        setCashPrice(existingPrice.cash_price.toString());
+      } else {
+        setInvoicePrice(product.Cena.toString());
+        setCashPrice(product.Cena.toString());
+      }
+    } else {
+      setInvoicePrice(product.Cena.toString());
+      setCashPrice(product.Cena.toString());
+    }
   };
 
   const handleCustomerSelect = (customer: Customer) => {
@@ -72,7 +94,24 @@ export const useGroupPriceForm = () => {
       const timestamp = new Date().toISOString();
 
       if (selectedGroup) {
-        // First update group prices
+        // First update group_price_history
+        const { error: historyError } = await supabase
+          .from('group_price_history')
+          .insert({
+            group_id: selectedGroup.id,
+            product_id: selectedProduct.id,
+            invoice_price: parseFloat(invoicePrice),
+            cash_price: parseFloat(cashPrice),
+            user_id: session.user.id,
+            effective_from: timestamp
+          });
+
+        if (historyError) {
+          console.error('Error inserting price history:', historyError);
+          throw historyError;
+        }
+
+        // Then update group prices
         const { error: groupError } = await supabase
           .from('group_prices')
           .upsert({
