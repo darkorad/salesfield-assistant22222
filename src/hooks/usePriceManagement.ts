@@ -34,7 +34,8 @@ export const usePriceManagement = () => {
         return false;
       }
 
-      const { error } = await supabase
+      // First, insert the price change
+      const { error: insertError } = await supabase
         .from('price_changes')
         .insert({
           product_id: productId,
@@ -45,9 +46,24 @@ export const usePriceManagement = () => {
           user_id: session.session.user.id
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
-      toast.success("Cena je uspešno ažurirana");
+      // Get the latest price to confirm the change
+      const { data: latestPrice, error: priceError } = await supabase
+        .rpc('get_product_price', {
+          p_product_id: productId,
+          p_customer_id: customerId || null
+        });
+
+      if (priceError) throw priceError;
+
+      if (latestPrice) {
+        const message = customerId 
+          ? "Cena za kupca je uspešno ažurirana"
+          : "Cena za grupu je uspešno ažurirana";
+        toast.success(message);
+      }
+
       return true;
     } catch (error) {
       console.error('Error updating price:', error);

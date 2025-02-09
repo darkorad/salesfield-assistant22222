@@ -27,11 +27,11 @@ export const usePriceHistory = (
 
     const fetchPriceHistory = async () => {
       try {
+        // Get price history from the latest_prices view
         let query = supabase
-          .from('price_changes')
+          .from('latest_prices')
           .select('*')
-          .eq('product_id', productId)
-          .order('created_at', { ascending: false });
+          .eq('product_id', productId);
 
         if (groupId) {
           query = query.eq('group_id', groupId);
@@ -53,9 +53,11 @@ export const usePriceHistory = (
       }
     };
 
-    // Set up realtime subscription
+    fetchPriceHistory();
+
+    // Set up realtime subscription for price changes
     const channel = supabase
-      .channel('price-changes')
+      .channel('price_changes')
       .on(
         'postgres_changes',
         {
@@ -69,8 +71,6 @@ export const usePriceHistory = (
         }
       )
       .subscribe();
-
-    fetchPriceHistory();
 
     return () => {
       supabase.removeChannel(channel);

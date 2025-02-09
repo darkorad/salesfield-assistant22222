@@ -489,7 +489,40 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      latest_prices: {
+        Row: {
+          cash_price: number | null
+          created_at: string | null
+          customer_id: string | null
+          group_id: string | null
+          id: string | null
+          invoice_price: number | null
+          product_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_changes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_changes_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_changes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_darko"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       citext:
@@ -540,6 +573,16 @@ export type Database = {
           "": string
         }
         Returns: string
+      }
+      get_product_price: {
+        Args: {
+          p_product_id: string
+          p_customer_id: string
+        }
+        Returns: {
+          invoice_price: number
+          cash_price: number
+        }[]
       }
     }
     Enums: {
