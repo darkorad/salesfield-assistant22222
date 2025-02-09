@@ -4,6 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
 import { toast } from "sonner";
 
+// Define the type for group price payload
+type GroupPricePayload = {
+  new: {
+    product_id: string;
+    invoice_price: number;
+    cash_price: number;
+  };
+};
+
 export const useGroupPriceForm = () => {
   const [selectedGroup, setSelectedGroup] = useState<{ id: string; name: string } | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -34,7 +43,7 @@ export const useGroupPriceForm = () => {
               table: 'group_prices',
               filter: `group_id=eq.${selectedGroup.id}`
             },
-            async (payload) => {
+            (payload: GroupPricePayload) => {
               console.log('Group price change detected:', payload);
               if (selectedProduct && payload.new.product_id === selectedProduct.id) {
                 setInvoicePrice(payload.new.invoice_price.toString());
