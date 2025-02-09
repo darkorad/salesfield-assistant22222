@@ -32,7 +32,7 @@ export const CustomerPurchaseHistory = ({ customer, open, onOpenChange }: Custom
 
         const { data: salesData, error } = await supabase
           .from('sales')
-          .select('*, darko_customer:kupci_darko(*)')
+          .select('*, darko_customer:kupci_darko!fk_sales_kupci_darko(*)')
           .eq('user_id', session.user.id)
           .eq('darko_customer_id', customer.id)
           .gte('date', yearStart.toISOString())
