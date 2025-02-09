@@ -1,8 +1,7 @@
 
 import { useState } from "react";
 import { Product, OrderItem, Customer } from "@/types";
-import { ProductSearchInput } from "./ProductSearchInput";
-import { ProductSearchResults } from "./ProductSearchResults";
+import { ProductSearchSection } from "./product-selection/ProductSearchSection";
 
 interface ProductSelectProps {
   products: Product[];
@@ -17,18 +16,13 @@ export const ProductSelect = ({
   selectedCustomer, 
   onOrderItemsChange 
 }: ProductSelectProps) => {
-  const [search, setSearch] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    const filtered = products.filter(product =>
-      product.Naziv.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  };
+  const filteredProducts = products.filter(product =>
+    product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleProductSelect = (product: Product) => {
+  const handleAddProduct = (product: Product) => {
     const existingItem = orderItems.find(item => item.product.id === product.id);
     if (existingItem) {
       onOrderItemsChange(orderItems.map(item =>
@@ -43,27 +37,34 @@ export const ProductSelect = ({
         paymentType: 'cash'
       }]);
     }
-    setSearch("");
-    setFilteredProducts([]);
+    setSearchTerm(""); // Clear search after selection
   };
 
-  const getProductPrice = (product: Product) => {
+  const getProductPrice = (product: Product, paymentType: 'cash' | 'invoice') => {
     return product.Cena;
   };
 
   return (
     <div className="relative">
-      <ProductSearchInput
-        value={search}
-        onChange={handleSearchChange}
+      <ProductSearchSection
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filteredProducts={filteredProducts}
+        handleAddProduct={handleAddProduct}
+        getProductPrice={getProductPrice}
       />
-      {search && filteredProducts.length > 0 && (
-        <ProductSearchResults
-          products={filteredProducts}
-          onSelect={handleProductSelect}
-          getProductPrice={getProductPrice}
-        />
-      )}
+      {/* Display selected products */}
+      <div className="mt-4">
+        {orderItems.map((item) => (
+          <div key={item.product.id} className="flex justify-between items-center py-2 border-b">
+            <div>
+              <div className="font-medium">{item.product.Naziv}</div>
+              <div className="text-sm text-gray-600">Količina: {item.quantity}</div>
+            </div>
+            <div className="text-sm">{item.product.Cena} RSD</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
