@@ -34,6 +34,14 @@ export const usePriceManagement = () => {
         return false;
       }
 
+      console.log('Updating price:', {
+        productId,
+        invoicePrice,
+        cashPrice,
+        groupId,
+        customerId
+      });
+
       // First, insert the price change
       const { error: insertError } = await supabase
         .from('price_changes')
@@ -46,7 +54,10 @@ export const usePriceManagement = () => {
           user_id: session.session.user.id
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error inserting price change:', insertError);
+        throw insertError;
+      }
 
       // Get the latest price to confirm the change using RPC
       const { data: priceData, error: priceError } = await supabase
@@ -55,7 +66,10 @@ export const usePriceManagement = () => {
           p_customer_id: customerId || null
         });
 
-      if (priceError) throw priceError;
+      if (priceError) {
+        console.error('Error getting product price:', priceError);
+        throw priceError;
+      }
 
       console.log('Price data from RPC:', priceData);
 
