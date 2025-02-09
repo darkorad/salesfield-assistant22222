@@ -17,6 +17,47 @@ export const useGroupPriceForm = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch and set up real-time subscription for group prices
+  useEffect(() => {
+    let pricesChannel: any = null;
+
+    const setupSubscription = () => {
+      if (selectedGroup) {
+        console.log('Setting up group prices subscription for:', selectedGroup.id);
+        pricesChannel = supabase
+          .channel('group-prices-changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'group_prices',
+              filter: `group_id=eq.${selectedGroup.id}`
+            },
+            async (payload) => {
+              console.log('Group price change detected:', payload);
+              if (selectedProduct && payload.new.product_id === selectedProduct.id) {
+                setInvoicePrice(payload.new.invoice_price.toString());
+                setCashPrice(payload.new.cash_price.toString());
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('Group prices subscription status:', status);
+          });
+      }
+    };
+
+    setupSubscription();
+
+    return () => {
+      if (pricesChannel) {
+        console.log('Cleaning up group prices subscription');
+        supabase.removeChannel(pricesChannel);
+      }
+    };
+  }, [selectedGroup, selectedProduct]);
+
   useEffect(() => {
     const fetchProducts = async () => {
       const { data: productsData, error } = await supabase
@@ -48,22 +89,23 @@ export const useGroupPriceForm = () => {
     setProductSearch(product.Naziv);
 
     if (selectedGroup) {
-      // Fetch existing prices for this product and group
+      console.log('Fetching prices for product:', product.id, 'and group:', selectedGroup.id);
       const { data: existingPrice, error } = await supabase
         .from('group_prices')
         .select('*')
         .eq('group_id', selectedGroup.id)
         .eq('product_id', product.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error('Error fetching existing price:', error);
-      } else if (existingPrice) {
-        setInvoicePrice(existingPrice.invoice_price.toString());
-        setCashPrice(existingPrice.cash_price.toString());
-      } else {
+        // If no price exists, use product's default price
         setInvoicePrice(product.Cena.toString());
         setCashPrice(product.Cena.toString());
+      } else if (existingPrice) {
+        console.log('Found existing price:', existingPrice);
+        setInvoicePrice(existingPrice.invoice_price.toString());
+        setCashPrice(existingPrice.cash_price.toString());
       }
     } else {
       setInvoicePrice(product.Cena.toString());
@@ -94,7 +136,21 @@ export const useGroupPriceForm = () => {
       const timestamp = new Date().toISOString();
 
       if (selectedGroup) {
-        // First update group_price_history
+        // Update group prices first
+        const { error: groupError } = await supabase
+          .from('group_prices')
+          .upsert({
+            group_id: selectedGroup.id,
+            product_id: selectedProduct.id,
+            invoice_price: parseFloat(invoicePrice),
+            cash_price: parseFloat(cashPrice),
+            user_id: session.user.id,
+            last_changed: timestamp
+          });
+
+        if (groupError) throw groupError;
+
+        // Then add to history
         const { error: historyError } = await supabase
           .from('group_price_history')
           .insert({
@@ -110,20 +166,6 @@ export const useGroupPriceForm = () => {
           console.error('Error inserting price history:', historyError);
           throw historyError;
         }
-
-        // Then update group prices
-        const { error: groupError } = await supabase
-          .from('group_prices')
-          .upsert({
-            group_id: selectedGroup.id,
-            product_id: selectedProduct.id,
-            invoice_price: parseFloat(invoicePrice),
-            cash_price: parseFloat(cashPrice),
-            user_id: session.user.id,
-            last_changed: timestamp
-          });
-
-        if (groupError) throw groupError;
 
         // Then get all customers in the group
         const { data: groupCustomers, error: customersError } = await supabase
