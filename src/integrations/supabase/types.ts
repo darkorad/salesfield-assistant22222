@@ -587,6 +587,10 @@ export type Database = {
           cash_price: number
         }[]
       }
+      reset_completed_visits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
