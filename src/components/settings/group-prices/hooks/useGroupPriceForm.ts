@@ -107,6 +107,7 @@ export const useGroupPriceForm = () => {
         .select('*')
         .eq('group_id', selectedGroup.id)
         .eq('product_id', product.id)
+        .order('last_changed', { ascending: false })
         .limit(1);
 
       if (error) {
