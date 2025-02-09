@@ -5,13 +5,14 @@ import { Customer, Product } from "@/types";
 import { toast } from "sonner";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-// Define the type for group price payload
+interface GroupPriceUpdate {
+  product_id: string;
+  invoice_price: number;
+  cash_price: number;
+}
+
 type GroupPricePayload = RealtimePostgresChangesPayload<{
-  new: {
-    product_id: string;
-    invoice_price: number;
-    cash_price: number;
-  };
+  new: GroupPriceUpdate;
 }>;
 
 export const useGroupPriceForm = () => {
