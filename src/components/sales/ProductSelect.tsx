@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { Product, OrderItem, Customer } from "@/types";
 import { ProductSearchSection } from "./product-selection/ProductSearchSection";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ProductSelectProps {
   products: Product[];
@@ -40,6 +42,18 @@ export const ProductSelect = ({
     setSearchTerm(""); // Clear search after selection
   };
 
+  const handleDeleteItem = (productId: string) => {
+    onOrderItemsChange(orderItems.filter(item => item.product.id !== productId));
+  };
+
+  const handlePaymentTypeChange = (productId: string, newPaymentType: 'cash' | 'invoice') => {
+    onOrderItemsChange(orderItems.map(item =>
+      item.product.id === productId
+        ? { ...item, paymentType: newPaymentType }
+        : item
+    ));
+  };
+
   const getProductPrice = (product: Product, paymentType: 'cash' | 'invoice') => {
     return product.Cena;
   };
@@ -54,14 +68,37 @@ export const ProductSelect = ({
         getProductPrice={getProductPrice}
       />
       {/* Display selected products */}
-      <div className="mt-4">
+      <div className="mt-4 space-y-2">
         {orderItems.map((item) => (
-          <div key={item.product.id} className="flex justify-between items-center py-2 border-b">
-            <div>
+          <div key={item.product.id} className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border">
+            <div className="flex-1">
               <div className="font-medium">{item.product.Naziv}</div>
-              <div className="text-sm text-gray-600">Količina: {item.quantity}</div>
+              <div className="text-sm text-gray-600 mt-1">
+                <span className="mr-4">Količina: {item.quantity}</span>
+                <span className="space-x-2">
+                  <button
+                    className={`px-2 py-0.5 rounded ${item.paymentType === 'cash' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
+                    onClick={() => handlePaymentTypeChange(item.product.id, 'cash')}
+                  >
+                    Gotovina: {item.product.Cena} RSD
+                  </button>
+                  <button
+                    className={`px-2 py-0.5 rounded ${item.paymentType === 'invoice' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
+                    onClick={() => handlePaymentTypeChange(item.product.id, 'invoice')}
+                  >
+                    Račun: {item.product.Cena} RSD
+                  </button>
+                </span>
+              </div>
             </div>
-            <div className="text-sm">{item.product.Cena} RSD</div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-2 text-gray-500 hover:text-red-500"
+              onClick={() => handleDeleteItem(item.product.id)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         ))}
       </div>

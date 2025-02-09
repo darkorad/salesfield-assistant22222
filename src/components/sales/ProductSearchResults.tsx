@@ -26,7 +26,9 @@ export const ProductSearchResults = ({ products, onSelect, getProductPrice }: Pr
         >
           <div className="text-sm font-medium">{product.Naziv}</div>
           <div className="text-xs text-gray-500">
-            {product.Proizvođač} - {getProductPrice(product)} RSD
+            <span className="mr-2">{product.Proizvođač}</span>
+            <span className="mr-2">Gotovina: {product.Cena} RSD</span>
+            <span>Račun: {product.Cena} RSD</span>
           </div>
         </button>
       ))}
