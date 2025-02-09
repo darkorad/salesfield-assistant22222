@@ -42,7 +42,6 @@ export const CustomerPurchaseHistory = ({ customer, open, onOpenChange }: Custom
           return;
         }
 
-        // Get start of year date
         const yearStart = startOfYear(new Date());
 
         const { data: salesData, error } = await supabase
