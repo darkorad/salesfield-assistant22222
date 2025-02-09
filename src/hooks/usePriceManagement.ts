@@ -48,8 +48,8 @@ export const usePriceManagement = () => {
 
       if (insertError) throw insertError;
 
-      // Get the latest price to confirm the change
-      const { data: latestPrice, error: priceError } = await supabase
+      // Get the latest price to confirm the change using RPC
+      const { data: priceData, error: priceError } = await supabase
         .rpc('get_product_price', {
           p_product_id: productId,
           p_customer_id: customerId || null
@@ -57,7 +57,9 @@ export const usePriceManagement = () => {
 
       if (priceError) throw priceError;
 
-      if (latestPrice) {
+      console.log('Price data from RPC:', priceData);
+
+      if (priceData && priceData.length > 0) {
         const message = customerId 
           ? "Cena za kupca je uspešno ažurirana"
           : "Cena za grupu je uspešno ažurirana";
