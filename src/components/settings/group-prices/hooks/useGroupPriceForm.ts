@@ -46,7 +46,7 @@ export const useGroupPriceForm = () => {
             },
             (payload: GroupPricePayload) => {
               console.log('Group price change detected:', payload);
-              if (selectedProduct && payload.new.product_id === selectedProduct.id) {
+              if (selectedProduct && payload.new && payload.new.product_id === selectedProduct.id) {
                 setInvoicePrice(payload.new.invoice_price.toString());
                 setCashPrice(payload.new.cash_price.toString());
               }
