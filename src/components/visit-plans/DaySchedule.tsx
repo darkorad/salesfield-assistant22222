@@ -1,11 +1,13 @@
 
 import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, History } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerOrderForm } from "./CustomerOrderForm";
+import { CustomerPurchaseHistory } from "./CustomerPurchaseHistory";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface DayScheduleProps {
   day: string;
@@ -16,6 +18,7 @@ interface DayScheduleProps {
 export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
   const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerForHistory, setSelectedCustomerForHistory] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -96,10 +99,9 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
             className={`p-1.5 cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${
               completedCustomers.has(customer.id) ? 'bg-green-100' : ''
             }`}
-            onClick={() => handleCustomerClick(customer)}
           >
-            <div className="flex justify-between items-start">
-              <div>
+            <div className="flex justify-between items-start p-2">
+              <div className="flex-1" onClick={() => handleCustomerClick(customer)}>
                 <h3 className="text-xs font-medium">{customer.name}</h3>
                 <p className="text-[10px] text-gray-600">{customer.address}</p>
                 <p className="text-[10px] text-gray-600">{customer.city}</p>
@@ -107,9 +109,22 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
                   <p className="text-[10px] text-gray-600">{customer.phone}</p>
                 )}
               </div>
-              {completedCustomers.has(customer.id) && (
-                <Check className="text-green-500 h-3 w-3" />
-              )}
+              <div className="flex items-start gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedCustomerForHistory(customer);
+                  }}
+                >
+                  <History className="h-4 w-4" />
+                </Button>
+                {completedCustomers.has(customer.id) && (
+                  <Check className="text-green-500 h-3 w-3" />
+                )}
+              </div>
             </div>
           </Card>
           {selectedCustomerId === customer.id && (
@@ -126,6 +141,15 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         <div className="col-span-full text-center text-gray-500 py-2 text-xs">
           Nema planiranih poseta za ovaj dan
         </div>
+      )}
+      {selectedCustomerForHistory && (
+        <CustomerPurchaseHistory
+          customer={selectedCustomerForHistory}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setSelectedCustomerForHistory(null);
+          }}
+        />
       )}
     </div>
   );
