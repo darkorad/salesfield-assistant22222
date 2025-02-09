@@ -74,21 +74,21 @@ export const ProductSelect = ({
             <div className="flex-1">
               <div className="font-medium">{item.product.Naziv}</div>
               <div className="text-sm text-gray-600 mt-1">
-                <span className="mr-4">Količina: {item.quantity}</span>
-                <span className="space-x-2">
+                <div className="mb-2">Količina: {item.quantity}</div>
+                <div className="space-y-2">
                   <button
-                    className={`px-2 py-0.5 rounded ${item.paymentType === 'cash' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
+                    className={`w-full text-left px-2 py-1 rounded ${item.paymentType === 'cash' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
                     onClick={() => handlePaymentTypeChange(item.product.id, 'cash')}
                   >
                     Gotovina: {item.product.Cena} RSD
                   </button>
                   <button
-                    className={`px-2 py-0.5 rounded ${item.paymentType === 'invoice' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
+                    className={`w-full text-left px-2 py-1 rounded ${item.paymentType === 'invoice' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
                     onClick={() => handlePaymentTypeChange(item.product.id, 'invoice')}
                   >
                     Račun: {item.product.Cena} RSD
                   </button>
-                </span>
+                </div>
               </div>
             </div>
             <Button

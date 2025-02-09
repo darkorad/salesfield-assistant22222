@@ -25,10 +25,10 @@ export const ProductSearchResults = ({ products, onSelect, getProductPrice }: Pr
           onClick={() => onSelect(product)}
         >
           <div className="text-sm font-medium">{product.Naziv}</div>
-          <div className="text-xs text-gray-500">
-            <span className="mr-2">{product.Proizvođač}</span>
-            <span className="mr-2">Gotovina: {product.Cena} RSD</span>
-            <span>Račun: {product.Cena} RSD</span>
+          <div className="text-xs text-gray-500 mt-1">
+            <div className="mb-1">{product.Proizvođač}</div>
+            <div>Gotovina: {product.Cena} RSD</div>
+            <div>Račun: {product.Cena} RSD</div>
           </div>
         </button>
       ))}
