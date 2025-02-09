@@ -3,15 +3,16 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
 import { toast } from "sonner";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 // Define the type for group price payload
-type GroupPricePayload = {
+type GroupPricePayload = RealtimePostgresChangesPayload<{
   new: {
     product_id: string;
     invoice_price: number;
     cash_price: number;
   };
-};
+}>;
 
 export const useGroupPriceForm = () => {
   const [selectedGroup, setSelectedGroup] = useState<{ id: string; name: string } | null>(null);
