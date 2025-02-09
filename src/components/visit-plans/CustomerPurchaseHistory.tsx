@@ -13,19 +13,20 @@ interface CustomerPurchaseHistoryProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type SaleData = {
+interface SaleItem {
+  product: {
+    Naziv: string;
+    "Jedinica mere": string;
+  };
+  quantity: number;
+}
+
+interface SaleData {
   id: string;
   date: string;
   total: number;
-  payment_type: string;
-  items: Array<{
-    product: {
-      Naziv: string;
-      "Jedinica mere": string;
-    };
-    quantity: number;
-  }>;
-  darko_customer: Customer;
+  payment_type: 'cash' | 'invoice';
+  items: SaleItem[];
 }
 
 export const CustomerPurchaseHistory = ({ customer, open, onOpenChange }: CustomerPurchaseHistoryProps) => {
@@ -46,7 +47,13 @@ export const CustomerPurchaseHistory = ({ customer, open, onOpenChange }: Custom
 
         const { data: salesData, error } = await supabase
           .from('sales')
-          .select('*, darko_customer:kupci_darko!fk_sales_kupci_darko(*)')
+          .select(`
+            id,
+            date,
+            total,
+            payment_type,
+            items
+          `)
           .eq('user_id', session.user.id)
           .eq('darko_customer_id', customer.id)
           .gte('date', yearStart.toISOString())
