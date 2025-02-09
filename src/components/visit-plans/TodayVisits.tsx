@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,13 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Customer } from "@/types";
+import { AddVisitDialog } from "./AddVisitDialog";
 
 interface VisitPlan {
   id: string;
@@ -34,9 +30,17 @@ interface TodayVisitsProps {
   isLoading: boolean;
   visitPlans: VisitPlan[];
   date: string;
+  customers: Customer[];
+  onVisitAdded: () => void;
 }
 
-export const TodayVisits = ({ isLoading, visitPlans, date }: TodayVisitsProps) => {
+export const TodayVisits = ({ 
+  isLoading, 
+  visitPlans, 
+  date,
+  customers,
+  onVisitAdded 
+}: TodayVisitsProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   if (isLoading) {
@@ -81,23 +85,22 @@ export const TodayVisits = ({ isLoading, visitPlans, date }: TodayVisitsProps) =
       </Table>
 
       <div className="mt-4">
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Dodaj posetu
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Dodaj novu posetu za {date}</DialogTitle>
-            </DialogHeader>
-            <div className="p-4">
-              <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="w-full"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Dodaj posetu
+        </Button>
       </div>
+
+      <AddVisitDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        date={date}
+        customers={customers}
+        onVisitAdded={onVisitAdded}
+      />
     </div>
   );
 };
