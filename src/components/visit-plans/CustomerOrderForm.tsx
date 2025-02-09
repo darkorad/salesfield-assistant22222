@@ -6,7 +6,6 @@ import { ProductSelect } from "../sales/ProductSelect";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useSalesData } from "@/hooks/useSalesData";
 
 interface CustomerOrderFormProps {
   customer: Customer;
@@ -16,7 +15,6 @@ interface CustomerOrderFormProps {
 export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFormProps) => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { products, isLoading } = useSalesData();
 
   const handleSubmit = async () => {
     if (orderItems.length === 0) {
@@ -42,7 +40,7 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
         darko_customer_id: customer.id,
         items: orderItems,
         total,
-        payment_type: 'invoice',
+        payment_type: 'invoice' as const,
         date: new Date().toISOString()
       };
 
@@ -62,24 +60,15 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
     }
   };
 
-  if (isLoading) {
-    return <div className="text-sm text-gray-500">Učitavanje proizvoda...</div>;
-  }
-
   return (
     <Card className="p-3">
       <h3 className="text-sm font-medium mb-2">Nova porudžbina - {customer.name}</h3>
       
-      {products && products.length > 0 ? (
-        <ProductSelect
-          products={products}
-          orderItems={orderItems}
-          selectedCustomer={customer}
-          onOrderItemsChange={setOrderItems}
-        />
-      ) : (
-        <div className="text-sm text-gray-500">Nema dostupnih proizvoda</div>
-      )}
+      <ProductSelect
+        orderItems={orderItems}
+        selectedCustomer={customer}
+        onOrderItemsChange={setOrderItems}
+      />
 
       <div className="mt-3">
         <Button 
