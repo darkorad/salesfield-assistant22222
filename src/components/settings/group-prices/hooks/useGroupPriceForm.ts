@@ -12,8 +12,8 @@ interface GroupPriceUpdate {
 }
 
 type GroupPricePayload = RealtimePostgresChangesPayload<{
-  [key: string]: unknown;
-  new: GroupPriceUpdate;
+  [key: string]: any;
+  new: GroupPriceUpdate | null;
 }>;
 
 export const useGroupPriceForm = () => {
@@ -49,8 +49,8 @@ export const useGroupPriceForm = () => {
             (payload: GroupPricePayload) => {
               console.log('Group price change detected:', payload);
               if (selectedProduct && payload.new && payload.new.product_id === selectedProduct.id) {
-                setInvoicePrice(String(payload.new.invoice_price));
-                setCashPrice(String(payload.new.cash_price));
+                setInvoicePrice(payload.new.invoice_price.toString());
+                setCashPrice(payload.new.cash_price.toString());
               }
             }
           )
