@@ -5,7 +5,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/zirmd-company/' : '/',
+  base: mode === 'production' ? '/salesfield-assistant22222/' : '/',
   build: {
     outDir: 'build',
     rollupOptions: {
