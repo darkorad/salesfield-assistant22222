@@ -16,13 +16,13 @@ interface DayScheduleProps {
 }
 
 export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
-  const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedCustomerForHistory, setSelectedCustomerForHistory] = useState<Customer | null>(null);
+  const [visitStatuses, setVisitStatuses] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadCompletedCustomers = async () => {
+    const loadVisitStatuses = async () => {
       try {
         setIsLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
@@ -31,30 +31,27 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
           return;
         }
 
-        // Get today's date at start of day in local timezone
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Get tomorrow's date at start of day in local timezone
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const { data: sales, error } = await supabase
-          .from('sales')
-          .select('darko_customer_id')
+        const { data: visits, error } = await supabase
+          .from('visit_plans')
+          .select('customer_id, visit_status')
           .eq('user_id', session.user.id)
-          .gte('date', today.toISOString())
-          .lt('date', tomorrow.toISOString());
+          .eq('visit_day', today.toISOString().split('T')[0]);
 
         if (error) {
-          console.error("Error loading sales:", error);
-          toast.error("Greška pri učitavanju prodaje");
+          console.error("Error loading visits:", error);
+          toast.error("Greška pri učitavanju poseta");
           return;
         }
 
-        if (sales) {
-          const completedIds = new Set(sales.map(sale => sale.darko_customer_id));
-          setCompletedCustomers(completedIds);
+        if (visits) {
+          const statuses: Record<string, string> = {};
+          visits.forEach(visit => {
+            statuses[visit.customer_id] = visit.visit_status;
+          });
+          setVisitStatuses(statuses);
         }
       } catch (error) {
         console.error("Error:", error);
@@ -64,7 +61,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
       }
     };
 
-    loadCompletedCustomers();
+    loadVisitStatuses();
   }, []);
 
   const handleCustomerClick = (customer: Customer) => {
@@ -72,13 +69,33 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     onCustomerSelect(customer);
   };
 
-  const markAsCompleted = (customerId: string) => {
-    setCompletedCustomers(prev => {
-      const newSet = new Set(prev);
-      newSet.add(customerId);
-      return newSet;
-    });
-    setSelectedCustomerId(null);
+  const markAsCompleted = async (customerId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('visit_plans')
+        .update({ visit_status: 'completed' })
+        .eq('customer_id', customerId)
+        .eq('user_id', session.user.id)
+        .eq('visit_day', new Date().toISOString().split('T')[0]);
+
+      if (error) throw error;
+
+      setVisitStatuses(prev => ({
+        ...prev,
+        [customerId]: 'completed'
+      }));
+      setSelectedCustomerId(null);
+
+    } catch (error) {
+      console.error("Error updating visit status:", error);
+      toast.error("Greška pri ažuriranju statusa posete");
+    }
   };
 
   if (isLoading) {
@@ -97,7 +114,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         <div key={customer.id}>
           <Card
             className={`p-1.5 cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${
-              completedCustomers.has(customer.id) ? 'bg-green-100' : ''
+              visitStatuses[customer.id] === 'completed' ? 'bg-green-100' : ''
             }`}
           >
             <div className="flex justify-between items-start p-2">
@@ -121,7 +138,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
                 >
                   <History className="h-4 w-4" />
                 </Button>
-                {completedCustomers.has(customer.id) && (
+                {visitStatuses[customer.id] === 'completed' && (
                   <Check className="text-green-500 h-3 w-3" />
                 )}
               </div>

@@ -56,7 +56,7 @@ export const AddVisitDialog = ({
         customer_id: selectedCustomer?.id,
         visit_day: format(new Date(), 'yyyy-MM-dd'),
         dan_obilaska: format(new Date(), 'yyyy-MM-dd'),
-        visit_status: 'additional'
+        visit_status: 'planned'
       };
 
       const { error } = await supabase

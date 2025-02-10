@@ -448,7 +448,6 @@ export type Database = {
       }
       visit_plans: {
         Row: {
-          completed: boolean | null
           created_at: string
           customer_id: string | null
           dan_obilaska: string | null
@@ -460,7 +459,6 @@ export type Database = {
           visit_time: string | null
         }
         Insert: {
-          completed?: boolean | null
           created_at?: string
           customer_id?: string | null
           dan_obilaska?: string | null
@@ -472,7 +470,6 @@ export type Database = {
           visit_time?: string | null
         }
         Update: {
-          completed?: boolean | null
           created_at?: string
           customer_id?: string | null
           dan_obilaska?: string | null
