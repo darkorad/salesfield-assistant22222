@@ -3,22 +3,9 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Customer } from "@/types";
+import { Customer, VisitPlan } from "@/types";
 import { TodayVisits } from "@/components/visit-plans/TodayVisits";
 import { VisitPlanTabs } from "@/components/visit-plans/VisitPlanTabs";
-
-interface VisitPlan {
-  id: string;
-  customer_id: string;
-  visit_day: string;
-  visit_time: string | null;
-  notes: string | null;
-  customer: {
-    name: string;
-    address: string;
-    city: string;
-  };
-}
 
 const VisitPlans = () => {
   const [visitPlans, setVisitPlans] = useState<VisitPlan[]>([]);
@@ -46,7 +33,7 @@ const VisitPlans = () => {
           )
         `)
         .eq("user_id", session.session?.user.id)
-        .eq("dan_obilaska", today)
+        .eq("visit_day", today)
         .order("visit_time", { ascending: true });
 
       if (plansError) {
@@ -65,9 +52,6 @@ const VisitPlans = () => {
         toast.error("Greška pri učitavanju kupaca");
         return;
       }
-
-      console.log("Fetched customers:", customersData?.length);
-      console.log("Sample customer dan_posete:", customersData?.[0]?.dan_posete);
 
       setVisitPlans(plansData || []);
       setCustomers(customersData || []);

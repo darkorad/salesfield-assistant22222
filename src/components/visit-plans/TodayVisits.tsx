@@ -10,21 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Customer } from "@/types";
+import { Customer, VisitPlan } from "@/types";
 import { AddVisitDialog } from "./AddVisitDialog";
-
-interface VisitPlan {
-  id: string;
-  customer_id: string;
-  visit_day: string;
-  visit_time: string | null;
-  notes: string | null;
-  customer: {
-    name: string;
-    address: string;
-    city: string;
-  };
-}
 
 interface TodayVisitsProps {
   isLoading: boolean;
@@ -61,6 +48,7 @@ export const TodayVisits = ({
             <TableHead>Adresa</TableHead>
             <TableHead>Vreme</TableHead>
             <TableHead>Napomene</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -72,11 +60,12 @@ export const TodayVisits = ({
               </TableCell>
               <TableCell>{visit.visit_time}</TableCell>
               <TableCell>{visit.notes}</TableCell>
+              <TableCell>{visit.visit_status}</TableCell>
             </TableRow>
           ))}
           {visitPlans.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-gray-500">
+              <TableCell colSpan={5} className="text-center text-gray-500">
                 Nema planiranih poseta za danas
               </TableCell>
             </TableRow>
