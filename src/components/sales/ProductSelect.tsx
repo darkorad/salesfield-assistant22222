@@ -62,7 +62,7 @@ export const ProductSelect = ({
     ));
   };
 
-  const getProductPrice = (product: Product, paymentType: 'cash' | 'invoice') => {
+  const getProductPrice = (product: Product) => {
     return product.Cena;
   };
 

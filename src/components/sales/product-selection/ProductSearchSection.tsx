@@ -8,7 +8,7 @@ interface ProductSearchSectionProps {
   setSearchTerm: (term: string) => void;
   filteredProducts: Product[];
   handleAddProduct: (product: Product) => void;
-  getProductPrice: (product: Product, paymentType: 'cash' | 'invoice') => number;
+  getProductPrice: (product: Product) => number;
 }
 
 export const ProductSearchSection = ({
@@ -31,7 +31,7 @@ export const ProductSearchSection = ({
         <ProductSearchResults
           products={filteredProducts}
           onSelect={handleAddProduct}
-          getProductPrice={(product) => getProductPrice(product, 'cash')}
+          getProductPrice={getProductPrice}
         />
       )}
     </div>
