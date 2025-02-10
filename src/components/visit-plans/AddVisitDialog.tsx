@@ -54,8 +54,8 @@ export const AddVisitDialog = ({
       const visitData = {
         user_id: session.session?.user.id,
         customer_id: selectedCustomer?.id,
-        visit_day: format(new Date(), 'yyyy-MM-dd'),
-        dan_obilaska: format(new Date(), 'yyyy-MM-dd'),
+        visit_day: date, // Use the date passed from props
+        dan_obilaska: date, // Use the same date for consistency
         visit_status: 'planned'
       };
 
