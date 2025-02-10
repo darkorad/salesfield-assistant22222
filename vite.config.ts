@@ -5,7 +5,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/wp-content/plugins/sales-app/' : '/',
+  base: mode === 'production' ? '/' : '/',
   build: {
     outDir: 'build',
     rollupOptions: {
@@ -46,4 +46,3 @@ export default defineConfig(({ mode }) => ({
     }
   }
 }));
-
