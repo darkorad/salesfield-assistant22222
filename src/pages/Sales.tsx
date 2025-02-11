@@ -1,7 +1,11 @@
-import { Suspense, lazy } from "react";
+
+import { Suspense, lazy, useEffect } from "react";
 import { SalesFormContainer } from "@/components/sales/SalesFormContainer";
 import { ManufacturerSidebar } from "@/components/sales/ManufacturerSidebar";
 import { useSalesData } from "@/hooks/useSalesData";
+import { useOrderState } from "@/hooks/useOrderState";
+import { useLocation } from "react-router-dom";
+import { Customer } from "@/types";
 
 const LoadingFallback = () => (
   <div className="animate-pulse space-y-4">
@@ -12,6 +16,17 @@ const LoadingFallback = () => (
 
 const Sales = () => {
   const { customers, products, isLoading } = useSalesData();
+  const { handleCustomerSelect } = useOrderState();
+  const location = useLocation();
+
+  useEffect(() => {
+    const state = location.state as { selectedCustomer?: Customer };
+    if (state?.selectedCustomer) {
+      handleCustomerSelect(state.selectedCustomer);
+      // Clear the navigation state to prevent re-selecting on page refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, handleCustomerSelect]);
 
   if (isLoading) {
     return <LoadingFallback />;

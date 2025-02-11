@@ -1,11 +1,12 @@
 
+import React, { useState, useEffect } from "react";
 import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerOrderForm } from "./CustomerOrderForm";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface DayScheduleProps {
   day: string;
@@ -17,6 +18,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadCompletedCustomers = async () => {
@@ -65,8 +67,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   }, []);
 
   const handleCustomerClick = (customer: Customer) => {
-    setSelectedCustomerId(selectedCustomerId === customer.id ? null : customer.id);
-    onCustomerSelect(customer);
+    navigate('/sales', { state: { selectedCustomer: customer } });
   };
 
   const markAsCompleted = (customerId: string) => {

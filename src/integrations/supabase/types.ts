@@ -94,163 +94,62 @@ export type Database = {
           },
         ]
       }
-      customer_prices: {
+      customers: {
         Row: {
-          cash_price: number
-          created_at: string
-          customer_id: string | null
+          address: string
+          city: string
+          code: string
+          created_at: string | null
+          dan_obilaska: string | null
+          email: string | null
+          gps_coordinates: string | null
+          group_name: string | null
           id: string
-          invoice_price: number
-          last_changed: string | null
-          product_id: string | null
-          user_id: string | null
+          is_vat_registered: boolean | null
+          name: string
+          naselje: string | null
+          phone: string | null
+          pib: string
+          user_id: string
+          visit_day: string | null
         }
         Insert: {
-          cash_price: number
-          created_at?: string
-          customer_id?: string | null
+          address: string
+          city: string
+          code: string
+          created_at?: string | null
+          dan_obilaska?: string | null
+          email?: string | null
+          gps_coordinates?: string | null
+          group_name?: string | null
           id?: string
-          invoice_price: number
-          last_changed?: string | null
-          product_id?: string | null
-          user_id?: string | null
+          is_vat_registered?: boolean | null
+          name: string
+          naselje?: string | null
+          phone?: string | null
+          pib: string
+          user_id: string
+          visit_day?: string | null
         }
         Update: {
-          cash_price?: number
-          created_at?: string
-          customer_id?: string | null
+          address?: string
+          city?: string
+          code?: string
+          created_at?: string | null
+          dan_obilaska?: string | null
+          email?: string | null
+          gps_coordinates?: string | null
+          group_name?: string | null
           id?: string
-          invoice_price?: number
-          last_changed?: string | null
-          product_id?: string | null
-          user_id?: string | null
+          is_vat_registered?: boolean | null
+          name?: string
+          naselje?: string | null
+          phone?: string | null
+          pib?: string
+          user_id?: string
+          visit_day?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "customer_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products_darko"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_prices_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      group_price_changes: {
-        Row: {
-          cash_price: number
-          created_at: string
-          group_id: string | null
-          id: string
-          invoice_price: number
-          last_changed: string | null
-          product_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          cash_price: number
-          created_at?: string
-          group_id?: string | null
-          id?: string
-          invoice_price: number
-          last_changed?: string | null
-          product_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          cash_price?: number
-          created_at?: string
-          group_id?: string | null
-          id?: string
-          invoice_price?: number
-          last_changed?: string | null
-          product_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_price_changes_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "customer_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_price_changes_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products_darko"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_price_changes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      group_prices: {
-        Row: {
-          cash_price: number
-          created_at: string
-          group_id: string | null
-          id: string
-          invoice_price: number
-          last_changed: string | null
-          product_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          cash_price: number
-          created_at?: string
-          group_id?: string | null
-          id?: string
-          invoice_price: number
-          last_changed?: string | null
-          product_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          cash_price?: number
-          created_at?: string
-          group_id?: string | null
-          id?: string
-          invoice_price?: number
-          last_changed?: string | null
-          product_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_prices_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "customer_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products_darko"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_prices_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       kupci_darko: {
         Row: {
@@ -346,6 +245,91 @@ export type Database = {
           },
         ]
       }
+      price_changes: {
+        Row: {
+          cash_price: number
+          created_at: string
+          customer_id: string | null
+          group_id: string | null
+          id: string
+          invoice_price: number
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          cash_price: number
+          created_at?: string
+          customer_id?: string | null
+          group_id?: string | null
+          id?: string
+          invoice_price: number
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          cash_price?: number
+          created_at?: string
+          customer_id?: string | null
+          group_id?: string | null
+          id?: string
+          invoice_price?: number
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_changes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_changes_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_changes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_darko"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          Cena: number
+          created_at: string | null
+          id: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+          user_id: string
+        }
+        Insert: {
+          Cena: number
+          created_at?: string | null
+          id?: string
+          "Jedinica mere": string
+          Naziv: string
+          Proizvođač: string
+          user_id: string
+        }
+        Update: {
+          Cena?: number
+          created_at?: string | null
+          id?: string
+          "Jedinica mere"?: string
+          Naziv?: string
+          Proizvođač?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products_darko: {
         Row: {
           Cena: number
@@ -433,6 +417,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_sales_customers"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_sales_kupci_darko"
             columns: ["darko_customer_id"]
             isOneToOne: false
@@ -464,6 +455,7 @@ export type Database = {
           notes: string | null
           user_id: string | null
           visit_day: string
+          visit_status: string
           visit_time: string | null
         }
         Insert: {
@@ -474,6 +466,7 @@ export type Database = {
           notes?: string | null
           user_id?: string | null
           visit_day: string
+          visit_status?: string
           visit_time?: string | null
         }
         Update: {
@@ -484,6 +477,7 @@ export type Database = {
           notes?: string | null
           user_id?: string | null
           visit_day?: string
+          visit_status?: string
           visit_time?: string | null
         }
         Relationships: [
@@ -505,7 +499,40 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      latest_prices: {
+        Row: {
+          cash_price: number | null
+          created_at: string | null
+          customer_id: string | null
+          group_id: string | null
+          id: string | null
+          invoice_price: number | null
+          product_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_changes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_changes_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_changes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_darko"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       citext:
@@ -557,9 +584,27 @@ export type Database = {
         }
         Returns: string
       }
+      get_product_price: {
+        Args: {
+          p_product_id: string
+          p_customer_id: string
+        }
+        Returns: {
+          invoice_price: number
+          cash_price: number
+        }[]
+      }
+      reset_completed_visits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      reset_daily_sales: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      payment_method: "cash" | "invoice"
     }
     CompositeTypes: {
       [_ in never]: never
