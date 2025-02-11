@@ -27,6 +27,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
       console.log('Fetching prices for customer:', selectedCustomer.id);
       
       let pricesMap: Record<string, { cash: number; invoice: number }> = {};
+      let latestTimestamps: Record<string, Date> = {};
 
       // If customer belongs to a group, first get group prices
       if (selectedCustomer.group_name) {
@@ -55,17 +56,16 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           } else if (groupPrices) {
             console.log('Found group prices:', groupPrices.length);
             // Process each price based on most recent created_at
-            const processedPrices: { [key: string]: { cash: number; invoice: number } } = {};
             groupPrices.forEach(price => {
-              if (!processedPrices[price.product_id] || 
-                  new Date(price.created_at) > new Date(processedPrices[price.product_id].created_at)) {
-                processedPrices[price.product_id] = {
+              const timestamp = new Date(price.created_at);
+              if (!latestTimestamps[price.product_id] || timestamp > latestTimestamps[price.product_id]) {
+                latestTimestamps[price.product_id] = timestamp;
+                pricesMap[price.product_id] = {
                   cash: price.cash_price,
                   invoice: price.invoice_price
                 };
               }
             });
-            pricesMap = { ...pricesMap, ...processedPrices };
           }
         }
       }
@@ -82,17 +82,16 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
       } else if (customerPrices) {
         console.log('Found customer-specific prices:', customerPrices.length);
         // Process each price based on most recent created_at
-        const processedPrices: { [key: string]: { cash: number; invoice: number } } = {};
         customerPrices.forEach(price => {
-          if (!processedPrices[price.product_id] || 
-              new Date(price.created_at) > new Date(processedPrices[price.product_id].created_at)) {
-            processedPrices[price.product_id] = {
+          const timestamp = new Date(price.created_at);
+          if (!latestTimestamps[price.product_id] || timestamp > latestTimestamps[price.product_id]) {
+            latestTimestamps[price.product_id] = timestamp;
+            pricesMap[price.product_id] = {
               cash: price.cash_price,
               invoice: price.invoice_price
             };
           }
         });
-        pricesMap = { ...pricesMap, ...processedPrices };
       }
 
       console.log('Setting new prices map:', pricesMap);
