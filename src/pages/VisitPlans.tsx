@@ -13,6 +13,7 @@ interface VisitPlan {
   visit_day: string;
   visit_time: string | null;
   notes: string | null;
+  completed: boolean;
   customer: {
     name: string;
     address: string;

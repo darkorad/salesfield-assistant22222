@@ -38,23 +38,40 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const { data: sales, error } = await supabase
+        // First check completed visits
+        const { data: completedVisits, error: visitsError } = await supabase
+          .from('visit_plans')
+          .select('customer_id')
+          .eq('user_id', session.user.id)
+          .eq('completed', true)
+          .gte('created_at', today.toISOString())
+          .lt('created_at', tomorrow.toISOString());
+
+        if (visitsError) {
+          console.error("Error loading completed visits:", visitsError);
+          return;
+        }
+
+        // Then check sales
+        const { data: sales, error: salesError } = await supabase
           .from('sales')
           .select('darko_customer_id')
           .eq('user_id', session.user.id)
           .gte('date', today.toISOString())
           .lt('date', tomorrow.toISOString());
 
-        if (error) {
-          console.error("Error loading sales:", error);
-          toast.error("Greška pri učitavanju prodaje");
+        if (salesError) {
+          console.error("Error loading sales:", salesError);
           return;
         }
 
-        if (sales) {
-          const completedIds = new Set(sales.map(sale => sale.darko_customer_id));
-          setCompletedCustomers(completedIds);
-        }
+        // Combine both completed visits and sales
+        const completedIds = new Set([
+          ...(completedVisits || []).map(visit => visit.customer_id),
+          ...(sales || []).map(sale => sale.darko_customer_id)
+        ]);
+
+        setCompletedCustomers(completedIds);
       } catch (error) {
         console.error("Error:", error);
         toast.error("Greška pri učitavanju podataka");

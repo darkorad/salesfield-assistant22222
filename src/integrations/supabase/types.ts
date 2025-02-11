@@ -448,6 +448,7 @@ export type Database = {
       }
       visit_plans: {
         Row: {
+          completed: boolean | null
           created_at: string
           customer_id: string | null
           dan_obilaska: string | null
@@ -459,6 +460,7 @@ export type Database = {
           visit_time: string | null
         }
         Insert: {
+          completed?: boolean | null
           created_at?: string
           customer_id?: string | null
           dan_obilaska?: string | null
@@ -470,6 +472,7 @@ export type Database = {
           visit_time?: string | null
         }
         Update: {
+          completed?: boolean | null
           created_at?: string
           customer_id?: string | null
           dan_obilaska?: string | null
@@ -618,10 +621,6 @@ export type Database = {
           invoice_price: number
           cash_price: number
         }[]
-      }
-      reset_completed_visits: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       reset_daily_sales: {
         Args: Record<PropertyKey, never>
