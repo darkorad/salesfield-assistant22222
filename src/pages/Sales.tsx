@@ -22,6 +22,7 @@ const Sales = () => {
   useEffect(() => {
     const state = location.state as { selectedCustomer?: Customer };
     if (state?.selectedCustomer) {
+      console.log("Setting selected customer from navigation:", state.selectedCustomer);
       handleCustomerSelect(state.selectedCustomer);
       // Clear the navigation state to prevent re-selecting on page refresh
       window.history.replaceState({}, document.title);
@@ -45,3 +46,4 @@ const Sales = () => {
 };
 
 export default Sales;
+

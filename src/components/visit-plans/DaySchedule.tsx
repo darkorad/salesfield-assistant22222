@@ -84,7 +84,27 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   }, []);
 
   const handleCustomerClick = (customer: Customer) => {
-    navigate('/sales', { state: { selectedCustomer: customer } });
+    // Navigate to sales with customer data in state
+    navigate('/sales', { 
+      state: { 
+        selectedCustomer: {
+          id: customer.id,
+          name: customer.name,
+          address: customer.address,
+          city: customer.city,
+          phone: customer.phone,
+          pib: customer.pib,
+          is_vat_registered: customer.is_vat_registered,
+          email: customer.email,
+          naselje: customer.naselje,
+          gps_coordinates: customer.gps_coordinates,
+          group_name: customer.group_name,
+          dan_posete: customer.dan_posete,
+          dan_obilaska: customer.dan_obilaska
+        } 
+      },
+      replace: true // This ensures we replace the current history entry
+    });
   };
 
   const markAsCompleted = (customerId: string) => {
@@ -148,3 +168,4 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     </div>
   );
 };
+
