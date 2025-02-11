@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
@@ -44,19 +45,23 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           
           // Get group prices
           const { data: groupPrices, error: pricesError } = await supabase
-            .from('group_prices')
+            .from('price_changes')
             .select('*')
-            .eq('group_id', groupData.id);
+            .eq('group_id', groupData.id)
+            .order('created_at', { ascending: false });
 
           if (pricesError) {
             console.error('Error fetching group prices:', pricesError);
           } else if (groupPrices) {
             console.log('Found group prices:', groupPrices.length);
             groupPrices.forEach(price => {
-              pricesMap[price.product_id] = {
-                cash: price.cash_price,
-                invoice: price.invoice_price
-              };
+              if (!pricesMap[price.product_id] || new Date(price.created_at) > new Date(pricesMap[price.product_id].timestamp)) {
+                pricesMap[price.product_id] = {
+                  cash: price.cash_price,
+                  invoice: price.invoice_price,
+                  timestamp: price.created_at
+                };
+              }
             });
           }
         }
@@ -64,24 +69,37 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
 
       // Then get customer-specific prices which will override group prices
       const { data: customerPrices, error: customerError } = await supabase
-        .from('customer_prices')
+        .from('price_changes')
         .select('*')
-        .eq('customer_id', selectedCustomer.id);
+        .eq('customer_id', selectedCustomer.id)
+        .order('created_at', { ascending: false });
 
       if (customerError) {
         console.error('Error fetching customer prices:', customerError);
       } else if (customerPrices) {
         console.log('Found customer-specific prices:', customerPrices.length);
         customerPrices.forEach(price => {
-          pricesMap[price.product_id] = {
-            cash: price.cash_price,
-            invoice: price.invoice_price
-          };
+          if (!pricesMap[price.product_id] || new Date(price.created_at) > new Date(pricesMap[price.product_id].timestamp)) {
+            pricesMap[price.product_id] = {
+              cash: price.cash_price,
+              invoice: price.invoice_price,
+              timestamp: price.created_at
+            };
+          }
         });
       }
 
-      console.log('Setting new prices map:', pricesMap);
-      setCustomerPrices(pricesMap);
+      // Remove timestamp from final prices map
+      const finalPricesMap: Record<string, { cash: number; invoice: number }> = {};
+      Object.entries(pricesMap).forEach(([productId, data]) => {
+        finalPricesMap[productId] = {
+          cash: data.cash,
+          invoice: data.invoice
+        };
+      });
+
+      console.log('Setting new prices map:', finalPricesMap);
+      setCustomerPrices(finalPricesMap);
     } catch (error) {
       console.error('Error in fetchCustomerPrices:', error);
       toast.error("Greška pri učitavanju cena");
@@ -98,7 +116,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
       console.log('Setting up price subscriptions for customer:', selectedCustomer.id);
       await fetchCustomerPrices();
 
-      // Subscribe to customer_prices changes
+      // Subscribe to price_changes changes for this customer
       pricesChannel = supabase
         .channel('customer-prices-changes')
         .on(
@@ -106,7 +124,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
           {
             event: '*',
             schema: 'public',
-            table: 'customer_prices',
+            table: 'price_changes',
             filter: `customer_id=eq.${selectedCustomer.id}`
           },
           async (payload: RealtimePostgresChangesPayload<CustomerPrice>) => {
@@ -136,7 +154,7 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
               {
                 event: '*',
                 schema: 'public',
-                table: 'group_prices',
+                table: 'price_changes',
                 filter: `group_id=eq.${groupData.id}`
               },
               async (payload: RealtimePostgresChangesPayload<GroupPrice>) => {

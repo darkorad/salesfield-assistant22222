@@ -499,6 +499,31 @@ export type Database = {
       }
     }
     Views: {
+      customer_prices: {
+        Row: {
+          cash_price: number | null
+          created_at: string | null
+          customer_id: string | null
+          invoice_price: number | null
+          product_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_changes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_changes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_darko"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       latest_prices: {
         Row: {
           cash_price: number | null

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +20,7 @@ export const SyncPricesButton = ({ customerId, onSyncComplete }: SyncPricesButto
     try {
       // Fetch latest customer prices
       const { data: prices, error: pricesError } = await supabase
-        .from('customer_prices')
+        .from('price_changes')
         .select('*')
         .eq('customer_id', customerId);
 
