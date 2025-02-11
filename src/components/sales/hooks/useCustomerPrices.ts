@@ -54,15 +54,18 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
             console.error('Error fetching group prices:', pricesError);
           } else if (groupPrices) {
             console.log('Found group prices:', groupPrices.length);
+            // Process each price based on most recent created_at
+            const processedPrices: { [key: string]: { cash: number; invoice: number } } = {};
             groupPrices.forEach(price => {
-              if (!pricesMap[price.product_id] || new Date(price.created_at) > new Date(pricesMap[price.product_id].timestamp)) {
-                pricesMap[price.product_id] = {
+              if (!processedPrices[price.product_id] || 
+                  new Date(price.created_at) > new Date(processedPrices[price.product_id].created_at)) {
+                processedPrices[price.product_id] = {
                   cash: price.cash_price,
-                  invoice: price.invoice_price,
-                  timestamp: price.created_at
+                  invoice: price.invoice_price
                 };
               }
             });
+            pricesMap = { ...pricesMap, ...processedPrices };
           }
         }
       }
@@ -78,28 +81,22 @@ export const useCustomerPrices = (selectedCustomer: Customer) => {
         console.error('Error fetching customer prices:', customerError);
       } else if (customerPrices) {
         console.log('Found customer-specific prices:', customerPrices.length);
+        // Process each price based on most recent created_at
+        const processedPrices: { [key: string]: { cash: number; invoice: number } } = {};
         customerPrices.forEach(price => {
-          if (!pricesMap[price.product_id] || new Date(price.created_at) > new Date(pricesMap[price.product_id].timestamp)) {
-            pricesMap[price.product_id] = {
+          if (!processedPrices[price.product_id] || 
+              new Date(price.created_at) > new Date(processedPrices[price.product_id].created_at)) {
+            processedPrices[price.product_id] = {
               cash: price.cash_price,
-              invoice: price.invoice_price,
-              timestamp: price.created_at
+              invoice: price.invoice_price
             };
           }
         });
+        pricesMap = { ...pricesMap, ...processedPrices };
       }
 
-      // Remove timestamp from final prices map
-      const finalPricesMap: Record<string, { cash: number; invoice: number }> = {};
-      Object.entries(pricesMap).forEach(([productId, data]) => {
-        finalPricesMap[productId] = {
-          cash: data.cash,
-          invoice: data.invoice
-        };
-      });
-
-      console.log('Setting new prices map:', finalPricesMap);
-      setCustomerPrices(finalPricesMap);
+      console.log('Setting new prices map:', pricesMap);
+      setCustomerPrices(pricesMap);
     } catch (error) {
       console.error('Error in fetchCustomerPrices:', error);
       toast.error("Greška pri učitavanju cena");
