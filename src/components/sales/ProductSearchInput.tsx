@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 
 interface ProductSearchInputProps {
@@ -8,12 +7,13 @@ interface ProductSearchInputProps {
 
 export const ProductSearchInput = ({ value, onChange }: ProductSearchInputProps) => {
   return (
-    <Input
-      type="text"
-      placeholder="Pretraži proizvode..."
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full"
-    />
+    <div className="relative">
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Pretraži proizvod..."
+        className="w-full"
+      />
+    </div>
   );
 };

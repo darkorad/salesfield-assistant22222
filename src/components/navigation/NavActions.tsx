@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +35,7 @@ const NavActions = () => {
   };
 
   const menuItems = [
+    { path: "/sales", label: "Prodaja" },
     { path: "/daily-orders", label: "Današnje porudžbine" },
     { path: "/visit-plans", label: "Plan poseta", icon: Calendar },
     { path: "/settings", label: "Podešavanja i izveštaji", icon: Settings },

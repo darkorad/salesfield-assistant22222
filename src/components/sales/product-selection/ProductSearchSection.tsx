@@ -1,5 +1,4 @@
-
-import { Product } from "@/types";
+import { Product, Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { ProductSearchResults } from "../ProductSearchResults";
 
@@ -8,7 +7,7 @@ interface ProductSearchSectionProps {
   setSearchTerm: (term: string) => void;
   filteredProducts: Product[];
   handleAddProduct: (product: Product) => void;
-  getProductPrice: (product: Product) => number;
+  getProductPrice: (product: Product, paymentType: 'cash' | 'invoice') => number;
 }
 
 export const ProductSearchSection = ({

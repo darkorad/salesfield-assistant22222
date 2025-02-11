@@ -3,9 +3,8 @@ import { useState, useEffect } from "react";
 import { Order } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { startOfDay, endOfDay } from "date-fns";
 
-export const useDailySales = (selectedDate: Date) => {
+export const useDailySales = () => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -17,17 +16,23 @@ export const useDailySales = (selectedDate: Date) => {
         return;
       }
 
-      const start = startOfDay(selectedDate);
-      const end = endOfDay(selectedDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      console.log("Fetching sales between:", start.toISOString(), "and", end.toISOString());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
 
       const { data: salesData, error } = await supabase
         .from('sales')
-        .select('*, darko_customer:kupci_darko(*)')
+        .select(`
+          *,
+          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
+        `)
         .eq('user_id', session.user.id)
-        .gte('date', start.toISOString())
-        .lt('date', end.toISOString())
+        .gte('date', today.toISOString())
+        .lt('date', tomorrow.toISOString())
         .order('date', { ascending: false });
 
       if (error) {
@@ -38,7 +43,7 @@ export const useDailySales = (selectedDate: Date) => {
 
       const transformedSales = salesData?.map(sale => ({
         ...sale,
-        customer: sale.darko_customer,
+        customer: sale.darko_customer
       }));
 
       console.log("Fetched sales data:", transformedSales);
@@ -53,12 +58,9 @@ export const useDailySales = (selectedDate: Date) => {
 
   useEffect(() => {
     loadTodaySales();
-    // Only set up interval if we're looking at today's date
-    if (startOfDay(selectedDate).getTime() === startOfDay(new Date()).getTime()) {
-      const interval = setInterval(loadTodaySales, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedDate]);
+    const interval = setInterval(loadTodaySales, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return {
     todaySales,

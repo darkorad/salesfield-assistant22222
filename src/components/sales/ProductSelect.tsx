@@ -1,115 +1,112 @@
 
-import { useState } from "react";
 import { Product, OrderItem, Customer } from "@/types";
+import { OrderItemsList } from "./OrderItemsList";
+import { useState } from "react";
+import { useCustomerPrices } from "./hooks/useCustomerPrices";
 import { ProductSearchSection } from "./product-selection/ProductSearchSection";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useSalesData } from "@/hooks/useSalesData";
+import { CustomerInfoSection } from "./product-selection/CustomerInfoSection";
 
 interface ProductSelectProps {
+  products: Product[];
   orderItems: OrderItem[];
   selectedCustomer: Customer;
-  onOrderItemsChange: React.Dispatch<React.SetStateAction<OrderItem[]>>;
+  onOrderItemsChange: (items: OrderItem[]) => void;
 }
 
-export const ProductSelect = ({ 
-  orderItems, 
-  selectedCustomer, 
-  onOrderItemsChange 
+export const ProductSelect = ({
+  products,
+  orderItems,
+  selectedCustomer,
+  onOrderItemsChange,
 }: ProductSelectProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { products, isLoading } = useSalesData();
+  const { getProductPrice, fetchCustomerPrices } = useCustomerPrices(selectedCustomer);
+  const [localProducts, setLocalProducts] = useState(products);
 
-  if (isLoading) {
-    return <div className="text-sm text-gray-500">Učitavanje proizvoda...</div>;
-  }
-
-  if (!products || products.length === 0) {
-    return <div className="text-sm text-gray-500">Nema dostupnih proizvoda</div>;
-  }
-
-  const filteredProducts = products.filter(product =>
+  const filteredProducts = localProducts.filter((product) =>
     product.Naziv.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddProduct = (product: Product) => {
-    const existingItem = orderItems.find(item => item.product.id === product.id);
-    if (existingItem) {
-      onOrderItemsChange(orderItems.map(item =>
-        item.product.id === product.id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
+  const handleAddProduct = (product: Product, quantity: number = 1, paymentType: 'cash' | 'invoice' = 'invoice') => {
+    const price = getProductPrice(product, paymentType);
+    const productWithPrice = { ...product, Cena: price };
+
+    const existingItemIndex = orderItems.findIndex(
+      (item) => item.product.Naziv === product.Naziv && item.paymentType === paymentType
+    );
+
+    if (existingItemIndex !== -1) {
+      const newItems = [...orderItems];
+      newItems[existingItemIndex] = {
+        ...newItems[existingItemIndex],
+        quantity: quantity,
+        paymentType: paymentType,
+        product: productWithPrice
+      };
+      onOrderItemsChange(newItems);
     } else {
-      onOrderItemsChange([...orderItems, { 
-        product, 
-        quantity: 1,
-        paymentType: 'cash'
-      }]);
+      const newItem: OrderItem = {
+        product: productWithPrice,
+        quantity,
+        paymentType
+      };
+      onOrderItemsChange([...orderItems, newItem]);
     }
-    setSearchTerm(""); // Clear search after selection
+    setSearchTerm("");
   };
 
-  const handleDeleteItem = (productId: string) => {
-    onOrderItemsChange(orderItems.filter(item => item.product.id !== productId));
-  };
-
-  const handlePaymentTypeChange = (productId: string, newPaymentType: 'cash' | 'invoice') => {
-    onOrderItemsChange(orderItems.map(item =>
-      item.product.id === productId
-        ? { ...item, paymentType: newPaymentType }
-        : item
-    ));
-  };
-
-  const getProductPrice = (product: Product) => {
-    return product.Cena;
+  const handleCustomerUpdate = () => {
+    // Refresh prices after customer update
+    fetchCustomerPrices();
   };
 
   return (
-    <div className="relative">
-      <ProductSearchSection
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filteredProducts={filteredProducts}
-        handleAddProduct={handleAddProduct}
-        getProductPrice={getProductPrice}
+    <div className="space-y-4">
+      <CustomerInfoSection 
+        customer={selectedCustomer}
+        onCustomerUpdate={handleCustomerUpdate}
       />
-      {/* Display selected products */}
-      <div className="mt-4 space-y-2">
-        {orderItems.map((item) => (
-          <div key={item.product.id} className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border">
-            <div className="flex-1">
-              <div className="font-medium">{item.product.Naziv}</div>
-              <div className="text-sm text-gray-600 mt-1">
-                <div className="mb-2">Količina: {item.quantity}</div>
-                <div className="space-y-2">
-                  <button
-                    className={`w-full text-left px-2 py-1 rounded ${item.paymentType === 'cash' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
-                    onClick={() => handlePaymentTypeChange(item.product.id, 'cash')}
-                  >
-                    Gotovina: {item.product.Cena} RSD
-                  </button>
-                  <button
-                    className={`w-full text-left px-2 py-1 rounded ${item.paymentType === 'invoice' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
-                    onClick={() => handlePaymentTypeChange(item.product.id, 'invoice')}
-                  >
-                    Račun: {item.product.Cena} RSD
-                  </button>
-                </div>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ml-2 text-gray-500 hover:text-red-500"
-              onClick={() => handleDeleteItem(item.product.id)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
+
+      <div className="relative">
+        <ProductSearchSection
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filteredProducts={filteredProducts}
+          handleAddProduct={handleAddProduct}
+          getProductPrice={getProductPrice}
+        />
       </div>
+
+      {orderItems.length > 0 && (
+        <div className="mt-4">
+          <OrderItemsList
+            items={orderItems}
+            onQuantityChange={(index, quantity) => {
+              const newItems = [...orderItems];
+              newItems[index] = {
+                ...newItems[index],
+                quantity: Math.max(1, quantity)
+              };
+              onOrderItemsChange(newItems);
+            }}
+            onPaymentTypeChange={(index, paymentType) => {
+              const newItems = [...orderItems];
+              const item = newItems[index];
+              const newPrice = getProductPrice(item.product, paymentType);
+              newItems[index] = {
+                ...item,
+                paymentType,
+                product: { ...item.product, Cena: newPrice }
+              };
+              onOrderItemsChange(newItems);
+            }}
+            onRemoveItem={(index) => {
+              const newItems = orderItems.filter((_, i) => i !== index);
+              onOrderItemsChange(newItems);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

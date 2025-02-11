@@ -1,4 +1,3 @@
-
 import { Customer } from "@/types";
 
 interface CustomerSearchResultsProps {
@@ -7,25 +6,29 @@ interface CustomerSearchResultsProps {
 }
 
 export const CustomerSearchResults = ({ customers, onCustomerSelect }: CustomerSearchResultsProps) => {
-  if (customers.length === 0) {
-    return (
-      <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 p-2">
-        <p className="text-sm text-gray-500">Nema rezultata</p>
-      </div>
-    );
-  }
+  if (customers.length === 0) return null;
 
   return (
-    <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+    <div className="absolute w-full mt-1 bg-white border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
       {customers.map((customer) => (
-        <button
+        <div
           key={customer.id}
-          className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+          className="px-4 py-2 cursor-pointer hover:bg-gray-100"
           onClick={() => onCustomerSelect(customer)}
         >
-          <div className="text-sm font-medium">{customer.name}</div>
-          <div className="text-xs text-gray-500">{customer.address}</div>
-        </button>
+          <div className="font-medium">{customer.name}</div>
+          {customer.group_name && (
+            <div className="text-sm text-blue-600">
+              Grupa: {customer.group_name}
+            </div>
+          )}
+          <div className="text-sm text-gray-500">
+            {customer.address}, {customer.naselje && `${customer.naselje},`} {customer.city}
+          </div>
+          {customer.email && (
+            <div className="text-sm text-gray-500">{customer.email}</div>
+          )}
+        </div>
       ))}
     </div>
   );

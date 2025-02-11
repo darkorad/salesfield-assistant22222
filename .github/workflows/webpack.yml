@@ -1,5 +1,4 @@
-
-name: Build and Deploy
+name: NodeJS with Webpack
 
 on:
   push:
@@ -7,16 +6,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [18.x, 20.x, 22.x]
 
     steps:
     - uses: actions/checkout@v4
@@ -25,23 +21,8 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: |
-        npm install --legacy-peer-deps
-        npm install -g vite
-        npm install -D webpack-cli
 
     - name: Build
-      run: npm run build
-      env:
-        CI: false
-
-    - name: Deploy
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        folder: build
-        branch: gh-pages
-        clean: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        npm install
+        npx webpack

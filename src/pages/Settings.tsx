@@ -1,4 +1,3 @@
-
 import { ExportData } from "@/components/settings/ExportData";
 import { CustomerPriceForm } from "@/components/settings/customer-prices/CustomerPriceForm";
 import { GroupPriceForm } from "@/components/settings/group-prices/GroupPriceForm";
@@ -31,10 +30,6 @@ const Settings = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <div className="mb-8">
-        <AddCustomerDialog />
-      </div>
-      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="settings">Podešavanja</TabsTrigger>
@@ -43,7 +38,10 @@ const Settings = () => {
         
         <TabsContent value="settings">
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Podešavanja</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Podešavanja</h2>
+              <AddCustomerDialog />
+            </div>
 
             <div>
               <CustomerPriceForm />

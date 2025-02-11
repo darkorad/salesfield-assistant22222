@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,24 +9,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Customer, VisitPlan } from "@/types";
-import { AddVisitDialog } from "./AddVisitDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+interface VisitPlan {
+  id: string;
+  customer_id: string;
+  visit_day: string;
+  visit_time: string | null;
+  notes: string | null;
+  customer: {
+    name: string;
+    address: string;
+    city: string;
+  };
+}
 
 interface TodayVisitsProps {
   isLoading: boolean;
   visitPlans: VisitPlan[];
   date: string;
-  customers: Customer[];
-  onVisitAdded: () => void;
 }
 
-export const TodayVisits = ({ 
-  isLoading, 
-  visitPlans, 
-  date,
-  customers,
-  onVisitAdded 
-}: TodayVisitsProps) => {
+export const TodayVisits = ({ isLoading, visitPlans, date }: TodayVisitsProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   if (isLoading) {
@@ -48,7 +57,6 @@ export const TodayVisits = ({
             <TableHead>Adresa</TableHead>
             <TableHead>Vreme</TableHead>
             <TableHead>Napomene</TableHead>
-            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -60,12 +68,11 @@ export const TodayVisits = ({
               </TableCell>
               <TableCell>{visit.visit_time}</TableCell>
               <TableCell>{visit.notes}</TableCell>
-              <TableCell>{visit.visit_status}</TableCell>
             </TableRow>
           ))}
           {visitPlans.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-gray-500">
+              <TableCell colSpan={4} className="text-center text-gray-500">
                 Nema planiranih poseta za danas
               </TableCell>
             </TableRow>
@@ -74,22 +81,23 @@ export const TodayVisits = ({
       </Table>
 
       <div className="mt-4">
-        <Button 
-          className="w-full"
-          onClick={() => setIsAddDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Dodaj posetu
-        </Button>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Dodaj posetu
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Dodaj novu posetu za {date}</DialogTitle>
+            </DialogHeader>
+            <div className="p-4">
+              <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <AddVisitDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        date={date}
-        customers={customers}
-        onVisitAdded={onVisitAdded}
-      />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 
 interface CustomerSearchInputProps {
@@ -8,12 +7,13 @@ interface CustomerSearchInputProps {
 
 export const CustomerSearchInput = ({ value, onChange }: CustomerSearchInputProps) => {
   return (
-    <Input
-      type="text"
-      placeholder="Pretraži kupce..."
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full"
-    />
+    <div className="relative flex-1 min-w-0">
+      <Input
+        placeholder="Pretraži kupca po nazivu, grupi, gradu ili adresi..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full"
+      />
+    </div>
   );
 };
