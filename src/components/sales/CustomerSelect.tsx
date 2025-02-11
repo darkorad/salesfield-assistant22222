@@ -1,5 +1,6 @@
+
 import { Customer } from "@/types";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CustomerSearchResults } from "./CustomerSearchResults";
 import { HistoryButton } from "./HistoryButton";
 import { CustomerDropdown } from "./CustomerDropdown";
@@ -26,8 +27,7 @@ export const CustomerSelect = ({
   const [showHistory, setShowHistory] = useState(false);
   const { refetch } = useSalesData();
 
-  console.log("Total customers available:", customers?.length || 0);
-  console.log("Current search term:", customerSearch);
+  console.log("CustomerSelect: Current customer search:", customerSearch);
 
   useCustomerSync(() => {
     refetch();
@@ -41,11 +41,19 @@ export const CustomerSelect = ({
       return;
     }
 
-    console.log("Selected customer:", customer.name);
+    console.log("CustomerSelect: Selected customer:", customer.name);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
     onCustomerSearchChange(customer.name);
   }, [onCustomerSelect, onCustomerSearchChange]);
+
+  // Update local state when customerSearch changes from parent
+  useEffect(() => {
+    const matchingCustomer = customers.find(c => c.name === customerSearch);
+    if (matchingCustomer && (!selectedCustomer || selectedCustomer.name !== customerSearch)) {
+      setSelectedCustomer(matchingCustomer);
+    }
+  }, [customerSearch, customers, selectedCustomer]);
 
   return (
     <div className="space-y-2 w-full">

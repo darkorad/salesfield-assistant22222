@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Customer, OrderItem } from "@/types";
 
@@ -7,8 +8,9 @@ export const useOrderState = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   const handleCustomerSelect = (customer: Customer) => {
+    console.log("useOrderState handling customer select:", customer);
     setSelectedCustomer(customer);
-    setCustomerSearch(customer.name);
+    setCustomerSearch(customer.name); // Make sure to set the search term to match the selected customer
   };
 
   const resetOrder = () => {
