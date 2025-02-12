@@ -1,3 +1,4 @@
+
 import { Customer } from "@/types";
 
 interface CustomerSearchResultsProps {
