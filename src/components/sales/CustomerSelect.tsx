@@ -44,15 +44,17 @@ export const CustomerSelect = ({
     console.log("CustomerSelect: Selected customer:", customer.name);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
-    onCustomerSearchChange(customer.name);
-  }, [onCustomerSelect, onCustomerSearchChange]);
+  }, [onCustomerSelect]);
 
   // Update local state when customerSearch changes from parent
   useEffect(() => {
-    const matchingCustomer = customers.find(c => c.name === customerSearch);
-    if (matchingCustomer && (!selectedCustomer || selectedCustomer.name !== customerSearch)) {
-      setSelectedCustomer(matchingCustomer);
-      onCustomerSelect(matchingCustomer); // Make sure to call onCustomerSelect here
+    if (customerSearch) {
+      const matchingCustomer = customers.find(c => c.name === customerSearch);
+      if (matchingCustomer && (!selectedCustomer || selectedCustomer.name !== customerSearch)) {
+        console.log("Found matching customer for search:", matchingCustomer.name);
+        setSelectedCustomer(matchingCustomer);
+        onCustomerSelect(matchingCustomer);
+      }
     }
   }, [customerSearch, customers, selectedCustomer, onCustomerSelect]);
 

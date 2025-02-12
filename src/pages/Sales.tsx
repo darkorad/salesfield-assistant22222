@@ -27,10 +27,9 @@ const Sales = () => {
       // Find the customer in our customers list to ensure we have complete data
       const fullCustomerData = customers.find(c => c.id === customerData.id);
       if (fullCustomerData) {
-        // First set the search term
-        setCustomerSearch(fullCustomerData.name);
-        // Then select the customer
+        console.log("Found matching customer:", fullCustomerData.name);
         handleCustomerSelect(fullCustomerData);
+        setCustomerSearch(fullCustomerData.name);
         // Clear the navigation state
         window.history.replaceState({}, document.title);
       }
