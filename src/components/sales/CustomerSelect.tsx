@@ -44,8 +44,7 @@ export const CustomerSelect = ({
     console.log("CustomerSelect: Selected customer:", customer.name);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
-    onCustomerSearchChange(customer.name);
-  }, [onCustomerSelect, onCustomerSearchChange]);
+  }, [onCustomerSelect]);
 
   // Update local state when customerSearch changes from parent
   useEffect(() => {
@@ -54,10 +53,11 @@ export const CustomerSelect = ({
       if (matchingCustomer && (!selectedCustomer || selectedCustomer.name !== customerSearch)) {
         console.log("Found matching customer for search:", matchingCustomer.name);
         setSelectedCustomer(matchingCustomer);
-        onCustomerSelect(matchingCustomer);
       }
+    } else {
+      setSelectedCustomer(null);
     }
-  }, [customerSearch, customers, selectedCustomer, onCustomerSelect]);
+  }, [customerSearch, customers, selectedCustomer]);
 
   return (
     <div className="space-y-2 w-full">

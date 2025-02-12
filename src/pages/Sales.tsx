@@ -20,21 +20,20 @@ const Sales = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.state && 'selectedCustomer' in location.state) {
+    if (location.state?.selectedCustomer) {
       const customerData = location.state.selectedCustomer as Customer;
       console.log("Setting selected customer from navigation:", customerData);
       
       // Find the customer in our customers list to ensure we have complete data
       const fullCustomerData = customers.find(c => c.id === customerData.id);
       if (fullCustomerData) {
-        console.log("Found matching customer:", fullCustomerData.name);
-        setCustomerSearch(fullCustomerData.name);
+        console.log("Found matching customer in customers list:", fullCustomerData.name);
+        // Explicitly select the customer and update the search
         handleCustomerSelect(fullCustomerData);
-        // Clear the navigation state
-        window.history.replaceState({}, document.title);
+        setCustomerSearch(fullCustomerData.name);
       }
     }
-  }, [location.state, customers, handleCustomerSelect, setCustomerSearch]);
+  }, [location.state, customers]);
 
   if (isLoading) {
     return <LoadingFallback />;
