@@ -24,16 +24,12 @@ const Sales = () => {
       const customerData = location.state.selectedCustomer as Customer;
       console.log("Setting selected customer from navigation:", customerData);
       
-      // Find the customer in our customers list to ensure we have complete data
-      const fullCustomerData = customers.find(c => c.id === customerData.id);
-      if (fullCustomerData) {
-        console.log("Found matching customer in customers list:", fullCustomerData.name);
-        // Explicitly select the customer and update the search
-        handleCustomerSelect(fullCustomerData);
-        setCustomerSearch(fullCustomerData.name);
-      }
+      // Since we already have complete customer data from the navigation state,
+      // we can use it directly without searching in the customers list
+      handleCustomerSelect(customerData);
+      setCustomerSearch(customerData.name);
     }
-  }, [location.state, customers]);
+  }, [location.state]);
 
   if (isLoading) {
     return <LoadingFallback />;
