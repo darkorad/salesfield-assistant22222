@@ -16,18 +16,21 @@ const LoadingFallback = () => (
 
 const Sales = () => {
   const { customers, products, isLoading } = useSalesData();
-  const { handleCustomerSelect } = useOrderState();
+  const { handleCustomerSelect, setCustomerSearch } = useOrderState();
   const location = useLocation();
 
   useEffect(() => {
     const state = location.state as { selectedCustomer?: Customer };
     if (state?.selectedCustomer) {
       console.log("Setting selected customer from navigation:", state.selectedCustomer);
+      // First set the search term
+      setCustomerSearch(state.selectedCustomer.name);
+      // Then select the customer
       handleCustomerSelect(state.selectedCustomer);
       // Clear the navigation state to prevent re-selecting on page refresh
       window.history.replaceState({}, document.title);
     }
-  }, [location.state, handleCustomerSelect]);
+  }, [location.state, handleCustomerSelect, setCustomerSearch]);
 
   if (isLoading) {
     return <LoadingFallback />;
@@ -46,4 +49,3 @@ const Sales = () => {
 };
 
 export default Sales;
-
