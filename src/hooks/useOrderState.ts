@@ -9,8 +9,10 @@ export const useOrderState = () => {
 
   const handleCustomerSelect = (customer: Customer) => {
     console.log("useOrderState handling customer select:", customer);
+    if (!customer) return;
+    
     setSelectedCustomer(customer);
-    setCustomerSearch(customer.name); // Make sure to set the search term to match the selected customer
+    setCustomerSearch(customer.name);
   };
 
   const resetOrder = () => {

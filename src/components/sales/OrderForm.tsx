@@ -1,3 +1,4 @@
+
 import { Customer, Product, OrderItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CustomerSelect } from "./CustomerSelect";
@@ -39,7 +40,7 @@ export const OrderForm = ({
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6">
       <CustomerSelect
         customers={customers}
         customerSearch={customerSearch}

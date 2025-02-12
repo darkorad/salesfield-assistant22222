@@ -52,8 +52,9 @@ export const CustomerSelect = ({
     const matchingCustomer = customers.find(c => c.name === customerSearch);
     if (matchingCustomer && (!selectedCustomer || selectedCustomer.name !== customerSearch)) {
       setSelectedCustomer(matchingCustomer);
+      onCustomerSelect(matchingCustomer); // Make sure to call onCustomerSelect here
     }
-  }, [customerSearch, customers, selectedCustomer]);
+  }, [customerSearch, customers, selectedCustomer, onCustomerSelect]);
 
   return (
     <div className="space-y-2 w-full">
