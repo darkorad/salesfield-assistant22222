@@ -20,19 +20,13 @@ const Sales = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const selectedCustomer = location.state?.selectedCustomer as Customer | undefined;
+    const selectedCustomer = location.state?.selectedCustomer;
     if (selectedCustomer) {
-      console.log("Setting selected customer from navigation:", selectedCustomer);
-      
-      // Update customer search first
+      // Directly set both states with the customer data
+      handleCustomerSelect(selectedCustomer);
       setCustomerSearch(selectedCustomer.name);
-      
-      // Then select the customer after a short delay to ensure state is updated
-      setTimeout(() => {
-        handleCustomerSelect(selectedCustomer);
-      }, 0);
     }
-  }, [location.state, handleCustomerSelect, setCustomerSearch]);
+  }, []);
 
   if (isLoading) {
     return <LoadingFallback />;
