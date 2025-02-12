@@ -20,17 +20,22 @@ const Sales = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const state = location.state as { selectedCustomer?: Customer };
-    if (state?.selectedCustomer) {
-      console.log("Setting selected customer from navigation:", state.selectedCustomer);
-      // First set the search term
-      setCustomerSearch(state.selectedCustomer.name);
-      // Then select the customer
-      handleCustomerSelect(state.selectedCustomer);
-      // Clear the navigation state to prevent re-selecting on page refresh
-      window.history.replaceState({}, document.title);
+    if (location.state && 'selectedCustomer' in location.state) {
+      const customerData = location.state.selectedCustomer as Customer;
+      console.log("Setting selected customer from navigation:", customerData);
+      
+      // Find the customer in our customers list to ensure we have complete data
+      const fullCustomerData = customers.find(c => c.id === customerData.id);
+      if (fullCustomerData) {
+        // First set the search term
+        setCustomerSearch(fullCustomerData.name);
+        // Then select the customer
+        handleCustomerSelect(fullCustomerData);
+        // Clear the navigation state
+        window.history.replaceState({}, document.title);
+      }
     }
-  }, [location.state, handleCustomerSelect, setCustomerSearch]);
+  }, [location.state, customers, handleCustomerSelect, setCustomerSearch]);
 
   if (isLoading) {
     return <LoadingFallback />;

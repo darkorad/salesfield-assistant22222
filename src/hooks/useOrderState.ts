@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Customer, OrderItem } from "@/types";
 
 export const useOrderState = () => {
@@ -7,13 +7,13 @@ export const useOrderState = () => {
   const [customerSearch, setCustomerSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
-  const handleCustomerSelect = (customer: Customer) => {
+  const handleCustomerSelect = useCallback((customer: Customer) => {
     console.log("useOrderState handling customer select:", customer);
     if (!customer) return;
     
     setSelectedCustomer(customer);
     setCustomerSearch(customer.name);
-  };
+  }, []);
 
   const resetOrder = () => {
     setSelectedCustomer(null);
