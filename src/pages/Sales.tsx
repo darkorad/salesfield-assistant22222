@@ -29,7 +29,7 @@ const Sales = () => {
       handleCustomerSelect(customerData);
       setCustomerSearch(customerData.name);
     }
-  }, [location.state]);
+  }, [location.state, handleCustomerSelect, setCustomerSearch]); // Added missing dependencies
 
   if (isLoading) {
     return <LoadingFallback />;
