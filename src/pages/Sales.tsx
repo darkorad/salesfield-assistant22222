@@ -20,16 +20,19 @@ const Sales = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.state?.selectedCustomer) {
-      const customerData = location.state.selectedCustomer as Customer;
-      console.log("Setting selected customer from navigation:", customerData);
+    const selectedCustomer = location.state?.selectedCustomer as Customer | undefined;
+    if (selectedCustomer) {
+      console.log("Setting selected customer from navigation:", selectedCustomer);
       
-      // Since we already have complete customer data from the navigation state,
-      // we can use it directly without searching in the customers list
-      handleCustomerSelect(customerData);
-      setCustomerSearch(customerData.name);
+      // Update customer search first
+      setCustomerSearch(selectedCustomer.name);
+      
+      // Then select the customer after a short delay to ensure state is updated
+      setTimeout(() => {
+        handleCustomerSelect(selectedCustomer);
+      }, 0);
     }
-  }, [location.state, handleCustomerSelect, setCustomerSearch]); // Added missing dependencies
+  }, [location.state, handleCustomerSelect, setCustomerSearch]);
 
   if (isLoading) {
     return <LoadingFallback />;
