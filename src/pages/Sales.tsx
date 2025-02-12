@@ -26,7 +26,7 @@ const Sales = () => {
       handleCustomerSelect(selectedCustomer);
       setCustomerSearch(selectedCustomer.name);
     }
-  }, []);
+  }, [location.state]);
 
   if (isLoading) {
     return <LoadingFallback />;
