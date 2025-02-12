@@ -84,29 +84,29 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   }, []);
 
   const handleCustomerClick = (customer: Customer) => {
-    // Ensure we pass all required customer fields
-    const customerData: Customer = {
-      id: customer.id,
-      user_id: customer.user_id,
-      code: customer.code,
-      name: customer.name,
-      address: customer.address,
-      city: customer.city,
-      phone: customer.phone || "",
-      pib: customer.pib,
-      is_vat_registered: customer.is_vat_registered,
-      gps_coordinates: customer.gps_coordinates,
-      naselje: customer.naselje,
-      group_name: customer.group_name,
-      email: customer.email,
-      visit_day: customer.visit_day,
-      dan_obilaska: customer.dan_obilaska,
-      dan_posete: customer.dan_posete
-    };
-
     // Navigate to sales with complete customer data
     navigate('/sales', { 
-      state: { selectedCustomer: customerData }
+      state: { 
+        selectedCustomer: {
+          id: customer.id,
+          user_id: customer.user_id,
+          code: customer.code,
+          name: customer.name,
+          address: customer.address,
+          city: customer.city,
+          phone: customer.phone || "",
+          pib: customer.pib,
+          is_vat_registered: customer.is_vat_registered,
+          gps_coordinates: customer.gps_coordinates,
+          naselje: customer.naselje,
+          group_name: customer.group_name,
+          email: customer.email,
+          visit_day: customer.visit_day,
+          dan_obilaska: customer.dan_obilaska,
+          dan_posete: customer.dan_posete
+        }
+      },
+      replace: true
     });
   };
 
