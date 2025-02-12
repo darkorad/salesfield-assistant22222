@@ -16,7 +16,6 @@ interface DayScheduleProps {
 
 export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
   const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -91,15 +90,6 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     });
   };
 
-  const markAsCompleted = (customerId: string) => {
-    setCompletedCustomers(prev => {
-      const newSet = new Set(prev);
-      newSet.add(customerId);
-      return newSet;
-    });
-    setSelectedCustomerId(null);
-  };
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -134,14 +124,6 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
               )}
             </div>
           </Card>
-          {selectedCustomerId === customer.id && (
-            <div className="mt-1">
-              <CustomerOrderForm 
-                customer={customer} 
-                onOrderComplete={() => markAsCompleted(customer.id)} 
-              />
-            </div>
-          )}
         </div>
       ))}
       {customers.length === 0 && (
