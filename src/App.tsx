@@ -1,6 +1,8 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import Sales from "./pages/Sales";
+import Prodaja2 from "./pages/Prodaja2";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import DailyOrders from "./pages/DailyOrders";
@@ -16,6 +18,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/sales" replace />} />
             <Route path="/sales" element={<Sales />} />
+            <Route path="/prodaja2" element={<Prodaja2 />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/login" element={<Login />} />
             <Route path="/daily-orders" element={<DailyOrders />} />

@@ -4,7 +4,6 @@ import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerOrderForm } from "./CustomerOrderForm";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -83,10 +82,9 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   }, []);
 
   const handleCustomerClick = (customer: Customer) => {
-    // Navigate to sales with exactly the same customer data
-    navigate('/sales', { 
-      state: { selectedCustomer: customer },
-      replace: true
+    // Navigate to the new Prodaja2 page with customer data
+    navigate('/prodaja2', { 
+      state: { selectedCustomer: customer }
     });
   };
 
