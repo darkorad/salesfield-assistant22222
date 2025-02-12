@@ -44,7 +44,8 @@ export const CustomerSelect = ({
     console.log("CustomerSelect: Selected customer:", customer.name);
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
-  }, [onCustomerSelect]);
+    onCustomerSearchChange(customer.name);
+  }, [onCustomerSelect, onCustomerSearchChange]);
 
   // Update local state when customerSearch changes from parent
   useEffect(() => {

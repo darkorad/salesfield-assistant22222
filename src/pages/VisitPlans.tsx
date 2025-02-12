@@ -21,11 +21,25 @@ interface VisitPlan {
   };
 }
 
+const getCurrentDayInSerbian = () => {
+  const day = format(new Date(), 'EEEE').toLowerCase();
+  const dayMap: { [key: string]: string } = {
+    'monday': 'ponedeljak',
+    'tuesday': 'utorak',
+    'wednesday': 'sreda',
+    'thursday': 'četvrtak',
+    'friday': 'petak',
+    'saturday': 'subota',
+    'sunday': 'nedelja'
+  };
+  return dayMap[day] || day;
+};
+
 const VisitPlans = () => {
   const [visitPlans, setVisitPlans] = useState<VisitPlan[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState(format(new Date(), 'EEEE').toLowerCase());
+  const [selectedDay, setSelectedDay] = useState(getCurrentDayInSerbian());
   const today = format(new Date(), 'yyyy-MM-dd');
 
   useEffect(() => {

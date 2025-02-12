@@ -28,8 +28,8 @@ const Sales = () => {
       const fullCustomerData = customers.find(c => c.id === customerData.id);
       if (fullCustomerData) {
         console.log("Found matching customer:", fullCustomerData.name);
-        handleCustomerSelect(fullCustomerData);
         setCustomerSearch(fullCustomerData.name);
+        handleCustomerSelect(fullCustomerData);
         // Clear the navigation state
         window.history.replaceState({}, document.title);
       }
