@@ -16,9 +16,11 @@ export const useDailySales = () => {
         return;
       }
 
+      // Get today's date at start of day in local timezone
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      // Get tomorrow's date at start of day in local timezone
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
