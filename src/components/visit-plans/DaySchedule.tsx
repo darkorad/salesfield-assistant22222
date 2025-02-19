@@ -1,12 +1,13 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerOrderForm } from "./CustomerOrderForm";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface DayScheduleProps {
   day: string;
@@ -19,6 +20,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const navigate = useNavigate();
+  const orderFormRef = useRef<HTMLDivElement>(null);
 
   const loadCompletedCustomers = async () => {
     try {
@@ -86,6 +88,11 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   const handleCustomerClick = (customer: Customer) => {
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
+    
+    // Scroll to order form after a short delay to ensure it's rendered
+    setTimeout(() => {
+      orderFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   if (isLoading) {
@@ -133,13 +140,25 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
       </div>
 
       {selectedCustomer && (
-        <CustomerOrderForm 
-          customer={selectedCustomer}
-          onOrderComplete={() => {
-            setSelectedCustomer(null);
-            loadCompletedCustomers();
-          }}
-        />
+        <div ref={orderFormRef} className="relative">
+          <div className="absolute right-2 top-2 z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setSelectedCustomer(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <CustomerOrderForm 
+            customer={selectedCustomer}
+            onOrderComplete={() => {
+              setSelectedCustomer(null);
+              loadCompletedCustomers();
+            }}
+          />
+        </div>
       )}
     </div>
   );
