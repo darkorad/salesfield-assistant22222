@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import { Check, History, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerOrderForm } from "./CustomerOrderForm";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { OrderHistory } from "../sales/OrderHistory";
 
 interface DayScheduleProps {
   day: string;
@@ -19,6 +20,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   const [completedCustomers, setCompletedCustomers] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const navigate = useNavigate();
   const orderFormRef = useRef<HTMLDivElement>(null);
 
@@ -141,7 +143,15 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
 
       {selectedCustomer && (
         <div ref={orderFormRef} className="relative">
-          <div className="absolute right-2 top-2 z-10">
+          <div className="absolute right-2 top-2 z-10 flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setShowHistory(true)}
+            >
+              <History className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -159,6 +169,14 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
             }}
           />
         </div>
+      )}
+
+      {selectedCustomer && (
+        <OrderHistory 
+          customer={selectedCustomer}
+          open={showHistory}
+          onOpenChange={setShowHistory}
+        />
       )}
     </div>
   );
