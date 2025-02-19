@@ -26,7 +26,8 @@ export const useDailySales = () => {
         items: cashItems,
         total: cashTotal,
         payment_status: 'gotovina',
-        payment_type: 'cash'
+        payment_type: 'cash',
+        customer: order.darko_customer // Use darko_customer directly instead of circular reference
       });
     }
 
@@ -41,7 +42,8 @@ export const useDailySales = () => {
         items: invoiceItems,
         total: invoiceTotal,
         payment_status: 'racun',
-        payment_type: 'invoice'
+        payment_type: 'invoice',
+        customer: order.darko_customer // Use darko_customer directly instead of circular reference
       });
     }
 
@@ -68,7 +70,21 @@ export const useDailySales = () => {
         .from('sales')
         .select(`
           *,
-          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
+          darko_customer:kupci_darko!fk_sales_kupci_darko(
+            id,
+            name,
+            address,
+            city,
+            phone,
+            pib,
+            is_vat_registered,
+            email,
+            code,
+            dan_posete,
+            group_name,
+            naselje,
+            gps_coordinates
+          )
         `)
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
@@ -83,15 +99,12 @@ export const useDailySales = () => {
 
       // Transform and split orders with mixed payment types
       const transformedSales = salesData?.flatMap(sale => {
-        const orderWithCustomer = {
-          ...sale,
-          customer: sale.darko_customer
-        };
-        return splitOrderByPaymentType(orderWithCustomer);
-      });
+        if (!sale) return [];
+        return splitOrderByPaymentType(sale);
+      }) || [];
 
       console.log("Processed sales data:", transformedSales);
-      setTodaySales(transformedSales || []);
+      setTodaySales(transformedSales);
     } catch (error) {
       console.error("Error loading sales:", error);
       toast.error("Greška pri učitavanju prodaje");
