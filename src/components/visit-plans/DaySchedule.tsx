@@ -144,14 +144,17 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
       {selectedCustomer && (
         <div ref={orderFormRef} className="relative">
           <div className="absolute right-2 top-2 z-10 flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-6 w-6"
-              onClick={() => setShowHistory(true)}
-            >
-              <History className="h-4 w-4" />
-            </Button>
+            <div className="flex flex-col items-center">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setShowHistory(true)}
+              >
+                <History className="h-4 w-4" />
+              </Button>
+              <span className="text-[10px] text-gray-600 mt-1">Istorija</span>
+            </div>
             <Button
               variant="ghost"
               size="icon"
