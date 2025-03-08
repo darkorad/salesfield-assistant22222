@@ -27,8 +27,12 @@ const SECOND_ROW = DAYS_OF_WEEK.slice(4); // Fri-Sun
 export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
   const getDayCustomers = (day: string) => {
     return customers.filter(customer => {
-      const customerDay = customer.dan_posete?.toLowerCase().trim();
-      return customerDay === day.toLowerCase().trim();
+      const customerVisitDay = customer.dan_posete?.toLowerCase().trim();
+      const customerObilazakDay = customer.dan_obilaska?.toLowerCase().trim();
+      
+      // Check both dan_posete and dan_obilaska fields
+      return customerVisitDay === day.toLowerCase().trim() || 
+             customerObilazakDay === day.toLowerCase().trim();
     });
   };
 
