@@ -5,7 +5,7 @@ import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
-import { processProductData } from "@/utils/import/productImportUtils";
+import { processProductData, processGroupPriceData } from "@/utils/import/productImportUtils";
 
 export const ProductImport = () => {
   const handleImportPrices = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,21 +27,36 @@ export const ProductImport = () => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-          let successCount = 0;
-          let errorCount = 0;
+          let productSuccessCount = 0;
+          let productErrorCount = 0;
+          let groupPriceSuccessCount = 0;
+          let groupPriceErrorCount = 0;
 
+          // Process each row in the imported file
           for (const row of jsonData) {
-            const success = await processProductData(row, session.user.id);
-            if (success) successCount++; else errorCount++;
+            // Check if this is a group pricing entry
+            if ((row as any).type === "group") {
+              const success = await processGroupPriceData(row, session.user.id);
+              if (success) groupPriceSuccessCount++; else groupPriceErrorCount++;
+            } else {
+              // Standard product entry
+              const success = await processProductData(row, session.user.id);
+              if (success) productSuccessCount++; else productErrorCount++;
+            }
           }
 
-          if (successCount > 0) {
+          // Report success and errors
+          if (productSuccessCount > 0) {
             localStorage.setItem(`lastProductsImport_${session.user.id}`, new Date().toISOString());
-            toast.success(`${successCount} proizvoda je uspešno ažurirano`);
+            toast.success(`${productSuccessCount} proizvoda je uspešno ažurirano`);
           }
 
-          if (errorCount > 0) {
-            toast.error(`Greška pri ažuriranju ${errorCount} proizvoda`);
+          if (groupPriceSuccessCount > 0) {
+            toast.success(`${groupPriceSuccessCount} grupnih cena je uspešno ažurirano`);
+          }
+
+          if (productErrorCount > 0 || groupPriceErrorCount > 0) {
+            toast.error(`Greška pri ažuriranju ${productErrorCount + groupPriceErrorCount} stavki`);
           }
         } catch (error) {
           console.error('Error processing file:', error);
