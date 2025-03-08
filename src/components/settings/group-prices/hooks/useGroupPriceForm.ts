@@ -88,27 +88,22 @@ export const useGroupPriceForm = () => {
         return;
       }
 
-      console.log("Saving prices:", {
-        group_id: selectedGroup?.id,
-        customer_id: selectedCustomer?.id,
-        product_id: selectedProduct.id,
-        invoice_price: invoicePriceNum,
-        cash_price: cashPriceNum,
-        user_id: session.user.id
-      });
-
       if (selectedGroup) {
         // Insert price change for the group
         // Important: Do NOT include customer_id when setting group prices
+        const insertData = {
+          group_id: selectedGroup.id,
+          product_id: selectedProduct.id,
+          invoice_price: invoicePriceNum,
+          cash_price: cashPriceNum,
+          user_id: session.user.id
+        };
+        
+        console.log("Saving prices:", insertData);
+        
         const { error: priceError } = await supabase
           .from('price_changes')
-          .insert({
-            group_id: selectedGroup.id,
-            product_id: selectedProduct.id,
-            invoice_price: invoicePriceNum,
-            cash_price: cashPriceNum,
-            user_id: session.user.id
-          });
+          .insert(insertData);
 
         if (priceError) {
           console.error('Error saving group price:', priceError);
