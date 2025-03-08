@@ -89,10 +89,10 @@ export const useGroupPriceForm = () => {
       }
 
       if (selectedGroup) {
-        // For group prices, create a data object that ONLY includes
-        // the fields we want to insert - explicitly excluding customer_id
+        // For group prices, explicitly set customer_id to null
         const groupPriceData = {
           group_id: selectedGroup.id,
+          customer_id: null,  // Explicitly set to null
           product_id: selectedProduct.id,
           invoice_price: invoicePriceNum,
           cash_price: cashPriceNum,
@@ -117,6 +117,7 @@ export const useGroupPriceForm = () => {
         // For customer-specific prices
         const customerPriceData = {
           customer_id: selectedCustomer.id,
+          group_id: null,  // Explicitly set to null
           product_id: selectedProduct.id,
           invoice_price: invoicePriceNum,
           cash_price: cashPriceNum,
