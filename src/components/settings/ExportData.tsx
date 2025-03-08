@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, Upload } from "lucide-react";
@@ -47,21 +48,22 @@ export const ExportData = () => {
         return;
       }
 
+      // Format data in the exact same format expected by import
       const exportData = customers.map(customer => ({
-        id: customer.id,
-        code: customer.code,
-        Naziv: customer.name,
-        Adresa: customer.address,
-        Grad: customer.city,
-        Telefon: customer.phone || '',
-        PIB: customer.pib,
-        "PDV Obveznik": customer.is_vat_registered ? "DA" : "NE",
-        "GPS Koordinate": customer.gps_coordinates || '',
-        Grupa: customer.group_name || '',
-        Naselje: customer.naselje || '',
-        Email: customer.email || '',
-        "Dan obilaska": customer.visit_day || '',
-        "Dan posete": customer.dan_posete || ''
+        name: customer.name,
+        address: customer.address,
+        city: customer.city,
+        phone: customer.phone || '',
+        pib: customer.pib,
+        is_vat_registered: customer.is_vat_registered ? "DA" : "NE",
+        gps_coordinates: customer.gps_coordinates || '',
+        group_name: customer.group_name || '',
+        naselje: customer.naselje || '',
+        email: customer.email || '',
+        visit_day: customer.visit_day || '',
+        dan_posete: customer.dan_posete || '',
+        dan_obilaska: customer.dan_obilaska || '',
+        code: customer.code
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);
@@ -69,8 +71,6 @@ export const ExportData = () => {
       XLSX.utils.book_append_sheet(wb, ws, "Kupci");
       
       const colWidths = [
-        { wch: 40 }, // id
-        { wch: 15 }, // code
         { wch: 30 }, // name
         { wch: 40 }, // address
         { wch: 20 }, // city
@@ -83,6 +83,8 @@ export const ExportData = () => {
         { wch: 30 }, // email
         { wch: 20 }, // visit_day
         { wch: 20 }, // dan_posete
+        { wch: 20 }, // dan_obilaska
+        { wch: 15 }, // code
       ];
       ws['!cols'] = colWidths;
 
@@ -134,6 +136,7 @@ export const ExportData = () => {
         return;
       }
 
+      // Format data in the exact same format expected by import
       const exportData = products.map(product => ({
         name: product.Naziv,
         manufacturer: product.Proizvođač,

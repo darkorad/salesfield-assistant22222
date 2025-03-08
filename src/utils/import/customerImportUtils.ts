@@ -9,13 +9,14 @@ export interface ImportCustomer {
   city: string;          
   phone?: string;
   pib: string;           
-  is_vat_registered?: boolean;
+  is_vat_registered?: boolean | string;
   gps_coordinates?: string;
   group_name?: string;
   naselje?: string;
   email?: string;
   dan_posete?: string;
   dan_obilaska?: string;
+  visit_day?: string;
 }
 
 export const processCustomerData = async (rawData: unknown, userId: string) => {
@@ -33,7 +34,10 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       email: (rawData as any).Email || (rawData as any).email,
       dan_posete: (rawData as any)["Dan posete"] || (rawData as any).dan_posete,
       dan_obilaska: (rawData as any)["Dan obilaska"] || (rawData as any).dan_obilaska,
-      is_vat_registered: ((rawData as any)["PDV Obveznik"] === "DA" || (rawData as any).is_vat_registered === true),
+      visit_day: (rawData as any)["Dan obilaska"] || (rawData as any).visit_day,
+      is_vat_registered: ((rawData as any)["PDV Obveznik"] === "DA" || 
+                         (rawData as any).is_vat_registered === "DA" || 
+                         (rawData as any).is_vat_registered === true),
       gps_coordinates: (rawData as any)["GPS Koordinate"] || (rawData as any).gps_coordinates,
       code: (rawData as any)["Šifra kupca"] || (rawData as any).code
     };
@@ -67,10 +71,13 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
 
     // Normalize dan_posete and dan_obilaska to lowercase
     if (data.dan_posete) {
-      data.dan_posete = data.dan_posete.toLowerCase().trim();
+      data.dan_posete = data.dan_posete.toString().toLowerCase().trim();
     }
     if (data.dan_obilaska) {
-      data.dan_obilaska = data.dan_obilaska.toLowerCase().trim();
+      data.dan_obilaska = data.dan_obilaska.toString().toLowerCase().trim();
+    }
+    if (data.visit_day) {
+      data.visit_day = data.visit_day.toString().toLowerCase().trim();
     }
 
     const customerData = {
@@ -87,7 +94,8 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       naselje: data.naselje?.toString().trim() || null,
       email: data.email?.toString().trim() || null,
       dan_posete: data.dan_posete || null,
-      dan_obilaska: data.dan_obilaska || null
+      dan_obilaska: data.dan_obilaska || null,
+      visit_day: data.visit_day || null
     };
 
     // First try to find if a customer with this code already exists
