@@ -26,13 +26,33 @@ const SECOND_ROW = DAYS_OF_WEEK.slice(4); // Fri-Sun
 
 export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
   const getDayCustomers = (day: string) => {
+    console.log(`Filtering customers for day: ${day}`);
+    console.log('All customers:', customers);
+    
     return customers.filter(customer => {
-      const customerVisitDay = customer.dan_posete?.toLowerCase().trim();
-      const customerObilazakDay = customer.dan_obilaska?.toLowerCase().trim();
+      // Normalize the day name to lowercase for comparison
+      const dayLower = day.toLowerCase().trim();
       
-      // Check both dan_posete and dan_obilaska fields
-      return customerVisitDay === day.toLowerCase().trim() || 
-             customerObilazakDay === day.toLowerCase().trim();
+      // Get customer visit days and handle possible undefined values
+      const danPosete = customer.dan_posete?.toLowerCase().trim() || '';
+      const danObilaska = customer.dan_obilaska?.toLowerCase().trim() || '';
+      const visitDay = customer.visit_day?.toLowerCase().trim() || '';
+      
+      // Log debugging information
+      console.log(`Customer ${customer.name}:`, {
+        danPosete,
+        danObilaska,
+        visitDay,
+        dayLower,
+        matchDanPosete: danPosete === dayLower,
+        matchDanObilaska: danObilaska === dayLower,
+        matchVisitDay: visitDay === dayLower
+      });
+      
+      // Check all three possible fields that might contain day information
+      return danPosete === dayLower || 
+             danObilaska === dayLower || 
+             visitDay === dayLower;
     });
   };
 
