@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -33,15 +32,12 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         return;
       }
 
-      // Get today's date at start of day in local timezone
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Get tomorrow's date at start of day in local timezone
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // First check completed visits
       const { data: completedVisits, error: visitsError } = await supabase
         .from('visit_plans')
         .select('customer_id')
@@ -55,7 +51,6 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         return;
       }
 
-      // Then check sales
       const { data: sales, error: salesError } = await supabase
         .from('sales')
         .select('darko_customer_id')
@@ -68,7 +63,6 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         return;
       }
 
-      // Combine both completed visits and sales
       const completedIds = new Set([
         ...(completedVisits || []).map(visit => visit.customer_id),
         ...(sales || []).map(sale => sale.darko_customer_id)
@@ -90,8 +84,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   const handleCustomerClick = (customer: Customer) => {
     setSelectedCustomer(customer);
     onCustomerSelect(customer);
-    
-    // Scroll to order form after a short delay to ensure it's rendered
+
     setTimeout(() => {
       orderFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
