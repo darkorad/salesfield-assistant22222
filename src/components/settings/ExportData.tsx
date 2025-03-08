@@ -17,7 +17,6 @@ export const ExportData = () => {
         return;
       }
 
-      // Get user email to determine which table to query
       const userEmail = session.user.email;
       let customers;
       let error;
@@ -48,7 +47,6 @@ export const ExportData = () => {
         return;
       }
 
-      // Transform data to match import format
       const exportData = customers.map(customer => ({
         id: customer.id,
         code: customer.code,
@@ -96,34 +94,71 @@ export const ExportData = () => {
     }
   };
 
-  const handleExportPrices = () => {
-    const currentUser = localStorage.getItem("currentUser");
-    if (!currentUser) {
-      toast.error("No user logged in");
-      return;
+  const handleExportPrices = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
+      const userEmail = session.user.email;
+      let products;
+      let error;
+
+      if (userEmail === 'zirmd.darko@gmail.com') {
+        const response = await supabase
+          .from('products_darko')
+          .select('*')
+          .not('Naziv', 'eq', '');
+        products = response.data;
+        error = response.error;
+      } else {
+        const response = await supabase
+          .from('products_darko')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .not('Naziv', 'eq', '');
+        products = response.data;
+        error = response.error;
+      }
+
+      if (error) {
+        console.error('Error fetching products:', error);
+        toast.error("Greška pri preuzimanju podataka");
+        return;
+      }
+
+      if (!products || products.length === 0) {
+        toast.error("Nema podataka o proizvodima");
+        return;
+      }
+
+      const exportData = products.map(product => ({
+        name: product.Naziv,
+        manufacturer: product.Proizvođač,
+        price: product.Cena,
+        unit: product["Jedinica mere"]
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Cenovnik");
+      
+      const colWidths = [
+        { wch: 30 }, // name
+        { wch: 20 }, // manufacturer
+        { wch: 15 }, // price
+        { wch: 10 }, // unit
+      ];
+      ws['!cols'] = colWidths;
+
+      XLSX.writeFile(wb, `cenovnik.xlsx`);
+      toast.success("Cenovnik je uspešno izvezen");
+    } catch (error) {
+      console.error('Error exporting products:', error);
+      toast.error("Greška pri izvozu cenovnika");
     }
-
-    const products = localStorage.getItem(`products_${currentUser}`);
-    if (!products) {
-      toast.error("Nema podataka o cenama");
-      return;
-    }
-
-    const productsData = JSON.parse(products);
-    const ws = XLSX.utils.json_to_sheet(productsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Cenovnik");
-    
-    const colWidths = [
-      { wch: 30 }, // name
-      { wch: 20 }, // manufacturer
-      { wch: 15 }, // price
-      { wch: 10 }, // unit
-    ];
-    ws['!cols'] = colWidths;
-
-    XLSX.writeFile(wb, `cenovnik.xlsx`);
-    toast.success("Cenovnik je uspešno izvezen");
   };
 
   const handleImportCustomers = async (event: React.ChangeEvent<HTMLInputElement>) => {
