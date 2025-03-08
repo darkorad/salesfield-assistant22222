@@ -89,9 +89,9 @@ export const useGroupPriceForm = () => {
       }
 
       if (selectedGroup) {
-        // Insert price change for the group
-        // Important: Do NOT include customer_id when setting group prices
-        const insertData = {
+        // For group prices, create a data object that ONLY includes
+        // the fields we want to insert - explicitly excluding customer_id
+        const groupPriceData = {
           group_id: selectedGroup.id,
           product_id: selectedProduct.id,
           invoice_price: invoicePriceNum,
@@ -99,11 +99,11 @@ export const useGroupPriceForm = () => {
           user_id: session.user.id
         };
         
-        console.log("Saving prices:", insertData);
+        console.log("Saving group prices:", groupPriceData);
         
         const { error: priceError } = await supabase
           .from('price_changes')
-          .insert(insertData);
+          .insert(groupPriceData);
 
         if (priceError) {
           console.error('Error saving group price:', priceError);
@@ -114,16 +114,20 @@ export const useGroupPriceForm = () => {
 
         toast.success(`Cene za grupu ${selectedGroup.name} uspešno sačuvane`);
       } else if (selectedCustomer) {
-        // Insert price change for individual customer
+        // For customer-specific prices
+        const customerPriceData = {
+          customer_id: selectedCustomer.id,
+          product_id: selectedProduct.id,
+          invoice_price: invoicePriceNum,
+          cash_price: cashPriceNum,
+          user_id: session.user.id
+        };
+        
+        console.log("Saving customer prices:", customerPriceData);
+        
         const { error: customerPriceError } = await supabase
           .from('price_changes')
-          .insert({
-            customer_id: selectedCustomer.id,
-            product_id: selectedProduct.id,
-            invoice_price: invoicePriceNum,
-            cash_price: cashPriceNum,
-            user_id: session.user.id
-          });
+          .insert(customerPriceData);
 
         if (customerPriceError) {
           console.error('Error saving customer price:', customerPriceError);
