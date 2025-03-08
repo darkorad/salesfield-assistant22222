@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,12 @@ import { toast } from "sonner";
 import { CustomerFormData, initialCustomerFormData } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerFormFields } from "./customer/CustomerFormFields";
+
+// Helper function to normalize day names for consistency
+const normalizeDay = (day: string | undefined): string | undefined => {
+  if (!day) return undefined;
+  return day.toLowerCase().trim();
+};
 
 export const AddCustomerDialog = () => {
   const [open, setOpen] = useState(false);
@@ -25,28 +32,63 @@ export const AddCustomerDialog = () => {
 
       const code = Date.now().toString().slice(-6);
 
-      const { data, error } = await supabase
-        .from('customers')
-        .insert([{
-          user_id: user.id,
-          code: code,
-          name: customer.name,
-          address: customer.address,
-          city: customer.city,
-          phone: customer.phone,
-          email: customer.email,
-          pib: customer.pib,
-          is_vat_registered: customer.isVatRegistered,
-          gps_coordinates: customer.gpsCoordinates,
-          naselje: customer.naselje,
-          visit_day: customer.visitDay
-        }])
-        .select()
-        .single();
+      // Normalize day fields before inserting
+      const normalizedVisitDay = normalizeDay(customer.visitDay);
+      const normalizedDanObilaska = normalizeDay(customer.danObilaska);
 
-      if (error) throw error;
+      // Check if it's Darko's account (zirmd.darko@gmail.com)
+      if (user.email === 'zirmd.darko@gmail.com') {
+        // Insert into kupci_darko table
+        const { data, error } = await supabase
+          .from('kupci_darko')
+          .insert([{
+            user_id: user.id,
+            code: code,
+            name: customer.name,
+            address: customer.address,
+            city: customer.city,
+            phone: customer.phone,
+            email: customer.email,
+            pib: customer.pib,
+            is_vat_registered: customer.isVatRegistered,
+            gps_coordinates: customer.gpsCoordinates,
+            naselje: customer.naselje,
+            dan_posete: normalizedVisitDay,
+            dan_obilaska: normalizedDanObilaska
+          }])
+          .select()
+          .single();
 
-      toast.success("Kupac je uspešno dodat");
+        if (error) throw error;
+        
+        toast.success("Kupac je uspešno dodat");
+      } else {
+        // Insert into customers table
+        const { data, error } = await supabase
+          .from('customers')
+          .insert([{
+            user_id: user.id,
+            code: code,
+            name: customer.name,
+            address: customer.address,
+            city: customer.city,
+            phone: customer.phone,
+            email: customer.email,
+            pib: customer.pib,
+            is_vat_registered: customer.isVatRegistered,
+            gps_coordinates: customer.gpsCoordinates,
+            naselje: customer.naselje,
+            visit_day: normalizedVisitDay,
+            dan_obilaska: normalizedDanObilaska
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        toast.success("Kupac je uspešno dodat");
+      }
+
       setOpen(false);
       setCustomer(initialCustomerFormData);
     } catch (error) {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,12 @@ import { CustomerFormData, initialCustomerFormData } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerFormFields } from "./customer/CustomerFormFields";
 import { Customer } from "@/types";
+
+// Helper function to normalize day names for consistency
+const normalizeDay = (day: string | undefined): string | undefined => {
+  if (!day) return undefined;
+  return day.toLowerCase().trim();
+};
 
 interface EditCustomerDialogProps {
   customer: Customer;
@@ -35,24 +42,56 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('customers')
-        .update({
-          name: customerData.name,
-          address: customerData.address,
-          city: customerData.city,
-          phone: customerData.phone,
-          email: customerData.email,
-          pib: customerData.pib,
-          is_vat_registered: customerData.isVatRegistered,
-          gps_coordinates: customerData.gpsCoordinates,
-          naselje: customerData.naselje,
-          visit_day: customerData.visitDay,
-          dan_obilaska: customerData.danObilaska
-        })
-        .eq('id', customer.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Morate biti prijavljeni da biste izmenili kupca");
+        return;
+      }
 
-      if (error) throw error;
+      // Normalize day fields
+      const normalizedVisitDay = normalizeDay(customerData.visitDay);
+      const normalizedDanObilaska = normalizeDay(customerData.danObilaska);
+
+      // Check which table to update based on user email
+      if (user.email === 'zirmd.darko@gmail.com') {
+        const { error } = await supabase
+          .from('kupci_darko')
+          .update({
+            name: customerData.name,
+            address: customerData.address,
+            city: customerData.city,
+            phone: customerData.phone,
+            email: customerData.email,
+            pib: customerData.pib,
+            is_vat_registered: customerData.isVatRegistered,
+            gps_coordinates: customerData.gpsCoordinates,
+            naselje: customerData.naselje,
+            dan_posete: normalizedVisitDay, // Use as dan_posete in kupci_darko
+            dan_obilaska: normalizedDanObilaska
+          })
+          .eq('id', customer.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('customers')
+          .update({
+            name: customerData.name,
+            address: customerData.address,
+            city: customerData.city,
+            phone: customerData.phone,
+            email: customerData.email,
+            pib: customerData.pib,
+            is_vat_registered: customerData.isVatRegistered,
+            gps_coordinates: customerData.gpsCoordinates,
+            naselje: customerData.naselje,
+            visit_day: normalizedVisitDay,
+            dan_obilaska: normalizedDanObilaska
+          })
+          .eq('id', customer.id);
+
+        if (error) throw error;
+      }
 
       toast.success("Podaci kupca su uspešno ažurirani");
       setOpen(false);

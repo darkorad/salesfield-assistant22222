@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomerFormData } from "../types";
@@ -11,14 +12,15 @@ interface CustomerFormFieldsProps {
   setCustomer: (value: React.SetStateAction<CustomerFormData>) => void;
 }
 
+// Use lowercase Serbian day names to match the database normalized values
 const visitDays = [
-  "Ponedeljak",
-  "Utorak",
-  "Sreda",
-  "Četvrtak",
-  "Petak",
-  "Subota",
-  "Nedelja"
+  { label: "Ponedeljak", value: "ponedeljak" },
+  { label: "Utorak", value: "utorak" },
+  { label: "Sreda", value: "sreda" },
+  { label: "Četvrtak", value: "četvrtak" },
+  { label: "Petak", value: "petak" },
+  { label: "Subota", value: "subota" },
+  { label: "Nedelja", value: "nedelja" }
 ];
 
 export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }: CustomerFormFieldsProps) => {
@@ -100,9 +102,9 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="visit_day">Dan obilaska (stari)</Label>
+        <Label htmlFor="visit_day">Dan posete</Label>
         <Select 
-          value={customer.visitDay || ''} 
+          value={customer.visitDay?.toLowerCase() || ''} 
           onValueChange={(value) => setCustomer(prev => ({ ...prev, visitDay: value }))}
         >
           <SelectTrigger>
@@ -110,17 +112,17 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
           </SelectTrigger>
           <SelectContent>
             {visitDays.map((day) => (
-              <SelectItem key={day} value={day}>
-                {day}
+              <SelectItem key={day.value} value={day.value}>
+                {day.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="dan_obilaska">Dan obilaska (novi)</Label>
+        <Label htmlFor="dan_obilaska">Dan obilaska</Label>
         <Select 
-          value={customer.danObilaska || ''} 
+          value={customer.danObilaska?.toLowerCase() || ''} 
           onValueChange={(value) => setCustomer(prev => ({ ...prev, danObilaska: value }))}
         >
           <SelectTrigger>
@@ -128,8 +130,8 @@ export const CustomerFormFields = ({ customer, handleInputChange, setCustomer }:
           </SelectTrigger>
           <SelectContent>
             {visitDays.map((day) => (
-              <SelectItem key={day} value={day}>
-                {day}
+              <SelectItem key={day.value} value={day.value}>
+                {day.label}
               </SelectItem>
             ))}
           </SelectContent>
