@@ -7,6 +7,7 @@ import { ProductSelection } from "./components/ProductSelection";
 import { PriceInputs } from "./components/PriceInputs";
 import { useGroupPriceForm } from "./hooks/useGroupPriceForm";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const GroupPriceForm = () => {
   const {
@@ -29,6 +30,15 @@ export const GroupPriceForm = () => {
     setCashPrice,
     handleSubmit
   } = useGroupPriceForm();
+
+  const onSubmit = async () => {
+    try {
+      await handleSubmit();
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      toast.error("Greška pri čuvanju cena. Pokušajte ponovo.");
+    }
+  };
 
   return (
     <Card>
@@ -67,7 +77,7 @@ export const GroupPriceForm = () => {
         />
 
         <Button 
-          onClick={handleSubmit}
+          onClick={onSubmit}
           disabled={!selectedProduct || (!selectedGroup && !selectedCustomer) || !invoicePrice || !cashPrice || isSubmitting}
           className="w-full"
         >

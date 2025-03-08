@@ -88,7 +88,14 @@ export const useGroupPriceForm = () => {
         return;
       }
 
-      const timestamp = new Date().toISOString();
+      console.log("Saving prices:", {
+        group_id: selectedGroup?.id,
+        customer_id: selectedCustomer?.id,
+        product_id: selectedProduct.id,
+        invoice_price: invoicePriceNum,
+        cash_price: cashPriceNum,
+        user_id: session.user.id
+      });
 
       if (selectedGroup) {
         // Insert price change for the group
@@ -104,7 +111,9 @@ export const useGroupPriceForm = () => {
 
         if (priceError) {
           console.error('Error saving group price:', priceError);
-          throw priceError;
+          toast.error(`Greška pri čuvanju cena: ${priceError.message}`);
+          setIsSubmitting(false);
+          return;
         }
 
         toast.success(`Cene za grupu ${selectedGroup.name} uspešno sačuvane`);
@@ -122,7 +131,9 @@ export const useGroupPriceForm = () => {
 
         if (customerPriceError) {
           console.error('Error saving customer price:', customerPriceError);
-          throw customerPriceError;
+          toast.error(`Greška pri čuvanju cena: ${customerPriceError.message}`);
+          setIsSubmitting(false);
+          return;
         }
 
         toast.success(`Cena za kupca ${selectedCustomer.name} uspešno sačuvana`);
@@ -130,9 +141,7 @@ export const useGroupPriceForm = () => {
 
       // Reset form after successful submission
       setSelectedProduct(null);
-      setSelectedCustomer(null);
       setProductSearch("");
-      setCustomerSearch("");
       setInvoicePrice("");
       setCashPrice("");
     } catch (error) {
