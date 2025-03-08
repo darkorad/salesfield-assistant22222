@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GroupSelection } from "./components/GroupSelection";
@@ -5,6 +6,7 @@ import { CustomerSelection } from "./components/CustomerSelection";
 import { ProductSelection } from "./components/ProductSelection";
 import { PriceInputs } from "./components/PriceInputs";
 import { useGroupPriceForm } from "./hooks/useGroupPriceForm";
+import { Loader2 } from "lucide-react";
 
 export const GroupPriceForm = () => {
   const {
@@ -17,6 +19,7 @@ export const GroupPriceForm = () => {
     invoicePrice,
     cashPrice,
     filteredProducts,
+    isSubmitting,
     setSelectedGroup,
     handleProductSelect,
     handleCustomerSelect,
@@ -24,8 +27,7 @@ export const GroupPriceForm = () => {
     setProductSearch,
     setInvoicePrice,
     setCashPrice,
-    handleSubmit,
-    isSubmitting
+    handleSubmit
   } = useGroupPriceForm();
 
   return (
@@ -69,7 +71,14 @@ export const GroupPriceForm = () => {
           disabled={!selectedProduct || (!selectedGroup && !selectedCustomer) || !invoicePrice || !cashPrice || isSubmitting}
           className="w-full"
         >
-          {isSubmitting ? "Čuvanje..." : "Sačuvaj cene"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+              Čuvanje...
+            </>
+          ) : (
+            "Sačuvaj cene"
+          )}
         </Button>
       </CardContent>
     </Card>

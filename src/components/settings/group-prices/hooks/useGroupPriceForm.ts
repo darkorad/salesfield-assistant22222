@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
@@ -18,6 +19,13 @@ export const useGroupPriceForm = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('No session found');
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
       const { data: productsData, error } = await supabase
         .from('products_darko')
         .select('*')
@@ -66,73 +74,58 @@ export const useGroupPriceForm = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Niste prijavljeni");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Convert prices to numbers and validate
+      const invoicePriceNum = parseFloat(invoicePrice);
+      const cashPriceNum = parseFloat(cashPrice);
+      
+      if (isNaN(invoicePriceNum) || isNaN(cashPriceNum)) {
+        toast.error("Nevažeća cena. Molimo unesite validne brojeve.");
+        setIsSubmitting(false);
         return;
       }
 
       const timestamp = new Date().toISOString();
 
       if (selectedGroup) {
-        // First update group prices
-        const { error: groupError } = await supabase
-          .from('group_prices')
-          .upsert({
+        // Insert price change for the group
+        const { error: priceError } = await supabase
+          .from('price_changes')
+          .insert({
             group_id: selectedGroup.id,
             product_id: selectedProduct.id,
-            invoice_price: parseFloat(invoicePrice),
-            cash_price: parseFloat(cashPrice),
-            user_id: session.user.id,
-            last_changed: timestamp
+            invoice_price: invoicePriceNum,
+            cash_price: cashPriceNum,
+            user_id: session.user.id
           });
 
-        if (groupError) throw groupError;
-
-        // Then get all customers in the group
-        const { data: groupCustomers, error: customersError } = await supabase
-          .from('customers')
-          .select('id')
-          .eq('group_name', selectedGroup.name);
-
-        if (customersError) {
-          console.error('Error fetching group customers:', customersError);
-          throw customersError;
+        if (priceError) {
+          console.error('Error saving group price:', priceError);
+          throw priceError;
         }
 
-        // Update customer_prices for all customers in the group
-        if (groupCustomers && groupCustomers.length > 0) {
-          const customerUpdates = groupCustomers.map(customer => ({
-            customer_id: customer.id,
-            product_id: selectedProduct.id,
-            invoice_price: parseFloat(invoicePrice),
-            cash_price: parseFloat(cashPrice),
-            user_id: session.user.id,
-            last_changed: timestamp
-          }));
-
-          const { error: updateError } = await supabase
-            .from('customer_prices')
-            .upsert(customerUpdates);
-
-          if (updateError) {
-            console.error('Error updating customer prices:', updateError);
-            throw updateError;
-          }
-        }
-
-        toast.success("Cene za grupu uspešno sačuvane");
+        toast.success(`Cene za grupu ${selectedGroup.name} uspešno sačuvane`);
       } else if (selectedCustomer) {
-        const { error } = await supabase
-          .from('customer_prices')
-          .upsert({
+        // Insert price change for individual customer
+        const { error: customerPriceError } = await supabase
+          .from('price_changes')
+          .insert({
             customer_id: selectedCustomer.id,
             product_id: selectedProduct.id,
-            invoice_price: parseFloat(invoicePrice),
-            cash_price: parseFloat(cashPrice),
-            user_id: session.user.id,
-            last_changed: timestamp
+            invoice_price: invoicePriceNum,
+            cash_price: cashPriceNum,
+            user_id: session.user.id
           });
 
-        if (error) throw error;
-        toast.success("Cena za kupca uspešno sačuvana");
+        if (customerPriceError) {
+          console.error('Error saving customer price:', customerPriceError);
+          throw customerPriceError;
+        }
+
+        toast.success(`Cena za kupca ${selectedCustomer.name} uspešno sačuvana`);
       }
 
       // Reset form after successful submission
