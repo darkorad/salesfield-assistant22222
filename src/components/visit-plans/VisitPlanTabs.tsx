@@ -1,8 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Customer } from "@/types";
 import { DaySchedule } from "./DaySchedule";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VisitPlanTabsProps {
   selectedDay: string;
@@ -24,19 +25,25 @@ const DAYS_OF_WEEK = [
 const FIRST_ROW = DAYS_OF_WEEK.slice(0, 4); // Mon-Thu
 const SECOND_ROW = DAYS_OF_WEEK.slice(4); // Fri-Sun
 
+// Helper function to normalize day names for consistent comparison
+const normalizeDay = (day: string | undefined): string => {
+  if (!day) return '';
+  return day.toLowerCase().trim();
+};
+
 export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
   const getDayCustomers = (day: string) => {
     console.log(`Filtering customers for day: ${day}`);
     console.log('All customers:', customers);
     
+    // Normalize the day name for comparison
+    const dayLower = normalizeDay(day);
+    
     return customers.filter(customer => {
-      // Normalize the day name to lowercase for comparison
-      const dayLower = day.toLowerCase().trim();
-      
       // Get customer visit days and handle possible undefined values
-      const danPosete = customer.dan_posete?.toLowerCase().trim() || '';
-      const danObilaska = customer.dan_obilaska?.toLowerCase().trim() || '';
-      const visitDay = customer.visit_day?.toLowerCase().trim() || '';
+      const danPosete = normalizeDay(customer.dan_posete);
+      const danObilaska = normalizeDay(customer.dan_obilaska);
+      const visitDay = normalizeDay(customer.visit_day);
       
       // Log debugging information
       console.log(`Customer ${customer.name}:`, {
