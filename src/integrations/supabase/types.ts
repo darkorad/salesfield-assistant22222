@@ -281,7 +281,7 @@ export type Database = {
             foreignKeyName: "price_changes_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "kupci_darko"
             referencedColumns: ["id"]
           },
           {
@@ -515,7 +515,7 @@ export type Database = {
             foreignKeyName: "price_changes_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "kupci_darko"
             referencedColumns: ["id"]
           },
           {
@@ -542,7 +542,7 @@ export type Database = {
             foreignKeyName: "price_changes_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "kupci_darko"
             referencedColumns: ["id"]
           },
           {

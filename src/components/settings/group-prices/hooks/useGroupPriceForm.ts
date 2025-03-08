@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
@@ -88,9 +87,12 @@ export const useGroupPriceForm = () => {
         return;
       }
 
+      let priceData = {};
+      let successMessage = "";
+
       if (selectedGroup) {
-        // For group prices, explicitly set customer_id to null
-        const groupPriceData = {
+        // For group prices
+        priceData = {
           group_id: selectedGroup.id,
           customer_id: null,  // Explicitly set to null
           product_id: selectedProduct.id,
@@ -99,23 +101,11 @@ export const useGroupPriceForm = () => {
           user_id: session.user.id
         };
         
-        console.log("Saving group prices:", groupPriceData);
-        
-        const { error: priceError } = await supabase
-          .from('price_changes')
-          .insert(groupPriceData);
-
-        if (priceError) {
-          console.error('Error saving group price:', priceError);
-          toast.error(`Greška pri čuvanju cena: ${priceError.message}`);
-          setIsSubmitting(false);
-          return;
-        }
-
-        toast.success(`Cene za grupu ${selectedGroup.name} uspešno sačuvane`);
+        console.log("Saving group prices:", priceData);
+        successMessage = `Cene za grupu ${selectedGroup.name} uspešno sačuvane`;
       } else if (selectedCustomer) {
         // For customer-specific prices
-        const customerPriceData = {
+        priceData = {
           customer_id: selectedCustomer.id,
           group_id: null,  // Explicitly set to null
           product_id: selectedProduct.id,
@@ -124,27 +114,30 @@ export const useGroupPriceForm = () => {
           user_id: session.user.id
         };
         
-        console.log("Saving customer prices:", customerPriceData);
-        
-        const { error: customerPriceError } = await supabase
-          .from('price_changes')
-          .insert(customerPriceData);
-
-        if (customerPriceError) {
-          console.error('Error saving customer price:', customerPriceError);
-          toast.error(`Greška pri čuvanju cena: ${customerPriceError.message}`);
-          setIsSubmitting(false);
-          return;
-        }
-
-        toast.success(`Cena za kupca ${selectedCustomer.name} uspešno sačuvana`);
+        console.log("Saving customer prices:", priceData);
+        successMessage = `Cena za kupca ${selectedCustomer.name} uspešno sačuvana`;
       }
+
+      const { error: priceError } = await supabase
+        .from('price_changes')
+        .insert(priceData);
+
+      if (priceError) {
+        console.error('Error saving price:', priceError);
+        toast.error(`Greška pri čuvanju cena: ${priceError.message}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success(successMessage);
 
       // Reset form after successful submission
       setSelectedProduct(null);
       setProductSearch("");
       setInvoicePrice("");
       setCashPrice("");
+      
+      // Keep the selected group/customer for convenience
     } catch (error) {
       console.error('Error saving prices:', error);
       toast.error("Greška pri čuvanju cena");
