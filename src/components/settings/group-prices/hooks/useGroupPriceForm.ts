@@ -99,6 +99,7 @@ export const useGroupPriceForm = () => {
 
       if (selectedGroup) {
         // Insert price change for the group
+        // Important: Do NOT include customer_id when setting group prices
         const { error: priceError } = await supabase
           .from('price_changes')
           .insert({
