@@ -1,3 +1,4 @@
+
 import { ExportData } from "@/components/settings/ExportData";
 import { CustomerPriceForm } from "@/components/settings/customer-prices/CustomerPriceForm";
 import { GroupPriceForm } from "@/components/settings/group-prices/GroupPriceForm";
@@ -6,10 +7,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AddCustomerDialog } from "@/components/settings/AddCustomerDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Reports } from "@/components/settings/Reports";
 import MonthlySales from "./MonthlySales";
+import { AddCustomerCard } from "@/components/settings/AddCustomerCard";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -38,10 +39,9 @@ const Settings = () => {
         
         <TabsContent value="settings">
           <div className="space-y-8">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Podešavanja</h2>
-              <AddCustomerDialog />
-            </div>
+            <h2 className="text-2xl font-bold">Podešavanja</h2>
+            
+            <AddCustomerCard />
 
             <div>
               <CustomerPriceForm />
