@@ -23,7 +23,8 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
   // Process each sale (one customer per page)
   salesData.forEach((sale, saleIndex) => {
     // Calculate starting row for this customer
-    const startRow = saleIndex * 44; // 44 rows per page in landscape
+    // Add more rows to account for the extra spacing between customers
+    const startRow = saleIndex * (44 + 2); // 44 rows per page + 2 extra lines between customers
 
     // Add customer information
     const headers = [
@@ -35,6 +36,24 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
     headers.forEach((row, index) => {
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: startRow + index });
+      
+      // Add cell styles to each cell in the header rows
+      for (let colIndex = 0; colIndex < row.length; colIndex++) {
+        if (colIndex === 4) continue; // Skip spacing column
+        const cellRef = XLSX.utils.encode_cell({ r: startRow + index, c: colIndex });
+        if (!ws[cellRef]) continue;
+        
+        ws[cellRef].s = {
+          font: { sz: 20, bold: true },
+          border: {
+            top: { style: 'thin' },
+            right: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' }
+          },
+          alignment: { horizontal: 'left', vertical: 'center' }
+        };
+      }
     });
 
     // Add table structure (empty rows for the full page)
@@ -42,6 +61,23 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
     for (let i = 0; i < tableRows; i++) {
       const emptyRow = ['', '', '', '', '', '', '', '', ''];
       XLSX.utils.sheet_add_aoa(ws, [emptyRow], { origin: startRow + 4 + i });
+      
+      // Add cell styles to each cell in the empty rows
+      for (let colIndex = 0; colIndex < emptyRow.length; colIndex++) {
+        if (colIndex === 4) continue; // Skip spacing column
+        const cellRef = XLSX.utils.encode_cell({ r: startRow + 4 + i, c: colIndex });
+        if (!ws[cellRef]) continue;
+        
+        ws[cellRef].s = {
+          font: { sz: 20 },
+          border: {
+            top: { style: 'thin' },
+            right: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' }
+          }
+        };
+      }
     }
 
     // Fill in actual items with correct formulas that include unit size
@@ -58,6 +94,23 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
         item.total // Pre-calculated total with correct unit size
       ];
       XLSX.utils.sheet_add_aoa(ws, [itemRow], { origin: startRow + 4 + itemIndex });
+      
+      // Add cell styles to each cell in the item rows
+      for (let colIndex = 0; colIndex < itemRow.length; colIndex++) {
+        if (colIndex === 4) continue; // Skip spacing column
+        const cellRef = XLSX.utils.encode_cell({ r: startRow + 4 + itemIndex, c: colIndex });
+        if (!ws[cellRef]) continue;
+        
+        ws[cellRef].s = {
+          font: { sz: 20 },
+          border: {
+            top: { style: 'thin' },
+            right: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' }
+          }
+        };
+      }
     });
 
     // Add totals at the bottom
@@ -102,6 +155,23 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
 
     totalsRows.forEach((row, index) => {
       XLSX.utils.sheet_add_aoa(ws, [row], { origin: totalsStartRow + index });
+      
+      // Add cell styles to each cell in the totals rows
+      for (let colIndex = 0; colIndex < row.length; colIndex++) {
+        if (colIndex === 4) continue; // Skip spacing column
+        const cellRef = XLSX.utils.encode_cell({ r: totalsStartRow + index, c: colIndex });
+        if (!ws[cellRef]) continue;
+        
+        ws[cellRef].s = {
+          font: { sz: 20, bold: index === 2 }, // Bold for the ZBIR row
+          border: {
+            top: { style: 'thin' },
+            right: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' }
+          }
+        };
+      }
     });
   });
 
