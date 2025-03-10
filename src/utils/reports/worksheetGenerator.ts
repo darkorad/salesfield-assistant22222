@@ -1,3 +1,4 @@
+
 import * as XLSX from "xlsx";
 import { CashSale } from "@/types/reports";
 
@@ -43,18 +44,18 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
       XLSX.utils.sheet_add_aoa(ws, [emptyRow], { origin: startRow + 4 + i });
     }
 
-    // Fill in actual items
+    // Fill in actual items with correct formulas that include unit size
     sale.items.forEach((item, itemIndex) => {
       const itemRow = [
         item.product.Naziv,
         item.quantity,
         item.product.Cena,
-        { f: `B${startRow + itemIndex + 5}*C${startRow + itemIndex + 5}` },
+        item.total, // Pre-calculated total with correct unit size
         '',
         item.product.Naziv,
         item.quantity,
         item.product.Cena,
-        { f: `G${startRow + itemIndex + 5}*H${startRow + itemIndex + 5}` }
+        item.total // Pre-calculated total with correct unit size
       ];
       XLSX.utils.sheet_add_aoa(ws, [itemRow], { origin: startRow + 4 + itemIndex });
     });
@@ -66,12 +67,12 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
         'Ukupno:', 
         '', 
         '', 
-        { f: `SUM(D${startRow + 5}:D${totalsStartRow})` },
+        sale.total, // Pre-calculated total for all items
         '',
         'Ukupno:', 
         '', 
         '', 
-        { f: `SUM(I${startRow + 5}:I${totalsStartRow})` }
+        sale.total // Pre-calculated total for all items
       ],
       [
         'Dug iz prethodnog perioda:', 
@@ -88,12 +89,12 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
         'ZBIR:', 
         '', 
         '', 
-        { f: `SUM(D${totalsStartRow + 1}:D${totalsStartRow + 2})` },
+        sale.total + (sale.previousDebt || 0),
         '',
         'ZBIR:', 
         '', 
         '', 
-        { f: `SUM(I${totalsStartRow + 1}:I${totalsStartRow + 2})` }
+        sale.total + (sale.previousDebt || 0)
       ],
       [''],
       ['potpis kupca', '', 'potpis vozaca', '', '', 'potpis kupca', '', 'potpis vozaca']

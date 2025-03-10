@@ -46,6 +46,12 @@ export const Reports = () => {
         return;
       }
 
+      // Debug logging to check all customers
+      console.log("All sales today:", salesData?.map(s => ({
+        customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
+        items: s.items.map((i: any) => i.paymentType).join(', ')
+      })));
+
       // Filter for cash sales by checking items
       const cashSales = salesData?.filter(sale => {
         // Check if any items have paymentType 'cash'
@@ -57,7 +63,7 @@ export const Reports = () => {
         return;
       }
 
-      console.log("Found cash sales:", cashSales.length);
+      console.log("Found cash sales:", cashSales.length, cashSales.map(s => s.customer?.name || s.darko_customer?.name || 'Unknown'));
 
       // Transform data for worksheet generator
       const formattedSales = cashSales.map(sale => {
