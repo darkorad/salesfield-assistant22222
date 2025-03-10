@@ -28,12 +28,13 @@ export const ExportData = () => {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
+      // Fix the relationship reference by specifying which relationship to use
       const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
           *,
           customer:customers(*),
-          darko_customer:kupci_darko(*)
+          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
         `)
         .eq('user_id', session.user.id)
         .eq('payment_type', 'cash')
