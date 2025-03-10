@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, CalendarIcon } from "lucide-react";
 import { exportDailyDetailedReport } from "@/utils/reports/dailyDetailedReport";
 import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
 import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
@@ -9,25 +9,41 @@ import { generateCashSalesWorksheet } from "@/utils/reports/worksheetGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export const Reports = () => {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+
   const handleExportTodayCashSales = async () => {
     try {
+      if (!selectedDate) {
+        toast.error("Izaberite datum");
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Niste prijavljeni");
         return;
       }
 
-      // Get today's date at start of day in local timezone
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Get the start of the selected date in local timezone
+      const startDate = new Date(selectedDate);
+      startDate.setHours(0, 0, 0, 0);
 
-      // Get tomorrow's date at start of day in local timezone
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      // Get the end of the selected date (next day at 00:00)
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
 
-      // Get all sales for today first - don't filter by payment_type at database level
+      // Get all sales for the selected date - don't filter by payment_type at database level
       const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
@@ -36,8 +52,8 @@ export const Reports = () => {
           darko_customer:kupci_darko!fk_sales_kupci_darko(*)
         `)
         .eq('user_id', session.user.id)
-        .gte('date', today.toISOString())
-        .lt('date', tomorrow.toISOString())
+        .gte('date', startDate.toISOString())
+        .lt('date', endDate.toISOString())
         .order('date', { ascending: false });
 
       if (error) {
@@ -47,7 +63,7 @@ export const Reports = () => {
       }
 
       // Log all sales and their payment types for debugging
-      console.log("All sales today:", salesData?.length, salesData?.map(s => ({
+      console.log("All sales for selected date:", salesData?.length, salesData?.map(s => ({
         id: s.id,
         customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
         items: s.items.length,
@@ -60,7 +76,7 @@ export const Reports = () => {
       }) || [];
 
       if (cashSales.length === 0) {
-        toast.error("Nema prodaje za gotovinu danas");
+        toast.error(`Nema prodaje za gotovinu na dan ${format(selectedDate, 'dd.MM.yyyy')}`);
         return;
       }
 
@@ -104,8 +120,8 @@ export const Reports = () => {
 
       const { wb, ws } = generateCashSalesWorksheet(formattedSales);
 
-      // Generate filename with current date
-      const dateStr = new Date().toLocaleDateString('sr-RS').replace(/\./g, '-');
+      // Generate filename with selected date
+      const dateStr = format(selectedDate, 'dd-MM-yyyy');
       XLSX.writeFile(wb, `gotovinska-prodaja-${dateStr}.xlsx`);
       toast.success("Izveštaj je uspešno izvezen");
 
@@ -145,13 +161,44 @@ export const Reports = () => {
           Mesečna prodaja po artiklima
         </Button>
 
-        <Button
-          className="w-full py-6 text-lg font-medium"
-          onClick={handleExportTodayCashSales}
-        >
-          <FileSpreadsheet className="mr-2 h-5 w-5" />
-          Export keš kupovina
-        </Button>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal",
+                  "border-dashed border-input",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? (
+                  format(selectedDate, "dd.MM.yyyy")
+                ) : (
+                  <span>Izaberite datum</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Button
+            className="flex-1 py-6 text-lg font-medium"
+            onClick={handleExportTodayCashSales}
+          >
+            <FileSpreadsheet className="mr-2 h-5 w-5" />
+            Export keš kupovina
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
