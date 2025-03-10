@@ -27,7 +27,7 @@ export const Reports = () => {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // Get all sales for today first
+      // Get all sales for today first - don't filter by payment_type at database level
       const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
@@ -46,15 +46,16 @@ export const Reports = () => {
         return;
       }
 
-      // Debug logging to check all customers
-      console.log("All sales today:", salesData?.map(s => ({
+      // Log all sales and their payment types for debugging
+      console.log("All sales today:", salesData?.length, salesData?.map(s => ({
+        id: s.id,
         customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
-        items: s.items.map((i: any) => i.paymentType).join(', ')
+        items: s.items.length,
+        itemsPaymentTypes: s.items.map((i: any) => i.paymentType || 'unknown')
       })));
 
-      // Filter for cash sales by checking items
+      // Filter for cash sales by checking if ANY items have paymentType 'cash'
       const cashSales = salesData?.filter(sale => {
-        // Check if any items have paymentType 'cash'
         return sale.items.some((item: any) => item.paymentType === 'cash');
       }) || [];
 
@@ -63,7 +64,11 @@ export const Reports = () => {
         return;
       }
 
-      console.log("Found cash sales:", cashSales.length, cashSales.map(s => s.customer?.name || s.darko_customer?.name || 'Unknown'));
+      console.log("Found cash sales:", cashSales.length, cashSales.map(s => ({
+        customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
+        itemsCount: s.items.length,
+        cashItemsCount: s.items.filter((i: any) => i.paymentType === 'cash').length
+      })));
 
       // Transform data for worksheet generator
       const formattedSales = cashSales.map(sale => {
