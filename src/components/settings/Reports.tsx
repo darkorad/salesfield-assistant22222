@@ -27,7 +27,7 @@ export const Reports = () => {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // Fix the relationship reference by specifying which relationship to use
+      // Get all sales for today first
       const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
@@ -36,7 +36,6 @@ export const Reports = () => {
           darko_customer:kupci_darko!fk_sales_kupci_darko(*)
         `)
         .eq('user_id', session.user.id)
-        .eq('payment_type', 'cash')
         .gte('date', today.toISOString())
         .lt('date', tomorrow.toISOString())
         .order('date', { ascending: false });
@@ -47,31 +46,50 @@ export const Reports = () => {
         return;
       }
 
-      if (!salesData || salesData.length === 0) {
+      // Filter for cash sales by checking items
+      const cashSales = salesData?.filter(sale => {
+        // Check if any items have paymentType 'cash'
+        return sale.items.some((item: any) => item.paymentType === 'cash');
+      }) || [];
+
+      if (cashSales.length === 0) {
         toast.error("Nema prodaje za gotovinu danas");
         return;
       }
 
+      console.log("Found cash sales:", cashSales.length);
+
       // Transform data for worksheet generator
-      const formattedSales = salesData.map(sale => ({
-        customer: sale.customer || sale.darko_customer || { 
-          name: 'Nepoznat',
-          address: 'N/A',
-          city: 'N/A',
-          phone: 'N/A'
-        },
-        items: sale.items.map((item: any) => ({
-          product: {
-            Naziv: item.product.Naziv,
-            "Jedinica mere": item.product["Jedinica mere"],
-            Cena: item.product.Cena
+      const formattedSales = cashSales.map(sale => {
+        // Get only cash items from the sale
+        const cashItems = sale.items.filter((item: any) => item.paymentType === 'cash');
+        
+        // Calculate the total only for cash items
+        const cashTotal = cashItems.reduce((sum: number, item: any) => {
+          const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
+          return sum + (item.product.Cena * item.quantity * unitSize);
+        }, 0);
+
+        return {
+          customer: sale.customer || sale.darko_customer || { 
+            name: 'Nepoznat',
+            address: 'N/A',
+            city: 'N/A',
+            phone: 'N/A'
           },
-          quantity: item.quantity,
-          total: item.quantity * item.product.Cena
-        })),
-        total: sale.total,
-        previousDebt: 0 // You might want to fetch this from somewhere
-      }));
+          items: cashItems.map((item: any) => ({
+            product: {
+              Naziv: item.product.Naziv,
+              "Jedinica mere": item.product["Jedinica mere"],
+              Cena: item.product.Cena
+            },
+            quantity: item.quantity,
+            total: item.quantity * item.product.Cena * (parseFloat(item.product["Jedinica mere"]) || 1)
+          })),
+          total: cashTotal,
+          previousDebt: 0 // You might want to fetch this from somewhere
+        };
+      });
 
       const { wb, ws } = generateCashSalesWorksheet(formattedSales);
 
