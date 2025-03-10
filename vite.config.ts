@@ -50,8 +50,7 @@ export default defineConfig(({ mode }) => ({
           'form-vendor': ['react-hook-form', 'zod'],
           'utils-vendor': ['date-fns', 'xlsx']
         }
-      },
-      external: [] // Ensure no external dependencies that should be bundled
+      }
     },
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false
