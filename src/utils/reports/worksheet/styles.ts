@@ -1,7 +1,7 @@
 
 // Defines common styles for worksheet cells
 export const defaultCellStyle = {
-  font: { sz: 16 },  // Increased from 12 to 16
+  font: { sz: 20 },  // Increased from 16 to 20 for better mobile viewing
   border: {
     top: { style: 'thin' },
     right: { style: 'thin' },
@@ -12,13 +12,13 @@ export const defaultCellStyle = {
 
 export const headerCellStyle = {
   ...defaultCellStyle,
-  font: { sz: 16, bold: true },  // Increased from 12 to 16
+  font: { sz: 20, bold: true },  // Increased from 16 to 20
   alignment: { horizontal: 'left', vertical: 'center' }
 };
 
 export const totalRowStyle = {
   ...defaultCellStyle,
-  font: { sz: 16, bold: true }  // Increased from 12 to 16
+  font: { sz: 20, bold: true }  // Increased from 16 to 20
 };
 
 // Column width definitions for A4 landscape layout

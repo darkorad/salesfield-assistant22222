@@ -1,9 +1,12 @@
+
 {
   "appId": "com.salesapp.app",
   "appName": "Sales App",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "url": "https://62804ab4-f3f4-4eaa-a344-12e3de709e58.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
   },
   "android": {
     "buildOptions": {
