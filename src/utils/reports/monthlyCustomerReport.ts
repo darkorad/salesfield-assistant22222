@@ -1,9 +1,17 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
 
 export const exportMonthlyCustomerReport = async () => {
   try {
+    // Get current user session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Niste prijavljeni");
+      return;
+    }
+
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const firstDayOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
@@ -25,6 +33,7 @@ export const exportMonthlyCustomerReport = async () => {
           pib
         )
       `)
+      .eq('user_id', session.user.id)
       .gte('created_at', firstDayOfMonth.toISOString())
       .lt('created_at', firstDayOfNextMonth.toISOString())
       .order('created_at', { ascending: true });
@@ -36,14 +45,31 @@ export const exportMonthlyCustomerReport = async () => {
       return;
     }
 
-    // Group sales by customer
-    const customerSales = sales.reduce((acc, sale) => {
+    // Group by customer with detailed purchase information
+    const customerSalesDetails = {};
+    const customerSalesSummary = {};
+    
+    // Process all sales for detailed and summary information
+    sales.forEach(sale => {
       const customer = sale.customer_id ? sale.customers : sale.kupci_darko;
-      const customerId = sale.customer_id || sale.darko_customer_id;
+      const customerId = sale.customer_id || sale.darko_customer_id || 'unknown';
+      const customerName = customer?.name || 'Nepoznat kupac';
+      const items = sale.items as any[];
       
-      if (!acc[customerId]) {
-        acc[customerId] = {
-          name: customer?.name || '',
+      // Initialize customer entries if they don't exist
+      if (!customerSalesDetails[customerId]) {
+        customerSalesDetails[customerId] = {
+          name: customerName,
+          address: customer?.address || '',
+          city: customer?.city || '',
+          pib: customer?.pib || '',
+          items: []
+        };
+      }
+
+      if (!customerSalesSummary[customerId]) {
+        customerSalesSummary[customerId] = {
+          name: customerName,
           address: customer?.address || '',
           city: customer?.city || '',
           pib: customer?.pib || '',
@@ -53,17 +79,87 @@ export const exportMonthlyCustomerReport = async () => {
         };
       }
       
-      if (sale.payment_type === 'cash') {
-        acc[customerId].totalCash += sale.total;
-      } else {
-        acc[customerId].totalInvoice += sale.total;
-      }
-      acc[customerId].totalAmount += sale.total;
+      // Add items to customer details
+      items.forEach(item => {
+        customerSalesDetails[customerId].items.push({
+          date: new Date(sale.created_at).toLocaleDateString('sr-RS'),
+          product: item.product.Naziv,
+          manufacturer: item.product.Proizvođač,
+          unit: item.product["Jedinica mere"],
+          quantity: item.quantity,
+          price: item.product.Cena,
+          total: item.quantity * item.product.Cena,
+          payment_type: sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'
+        });
+      });
       
-      return acc;
-    }, {});
+      // Update customer summary
+      if (sale.payment_type === 'cash') {
+        customerSalesSummary[customerId].totalCash += sale.total;
+      } else {
+        customerSalesSummary[customerId].totalInvoice += sale.total;
+      }
+      customerSalesSummary[customerId].totalAmount += sale.total;
+    });
 
-    const reportData = Object.values(customerSales)
+    // Create detailed report data by customer
+    const reportData = [];
+
+    // Add each customer's data with a header row and items
+    Object.values(customerSalesDetails).forEach((customer: any) => {
+      // Add customer header
+      reportData.push({
+        'Kupac': customer.name,
+        'PIB': customer.pib,
+        'Adresa': customer.address,
+        'Grad': customer.city,
+        'Datum': '',
+        'Proizvod': '',
+        'Proizvođač': '',
+        'Količina': '',
+        'Jedinica mere': '',
+        'Cena': '',
+        'Ukupno': '',
+        'Način plaćanja': ''
+      });
+      
+      // Add customer's items
+      customer.items.forEach(item => {
+        reportData.push({
+          'Kupac': '',
+          'PIB': '',
+          'Adresa': '',
+          'Grad': '',
+          'Datum': item.date,
+          'Proizvod': item.product,
+          'Proizvođač': item.manufacturer,
+          'Količina': item.quantity,
+          'Jedinica mere': item.unit,
+          'Cena': item.price,
+          'Ukupno': item.total,
+          'Način plaćanja': item.payment_type
+        });
+      });
+      
+      // Add empty row after customer
+      reportData.push({
+        'Kupac': '',
+        'PIB': '',
+        'Adresa': '',
+        'Grad': '',
+        'Datum': '',
+        'Proizvod': '',
+        'Proizvođač': '',
+        'Količina': '',
+        'Jedinica mere': '',
+        'Cena': '',
+        'Ukupno': '',
+        'Način plaćanja': ''
+      });
+    });
+
+    // Create customer summary data for second sheet
+    const summaryData = Object.values(customerSalesSummary)
       .sort((a: any, b: any) => b.totalAmount - a.totalAmount)
       .map((customer: any) => ({
         'Kupac': customer.name,
@@ -75,11 +171,45 @@ export const exportMonthlyCustomerReport = async () => {
         'Ukupan iznos': customer.totalAmount
       }));
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(reportData);
+    // Calculate monthly totals
+    const totalCash = summaryData.reduce((sum, item) => sum + item['Ukupno gotovina'], 0);
+    const totalInvoice = summaryData.reduce((sum, item) => sum + item['Ukupno račun'], 0);
+    const totalAmount = summaryData.reduce((sum, item) => sum + item['Ukupan iznos'], 0);
 
-    // Set column widths
-    ws['!cols'] = [
+    // Add totals row to summary
+    summaryData.push({
+      'Kupac': 'UKUPNO:',
+      'PIB': '',
+      'Adresa': '',
+      'Grad': '',
+      'Ukupno gotovina': totalCash,
+      'Ukupno račun': totalInvoice,
+      'Ukupan iznos': totalAmount
+    });
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Create detailed worksheet
+    const wsDetails = XLSX.utils.json_to_sheet(reportData);
+    wsDetails['!cols'] = [
+      { wch: 30 }, // Kupac
+      { wch: 15 }, // PIB
+      { wch: 30 }, // Adresa
+      { wch: 20 }, // Grad
+      { wch: 15 }, // Datum
+      { wch: 30 }, // Proizvod
+      { wch: 20 }, // Proizvođač
+      { wch: 10 }, // Količina
+      { wch: 15 }, // Jedinica mere
+      { wch: 12 }, // Cena
+      { wch: 12 }, // Ukupno
+      { wch: 15 }  // Način plaćanja
+    ];
+    
+    // Create summary worksheet
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    wsSummary['!cols'] = [
       { wch: 30 }, // Kupac
       { wch: 15 }, // PIB
       { wch: 30 }, // Adresa
@@ -89,7 +219,9 @@ export const exportMonthlyCustomerReport = async () => {
       { wch: 15 }  // Ukupan iznos
     ];
     
-    XLSX.utils.book_append_sheet(wb, ws, "Mesečna prodaja po kupcima");
+    // Add worksheets to workbook
+    XLSX.utils.book_append_sheet(wb, wsDetails, "Detaljna prodaja");
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Zbirna prodaja");
     
     const fileName = `Mesecna_prodaja_po_kupcima_${today.getMonth() + 1}_${today.getFullYear()}.xlsx`;
     XLSX.writeFile(wb, fileName);

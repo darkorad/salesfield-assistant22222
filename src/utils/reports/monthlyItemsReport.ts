@@ -1,9 +1,17 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
 
 export const exportMonthlyItemsReport = async () => {
   try {
+    // Get current user session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Niste prijavljeni");
+      return;
+    }
+    
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const firstDayOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
@@ -11,6 +19,7 @@ export const exportMonthlyItemsReport = async () => {
     const { data: sales, error } = await supabase
       .from('sales')
       .select('*')
+      .eq('user_id', session.user.id)
       .gte('created_at', firstDayOfMonth.toISOString())
       .lt('created_at', firstDayOfNextMonth.toISOString());
 
@@ -30,13 +39,16 @@ export const exportMonthlyItemsReport = async () => {
       const items = sale.items as any[];
       
       items.forEach(item => {
-        const key = `${item.product.Naziv}_${item.product.Proizvođač}_${item.product["Jedinica mere"]}`;
+        const product = item.product;
+        if (!product) return;
+        
+        const key = `${product.Naziv}_${product.Proizvođač}_${product["Jedinica mere"]}`;
         
         if (!acc[key]) {
           acc[key] = {
-            name: item.product.Naziv,
-            manufacturer: item.product.Proizvođač,
-            unit: item.product["Jedinica mere"],
+            name: product.Naziv,
+            manufacturer: product.Proizvođač,
+            unit: product["Jedinica mere"],
             cashQuantity: 0,
             invoiceQuantity: 0,
             totalQuantity: 0,
@@ -47,7 +59,7 @@ export const exportMonthlyItemsReport = async () => {
         }
         
         const quantity = parseFloat(item.quantity) || 0;
-        const price = parseFloat(item.price) || 0;
+        const price = parseFloat(product.Cena) || 0;
         const value = quantity * price;
         
         if (sale.payment_type === 'cash') {
@@ -78,6 +90,27 @@ export const exportMonthlyItemsReport = async () => {
         'Ukupna količina': parseFloat(item.totalQuantity.toFixed(2)),
         'Ukupna vrednost': parseFloat(item.totalValue.toFixed(2))
       }));
+
+    // Calculate total values
+    const totalCashQuantity = reportData.reduce((sum, item) => sum + item['Količina (gotovina)'], 0);
+    const totalCashValue = reportData.reduce((sum, item) => sum + item['Vrednost (gotovina)'], 0);
+    const totalInvoiceQuantity = reportData.reduce((sum, item) => sum + item['Količina (račun)'], 0);
+    const totalInvoiceValue = reportData.reduce((sum, item) => sum + item['Vrednost (račun)'], 0);
+    const totalQuantity = reportData.reduce((sum, item) => sum + item['Ukupna količina'], 0);
+    const totalValue = reportData.reduce((sum, item) => sum + item['Ukupna vrednost'], 0);
+
+    // Add totals row
+    reportData.push({
+      'Naziv artikla': 'UKUPNO:',
+      'Proizvođač': '',
+      'Jedinica mere': '',
+      'Količina (gotovina)': parseFloat(totalCashQuantity.toFixed(2)),
+      'Vrednost (gotovina)': parseFloat(totalCashValue.toFixed(2)),
+      'Količina (račun)': parseFloat(totalInvoiceQuantity.toFixed(2)),
+      'Vrednost (račun)': parseFloat(totalInvoiceValue.toFixed(2)),
+      'Ukupna količina': parseFloat(totalQuantity.toFixed(2)),
+      'Ukupna vrednost': parseFloat(totalValue.toFixed(2))
+    });
 
     // Create workbook
     const wb = XLSX.utils.book_new();

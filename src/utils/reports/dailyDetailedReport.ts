@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
@@ -10,6 +11,14 @@ export const exportDailyDetailedReport = async () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    // Get current user session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Niste prijavljeni");
+      return;
+    }
+
+    // Get all sales for today for the current user
     const { data: sales, error } = await supabase
       .from('sales')
       .select(`
@@ -27,6 +36,7 @@ export const exportDailyDetailedReport = async () => {
           pib
         )
       `)
+      .eq('user_id', session.user.id)
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
       .order('created_at', { ascending: true });
@@ -38,6 +48,7 @@ export const exportDailyDetailedReport = async () => {
       return;
     }
 
+    // Create flat array of all items from all sales
     const reportData = sales.map(sale => {
       const customer = sale.customer_id ? sale.customers : sale.kupci_darko;
       const items = sale.items as any[];
@@ -77,6 +88,28 @@ export const exportDailyDetailedReport = async () => {
       { wch: 12 },  // Ukupno
       { wch: 15 }   // Način plaćanja
     ];
+
+    // Calculate totals by payment type
+    const cashTotal = reportData
+      .filter(row => row['Način plaćanja'] === 'Gotovina')
+      .reduce((sum, row) => sum + row['Ukupno'], 0);
+    
+    const invoiceTotal = reportData
+      .filter(row => row['Način plaćanja'] === 'Račun')
+      .reduce((sum, row) => sum + row['Ukupno'], 0);
+    
+    const grandTotal = cashTotal + invoiceTotal;
+
+    // Add summary rows
+    const summaryData = [
+      [], // Empty row
+      ['Ukupno gotovina:', cashTotal, '', '', '', '', '', '', '', '', '', ''],
+      ['Ukupno račun:', invoiceTotal, '', '', '', '', '', '', '', '', '', ''],
+      ['UKUPNO:', grandTotal, '', '', '', '', '', '', '', '', '', '']
+    ];
+
+    // Add summary to worksheet
+    XLSX.utils.sheet_add_aoa(ws, summaryData, { origin: -1 });
 
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Dnevni izveštaj");
