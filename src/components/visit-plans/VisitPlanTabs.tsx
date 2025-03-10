@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Customer } from "@/types";
 import { DaySchedule } from "./DaySchedule";
-import { supabase } from "@/integrations/supabase/client";
 
 interface VisitPlanTabsProps {
   selectedDay: string;
@@ -26,40 +25,49 @@ const FIRST_ROW = DAYS_OF_WEEK.slice(0, 4); // Mon-Thu
 const SECOND_ROW = DAYS_OF_WEEK.slice(4); // Fri-Sun
 
 // Helper function to normalize day names for consistent comparison
-const normalizeDay = (day: string | undefined): string => {
+const normalizeDay = (day: string | undefined | null): string => {
   if (!day) return '';
-  return day.toLowerCase().trim();
+  // Convert to lowercase, remove diacritics, and trim spaces
+  return day.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/č/g, "c")
+    .replace(/ć/g, "c")
+    .replace(/š/g, "s")
+    .replace(/ž/g, "z")
+    .replace(/đ/g, "dj")
+    .trim();
 };
 
 export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
   const getDayCustomers = (day: string) => {
     console.log(`Filtering customers for day: ${day}`);
-    console.log('All customers:', customers);
     
     // Normalize the day name for comparison
     const dayLower = normalizeDay(day);
     
+    // Use a more robust filtering approach
     return customers.filter(customer => {
-      // Get customer visit days and handle possible undefined values
-      const danPosete = normalizeDay(customer.dan_posete);
-      const danObilaska = normalizeDay(customer.dan_obilaska);
-      const visitDay = normalizeDay(customer.visit_day);
+      // Try all possible day fields with better normalization
+      const customerDays = [
+        normalizeDay(customer.dan_posete),
+        normalizeDay(customer.dan_obilaska),
+        normalizeDay(customer.visit_day)
+      ];
       
-      // Log debugging information
-      console.log(`Customer ${customer.name}:`, {
-        danPosete,
-        danObilaska,
-        visitDay,
-        dayLower,
-        matchDanPosete: danPosete === dayLower,
-        matchDanObilaska: danObilaska === dayLower,
-        matchVisitDay: visitDay === dayLower
+      // Check if any of the customer's day fields match the selected day
+      const isMatch = customerDays.some(d => {
+        // Additional debug for specific customers
+        if (d && d.includes(dayLower.substring(0, 3))) {
+          console.log(`Match found for ${customer.name}: ${d} contains ${dayLower.substring(0, 3)}`);
+        }
+        
+        // Check for exact match or partial match (first 3 chars)
+        return d === dayLower || 
+               (d && d.includes(dayLower.substring(0, 3)));
       });
       
-      // Check all three possible fields that might contain day information
-      return danPosete === dayLower || 
-             danObilaska === dayLower || 
-             visitDay === dayLower;
+      return isMatch;
     });
   };
 

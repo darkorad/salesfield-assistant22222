@@ -39,17 +39,35 @@ const VisitPlans = () => {
   const [visitPlans, setVisitPlans] = useState<VisitPlan[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState(getCurrentDayInSerbian());
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const fetchData = async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session) {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data: session, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        setError("Greška pri proveri sesije");
+        toast.error("Greška pri proveri sesije");
+        return;
+      }
+      
+      if (!session.session) {
+        console.log("No active session found");
+        setError("Niste prijavljeni");
         toast.error("Niste prijavljeni");
         return;
       }
 
+      console.log("Fetching visit plans for date:", today);
+      console.log("User ID:", session.session?.user.id);
+
+      // Fetch visit plans
       const { data: plansData, error: plansError } = await supabase
         .from("visit_plans")
         .select(`
@@ -66,10 +84,14 @@ const VisitPlans = () => {
 
       if (plansError) {
         console.error("Error fetching visit plans:", plansError);
+        setError("Greška pri učitavanju planova poseta");
         toast.error("Greška pri učitavanju planova poseta");
         return;
       }
 
+      console.log("Fetched plans:", plansData?.length || 0);
+
+      // Fetch customers
       const { data: customersData, error: customersError } = await supabase
         .from("kupci_darko")
         .select("*")
@@ -77,18 +99,19 @@ const VisitPlans = () => {
 
       if (customersError) {
         console.error("Error fetching customers:", customersError);
+        setError("Greška pri učitavanju kupaca");
         toast.error("Greška pri učitavanju kupaca");
         return;
       }
 
-      console.log("Fetched customers:", customersData?.length);
-      console.log("Sample customer dan_posete:", customersData?.[0]?.dan_posete);
+      console.log("Fetched customers:", customersData?.length || 0);
 
       setVisitPlans(plansData || []);
       setCustomers(customersData || []);
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Greška pri učitavanju podataka");
+      console.error("Unexpected error:", error);
+      setError("Neočekivana greška pri učitavanju podataka");
+      toast.error("Neočekivana greška pri učitavanju podataka");
     } finally {
       setIsLoading(false);
     }
@@ -129,20 +152,34 @@ const VisitPlans = () => {
         <p className="text-xs text-gray-600">Pregled današnjih poseta i rasporeda po danima</p>
       </div>
 
-      <VisitPlanTabs 
-        selectedDay={selectedDay}
-        onDayChange={setSelectedDay}
-        customers={customers}
-      />
+      {error ? (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+          <p className="text-red-800 text-sm">{error}</p>
+          <button 
+            onClick={fetchData} 
+            className="mt-2 text-xs bg-red-100 hover:bg-red-200 text-red-800 py-1 px-2 rounded"
+          >
+            Pokušaj ponovo
+          </button>
+        </div>
+      ) : (
+        <>
+          <VisitPlanTabs 
+            selectedDay={selectedDay}
+            onDayChange={setSelectedDay}
+            customers={customers}
+          />
 
-      <div className="mt-6">
-        <h2 className="text-sm font-semibold mb-2">Današnje posete</h2>
-        <TodayVisits 
-          isLoading={isLoading}
-          visitPlans={visitPlans}
-          date={format(new Date(), 'dd.MM.yyyy.')}
-        />
-      </div>
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold mb-2">Današnje posete</h2>
+            <TodayVisits 
+              isLoading={isLoading}
+              visitPlans={visitPlans}
+              date={format(new Date(), 'dd.MM.yyyy.')}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };
