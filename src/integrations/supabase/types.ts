@@ -168,6 +168,7 @@ export type Database = {
           phone: string | null
           pib: string
           user_id: string | null
+          visit_day: string | null
         }
         Insert: {
           address: string
@@ -185,6 +186,7 @@ export type Database = {
           phone?: string | null
           pib: string
           user_id?: string | null
+          visit_day?: string | null
         }
         Update: {
           address?: string
@@ -202,6 +204,7 @@ export type Database = {
           phone?: string | null
           pib?: string
           user_id?: string | null
+          visit_day?: string | null
         }
         Relationships: [
           {
