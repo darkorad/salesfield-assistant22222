@@ -70,6 +70,9 @@ export const exportDailyDetailedReport = async () => {
       }));
     }).flat();
 
+    // Calculate daily total
+    const dailyTotal = reportData.reduce((sum, item) => sum + item['Ukupno'], 0);
+
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(reportData);
@@ -90,36 +93,20 @@ export const exportDailyDetailedReport = async () => {
       { wch: 15 }   // Način plaćanja
     ];
 
-    // Calculate totals by payment type
-    const cashTotal = reportData
-      .filter(row => row['Način plaćanja'] === 'Gotovina')
-      .reduce((sum, row) => sum + row['Ukupno'], 0);
-    
-    const invoiceTotal = reportData
-      .filter(row => row['Način plaćanja'] === 'Račun')
-      .reduce((sum, row) => sum + row['Ukupno'], 0);
-    
-    const grandTotal = cashTotal + invoiceTotal;
-
-    // Add summary rows
-    const summaryData = [
-      [], // Empty row
-      ['Ukupno gotovina:', cashTotal, '', '', '', '', '', '', '', '', '', ''],
-      ['Ukupno račun:', invoiceTotal, '', '', '', '', '', '', '', '', '', ''],
-      ['UKUPNO:', grandTotal, '', '', '', '', '', '', '', '', '', '']
-    ];
-
-    // Add summary to worksheet
-    XLSX.utils.sheet_add_aoa(ws, summaryData, { origin: -1 });
+    // Add daily total row
+    XLSX.utils.sheet_add_aoa(ws, [
+      [],  // Empty row
+      ['UKUPNO:', '', '', '', '', '', '', '', '', '', dailyTotal, '']
+    ], { origin: -1 });
 
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Dnevni izveštaj");
 
     // Generate filename with current date
     const dateStr = today.toLocaleDateString('sr-RS').replace(/\./g, '_');
-    const filename = `Dnevni_izvestaj_${dateStr}`;
+    const filename = `Detaljan_dnevni_izvestaj_${dateStr}`;
 
-    // Using the new exportWorkbook utility
+    // Export the workbook
     await exportWorkbook(wb, filename);
 
   } catch (error) {

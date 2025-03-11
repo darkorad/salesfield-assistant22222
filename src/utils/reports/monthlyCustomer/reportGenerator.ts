@@ -1,16 +1,15 @@
 
 import * as XLSX from 'xlsx';
 
-/**
- * Creates detailed report data from customer sales
- */
 export const createDetailedReportData = (customerSalesDetails: Record<string, any>) => {
   const reportData = [];
+  let customerIndex = 1;
 
-  // Add each customer's data with a header row and items
+  // Add each customer's data with index and a header row
   Object.values(customerSalesDetails).forEach((customer: any) => {
-    // Add customer header
+    // Add customer header with index
     reportData.push({
+      'Rbr': customerIndex,
       'Kupac': customer.name,
       'PIB': customer.pib,
       'Adresa': customer.address,
@@ -28,6 +27,7 @@ export const createDetailedReportData = (customerSalesDetails: Record<string, an
     // Add customer's items
     customer.items.forEach(item => {
       reportData.push({
+        'Rbr': '',
         'Kupac': '',
         'PIB': '',
         'Adresa': '',
@@ -45,6 +45,7 @@ export const createDetailedReportData = (customerSalesDetails: Record<string, an
     
     // Add empty row after customer
     reportData.push({
+      'Rbr': '',
       'Kupac': '',
       'PIB': '',
       'Adresa': '',
@@ -58,19 +59,19 @@ export const createDetailedReportData = (customerSalesDetails: Record<string, an
       'Ukupno': '',
       'Način plaćanja': ''
     });
+
+    customerIndex++;
   });
 
   return reportData;
 };
 
-/**
- * Creates summary report data from customer sales summary
- */
 export const createSummaryReportData = (customerSalesSummary: Record<string, any>) => {
-  // Create customer summary data for second sheet
+  // Create customer summary data for second sheet, sorted by total amount
   const summaryData = Object.values(customerSalesSummary)
     .sort((a: any, b: any) => b.totalAmount - a.totalAmount)
-    .map((customer: any) => ({
+    .map((customer: any, index: number) => ({
+      'Rbr': index + 1,
       'Kupac': customer.name,
       'PIB': customer.pib,
       'Adresa': customer.address,
@@ -85,8 +86,9 @@ export const createSummaryReportData = (customerSalesSummary: Record<string, any
   const totalInvoice = summaryData.reduce((sum, item) => sum + item['Ukupno račun'], 0);
   const totalAmount = summaryData.reduce((sum, item) => sum + item['Ukupan iznos'], 0);
 
-  // Add totals row to summary
+  // Add totals row
   summaryData.push({
+    'Rbr': '',
     'Kupac': 'UKUPNO:',
     'PIB': '',
     'Adresa': '',
@@ -99,16 +101,13 @@ export const createSummaryReportData = (customerSalesSummary: Record<string, any
   return summaryData;
 };
 
-/**
- * Creates and configures worksheets for the Excel workbook
- */
 export const createWorkbook = (reportData: any[], summaryData: any[]) => {
-  // Create workbook
   const wb = XLSX.utils.book_new();
   
   // Create detailed worksheet
   const wsDetails = XLSX.utils.json_to_sheet(reportData);
   wsDetails['!cols'] = [
+    { wch: 5 },  // Rbr
     { wch: 30 }, // Kupac
     { wch: 15 }, // PIB
     { wch: 30 }, // Adresa
@@ -126,6 +125,7 @@ export const createWorkbook = (reportData: any[], summaryData: any[]) => {
   // Create summary worksheet
   const wsSummary = XLSX.utils.json_to_sheet(summaryData);
   wsSummary['!cols'] = [
+    { wch: 5 },  // Rbr
     { wch: 30 }, // Kupac
     { wch: 15 }, // PIB
     { wch: 30 }, // Adresa
