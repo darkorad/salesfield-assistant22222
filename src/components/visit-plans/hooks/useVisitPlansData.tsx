@@ -47,7 +47,7 @@ export const useVisitPlansData = () => {
         return;
       }
 
-      console.log("Fetching visit plans for date:", today);
+      console.log("Fetching customers for visit plans");
       console.log("User ID:", session.session?.user.id);
 
       // Fetch customers with a valid visit day
@@ -66,7 +66,7 @@ export const useVisitPlansData = () => {
 
       console.log("Fetched customers:", customersData?.length || 0);
 
-      // Deduplicate customers
+      // Deduplicate customers by ID
       const uniqueCustomers = new Map<string, Customer>();
       
       customersData?.forEach(customer => {
@@ -78,8 +78,7 @@ export const useVisitPlansData = () => {
       const finalCustomers = Array.from(uniqueCustomers.values());
       console.log("Unique customers after deduplication:", finalCustomers.length);
 
-      // We're not fetching visit plans since we deleted them all,
-      // we'll generate them on demand from customer data
+      // For visit plans, we're setting it to an empty array as we deleted all records
       setVisitPlans([]);
       setCustomers(finalCustomers);
     } catch (error) {

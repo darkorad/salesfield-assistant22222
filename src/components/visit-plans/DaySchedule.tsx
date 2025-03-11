@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Customer } from "@/types";
 import { CustomerSearchBar } from "./customer-list/CustomerSearchBar";
 import { CustomerGrid } from "./customer-list/CustomerGrid";
@@ -7,6 +7,7 @@ import { CustomerOrderSection } from "./customer-order/CustomerOrderSection";
 import { useCompletedCustomers } from "./hooks/useCompletedCustomers";
 import { useCustomerSearch } from "./hooks/useCustomerSearch";
 import { useCustomersByDay } from "./hooks/useCustomersByDay";
+import { toast } from "sonner";
 
 interface DayScheduleProps {
   day: string;
@@ -26,6 +27,15 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   
   // Then apply text search on the day-filtered customers
   const filteredCustomers = useCustomerSearch(customersForDay, searchTerm);
+
+  // Log the customer counts to help debug
+  useEffect(() => {
+    console.log(`DaySchedule for ${day}:`, {
+      totalCustomers: customers.length,
+      customersForDay: customersForDay.length,
+      filteredCustomers: filteredCustomers.length
+    });
+  }, [day, customers.length, customersForDay.length, filteredCustomers.length]);
 
   const handleCustomerClick = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -57,6 +67,12 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         searchTerm={searchTerm}
         onChange={setSearchTerm}
       />
+
+      {customersForDay.length > 0 && (
+        <div className="p-2 bg-amber-50 rounded text-xs border border-amber-200 mb-2">
+          Prikazuje se {customersForDay.length} kupaca za {day}
+        </div>
+      )}
 
       <CustomerGrid
         customers={filteredCustomers}

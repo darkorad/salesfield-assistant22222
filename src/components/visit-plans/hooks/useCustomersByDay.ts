@@ -1,10 +1,17 @@
+
 import { useMemo } from "react";
 import { Customer } from "@/types";
 import { normalizeDay, areDaysSimilar } from "../utils/dayUtils";
 
 export const useCustomersByDay = (customers: Customer[], day: string) => {
   return useMemo(() => {
-    console.log(`Filtering customers for day: ${day}`);
+    console.log(`Filtering customers for day: ${day}, total customers: ${customers.length}`);
+    
+    // Early return if no customers
+    if (customers.length === 0) {
+      console.log(`No customers to filter for day: ${day}`);
+      return [];
+    }
     
     // Create a Map to store unique customers by ID
     const uniqueCustomersMap = new Map<string, Customer>();
@@ -34,6 +41,9 @@ export const useCustomersByDay = (customers: Customer[], day: string) => {
         }
       }
     });
+    
+    // Log the count of customers filtered by day
+    console.log(`First pass - Customers matching day ${day}:`, uniqueCustomersMap.size);
     
     // Second pass: Enhanced deduplication by name and address
     const finalCustomersMap = new Map<string, Customer>();
@@ -68,7 +78,7 @@ export const useCustomersByDay = (customers: Customer[], day: string) => {
     const uniqueCustomers = Array.from(finalCustomersMap.values())
       .sort((a, b) => a.name.localeCompare(b.name));
     
-    console.log(`Found ${uniqueCustomers.length} unique customers for day: ${day}`);
+    console.log(`Final filtered customers for day ${day}: ${uniqueCustomers.length}`);
     
     return uniqueCustomers;
   }, [customers, day]);
