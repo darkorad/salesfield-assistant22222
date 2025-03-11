@@ -17,6 +17,13 @@ export const exportMonthlyItemsReport = async () => {
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const firstDayOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
 
+    // Get month name in Serbian
+    const monthNames = [
+      'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Jun',
+      'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
+    ];
+    const monthName = monthNames[today.getMonth()];
+
     toast.info("Učitavanje podataka o prodaji za tekući mesec...");
 
     const { data: sales, error } = await supabase
@@ -123,7 +130,8 @@ export const exportMonthlyItemsReport = async () => {
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Mesečna prodaja po artiklima");
     
-    const fileName = `Mesecna_prodaja_po_artiklima_${today.getMonth() + 1}_${today.getFullYear()}`;
+    // Create more descriptive filename with month name and year
+    const fileName = `Prodaja_artikli_${monthName}_${today.getFullYear()}`;
     
     // Export the workbook
     try {
