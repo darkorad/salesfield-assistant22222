@@ -12,6 +12,13 @@ export const exportDailyDetailedReport = async () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    // Format date for the filename (today's date)
+    const dateFormatted = today.toLocaleDateString('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).replace(/\./g, '_');
+
     // Get current user session
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -19,25 +26,16 @@ export const exportDailyDetailedReport = async () => {
       return;
     }
 
+    toast.info("Učitavanje podataka za današnji dan...");
+
     // Get all sales for today for the current user
+    // Use specific relationship references to avoid ambiguity
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
         *,
-        customers:customer_id(
-          name,
-          address,
-          city,
-          pib,
-          is_vat_registered
-        ),
-        kupci_darko:darko_customer_id(
-          name,
-          address,
-          city,
-          pib,
-          is_vat_registered
-        )
+        customers:customer_id(*),
+        kupci_darko!fk_sales_kupci_darko(*)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -56,13 +54,16 @@ export const exportDailyDetailedReport = async () => {
 
     console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
       id: sale.id,
-      customer: (sale.customers?.name || sale.kupci_darko?.name || "Unknown"),
+      customer: (sale.customers?.name || (sale.kupci_darko?.name) || "Unknown"),
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
 
+    toast.info("Obrađivanje podataka za izveštaj...");
+
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
+      // Get customer data from either table
       const customer = sale.customers || sale.kupci_darko;
       if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);
@@ -133,13 +134,16 @@ export const exportDailyDetailedReport = async () => {
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Dnevni izveštaj");
 
-    // Generate filename with current date
-    const dateStr = today.toLocaleDateString('sr-RS').replace(/\./g, '_');
-    const filename = `Detaljan_dnevni_izvestaj_${dateStr}`;
+    // Generate more descriptive filename with current date
+    const monthNames = [
+      'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Jun',
+      'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
+    ];
+    const monthName = monthNames[today.getMonth()];
+    const filename = `Detaljan_dnevni_izvestaj_${dateFormatted}_${monthName}`;
 
     // Export the workbook
     await exportWorkbook(wb, filename);
-    toast.success(`Izveštaj je uspešno eksportovan: ${filename}`);
 
   } catch (error) {
     console.error("Error generating report:", error);
