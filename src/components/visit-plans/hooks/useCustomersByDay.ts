@@ -26,13 +26,33 @@ export const useCustomersByDay = (customers: Customer[], day: string) => {
         return areDaysSimilar(customerDay, day);
       });
       
-      if (dayMatches && !uniqueCustomersMap.has(customer.id)) {
-        uniqueCustomersMap.set(customer.id, customer);
+      // For deduplication, use a composite key of name+address or just ID if those are missing
+      const uniqueKey = customer.id;
+      
+      if (dayMatches && !uniqueCustomersMap.has(uniqueKey)) {
+        uniqueCustomersMap.set(uniqueKey, customer);
+      }
+    });
+    
+    // Additional deduplication step to catch similar names in the same location
+    const finalCustomersMap = new Map<string, Customer>();
+    Array.from(uniqueCustomersMap.values()).forEach(customer => {
+      // Create a normalized name for better comparison
+      const normalizedName = customer.name.toLowerCase().trim();
+      const normalizedAddress = (customer.address || '').toLowerCase().trim();
+      
+      // Use name+address as a composite key for additional deduplication
+      const compositeKey = `${normalizedName}-${normalizedAddress}`;
+      
+      if (!finalCustomersMap.has(compositeKey)) {
+        finalCustomersMap.set(compositeKey, customer);
+      } else {
+        console.log(`Found duplicate by name+address: ${customer.name} at ${customer.address}`);
       }
     });
     
     // Convert map back to array
-    const uniqueCustomers = Array.from(uniqueCustomersMap.values());
+    const uniqueCustomers = Array.from(finalCustomersMap.values());
     console.log(`Found ${uniqueCustomers.length} unique customers for day: ${day}`);
     
     return uniqueCustomers;
