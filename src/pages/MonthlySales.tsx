@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const MonthlySales = () => {
   const [monthlySales, setMonthlySales] = useState({
@@ -11,42 +13,28 @@ const MonthlySales = () => {
     total: 0
   });
   const [lastDataRefresh, setLastDataRefresh] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchMonthlySales = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+  const fetchMonthlySales = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-        // Check if there was a recent data import
-        const userId = session.user.id;
-        const lastImport = localStorage.getItem(`lastCustomersImport_${userId}`);
-        setLastDataRefresh(lastImport);
+      // Check if there was a recent data import
+      const userId = session.user.id;
+      const lastImport = localStorage.getItem(`lastCustomersImport_${userId}`);
+      setLastDataRefresh(lastImport);
 
-        // Get first day of current month
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        firstDay.setHours(0, 0, 0, 0);
-
-        // Get first day of next month
-        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        lastDay.setHours(0, 0, 0, 0);
-
-        // Fetch sales data with proper date filtering
-        const { data: salesData, error } = await supabase
-          .from('sales')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .gte('created_at', firstDay.toISOString())
-          .lt('created_at', lastDay.toISOString());
-
-        if (error) {
-          console.error("Error loading sales:", error);
-          return;
-        }
-
-        // If no sales data or empty array, set all values to 0
-        if (!salesData || salesData.length === 0) {
+      // If data was recently imported, don't show old sales data
+      if (lastImport) {
+        const lastImportDate = new Date(lastImport);
+        const now = new Date();
+        const differenceInHours = (now.getTime() - lastImportDate.getTime()) / (1000 * 60 * 60);
+        
+        // If the import was in the last 24 hours, just show zeros
+        // This assumes that after import, new sales should start fresh
+        if (differenceInHours < 24) {
+          console.log("Recent import detected. Showing zero values for monthly sales.");
           setMonthlySales({
             totalCash: 0,
             totalInvoice: 0,
@@ -54,35 +42,129 @@ const MonthlySales = () => {
           });
           return;
         }
+      }
 
-        const cashSales = salesData.filter(sale => sale.payment_type === 'cash') || [];
-        const invoiceSales = salesData.filter(sale => sale.payment_type === 'invoice') || [];
+      // Get first day of current month
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      firstDay.setHours(0, 0, 0, 0);
 
-        setMonthlySales({
-          totalCash: cashSales.reduce((sum, sale) => sum + (sale.total || 0), 0),
-          totalInvoice: invoiceSales.reduce((sum, sale) => sum + (sale.total || 0), 0),
-          total: salesData.reduce((sum, sale) => sum + (sale.total || 0), 0)
-        });
+      // Get first day of next month
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      lastDay.setHours(0, 0, 0, 0);
 
-      } catch (error) {
-        console.error("Error:", error);
+      // Only get sales created after the last import (if any)
+      let query = supabase
+        .from('sales')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .gte('created_at', firstDay.toISOString())
+        .lt('created_at', lastDay.toISOString());
+
+      if (lastImport) {
+        // Only include sales created after the last import
+        query = query.gte('created_at', new Date(lastImport).toISOString());
+      }
+
+      const { data: salesData, error } = await query;
+
+      if (error) {
+        console.error("Error loading sales:", error);
+        return;
+      }
+
+      // If no sales data or empty array, set all values to 0
+      if (!salesData || salesData.length === 0) {
         setMonthlySales({
           totalCash: 0,
           totalInvoice: 0,
           total: 0
         });
+        return;
       }
-    };
 
+      const cashSales = salesData.filter(sale => sale.payment_type === 'cash') || [];
+      const invoiceSales = salesData.filter(sale => sale.payment_type === 'invoice') || [];
+
+      setMonthlySales({
+        totalCash: cashSales.reduce((sum, sale) => sum + (sale.total || 0), 0),
+        totalInvoice: invoiceSales.reduce((sum, sale) => sum + (sale.total || 0), 0),
+        total: salesData.reduce((sum, sale) => sum + (sale.total || 0), 0)
+      });
+
+    } catch (error) {
+      console.error("Error:", error);
+      setMonthlySales({
+        totalCash: 0,
+        totalInvoice: 0,
+        total: 0
+      });
+    }
+  };
+
+  const handleClearData = async () => {
+    try {
+      setIsRefreshing(true);
+      
+      // Update the lastCustomersImport timestamp to force a reset
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const userId = session.user.id;
+      const timestamp = new Date().toISOString();
+      localStorage.setItem(`lastCustomersImport_${userId}`, timestamp);
+      
+      // Reset sales data in state
+      setMonthlySales({
+        totalCash: 0,
+        totalInvoice: 0,
+        total: 0
+      });
+      
+      setLastDataRefresh(timestamp);
+      toast.success("Podaci o prodaji su resetovani");
+    } catch (error) {
+      console.error("Error resetting data:", error);
+      toast.error("Greška pri resetovanju podataka");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMonthlySales();
     const interval = setInterval(fetchMonthlySales, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
+    
+    // Setup listener for local storage changes related to customer imports
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('lastCustomersImport_')) {
+        console.log('Customer import detected, refreshing data');
+        fetchMonthlySales();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return (
     <Card className="mt-4 md:mt-6">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg md:text-xl">Mesečna prodaja</CardTitle>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleClearData}
+          disabled={isRefreshing}
+          className="h-8"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Resetuj podatke
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

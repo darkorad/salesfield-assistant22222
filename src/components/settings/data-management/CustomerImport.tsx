@@ -29,6 +29,21 @@ export const CustomerImport = () => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+          // Clear all existing customer data
+          try {
+            toast.info("Brisanje postojećih podataka...");
+            const { error: deleteError } = await supabase
+              .from('sales')
+              .delete()
+              .eq('user_id', session.user.id);
+              
+            if (deleteError) {
+              console.error("Error deleting old sales data:", deleteError);
+            }
+          } catch (err) {
+            console.error("Error during data cleanup:", err);
+          }
+
           let successCount = 0;
           let errorCount = 0;
 
@@ -37,16 +52,17 @@ export const CustomerImport = () => {
             if (success) successCount++; else errorCount++;
           }
 
+          // Set the timestamp for the data import
+          const timestamp = new Date().toISOString();
+          localStorage.setItem(`lastCustomersImport_${session.user.id}`, timestamp);
+          
+          // Trigger a storage event to notify other tabs
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: `lastCustomersImport_${session.user.id}`,
+            newValue: timestamp
+          }));
+          
           if (successCount > 0) {
-            const timestamp = new Date().toISOString();
-            localStorage.setItem(`lastCustomersImport_${session.user.id}`, timestamp);
-            
-            // Also dispatch a storage event to notify other tabs
-            window.dispatchEvent(new StorageEvent('storage', {
-              key: `lastCustomersImport_${session.user.id}`,
-              newValue: timestamp
-            }));
-            
             toast.success(`${successCount} kupaca je uspešno ažurirano`);
           }
 
