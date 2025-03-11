@@ -24,6 +24,7 @@ export const useVisitPlansData = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastDataRefresh, setLastDataRefresh] = useState<string | null>(null);
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const fetchData = async () => {
@@ -46,6 +47,11 @@ export const useVisitPlansData = () => {
         toast.error("Niste prijavljeni");
         return;
       }
+
+      // Check if there was a recent data import
+      const userId = session.session.user.id;
+      const lastImport = localStorage.getItem(`lastCustomersImport_${userId}`);
+      setLastDataRefresh(lastImport);
 
       console.log("Fetching customers for visit plans");
       console.log("User ID:", session.session?.user.id);
@@ -113,8 +119,19 @@ export const useVisitPlansData = () => {
         console.log('Customer changes subscription status:', status);
       });
 
+    // Setup listener for local storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('lastCustomersImport_')) {
+        console.log('Customer import detected, refreshing data');
+        fetchData();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [today]);
 
@@ -124,6 +141,7 @@ export const useVisitPlansData = () => {
     isLoading,
     error,
     fetchData,
-    today
+    today,
+    lastDataRefresh
   };
 };

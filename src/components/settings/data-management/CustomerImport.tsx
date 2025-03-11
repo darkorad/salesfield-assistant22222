@@ -38,7 +38,15 @@ export const CustomerImport = () => {
           }
 
           if (successCount > 0) {
-            localStorage.setItem(`lastCustomersImport_${session.user.id}`, new Date().toISOString());
+            const timestamp = new Date().toISOString();
+            localStorage.setItem(`lastCustomersImport_${session.user.id}`, timestamp);
+            
+            // Also dispatch a storage event to notify other tabs
+            window.dispatchEvent(new StorageEvent('storage', {
+              key: `lastCustomersImport_${session.user.id}`,
+              newValue: timestamp
+            }));
+            
             toast.success(`${successCount} kupaca je uspešno ažurirano`);
           }
 

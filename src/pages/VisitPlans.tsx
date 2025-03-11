@@ -28,7 +28,7 @@ const getCurrentDayInSerbian = () => {
 };
 
 const VisitPlans = () => {
-  const { visitPlans, customers, isLoading, error, fetchData } = useVisitPlansData();
+  const { visitPlans, customers, isLoading, error, fetchData, lastDataRefresh } = useVisitPlansData();
   const [selectedDay, setSelectedDay] = useState(getCurrentDayInSerbian());
 
   return (
@@ -46,6 +46,7 @@ const VisitPlans = () => {
           <TodayVisitsSection 
             isLoading={isLoading}
             visitPlans={visitPlans}
+            lastDataRefresh={lastDataRefresh}
           />
         </>
       )}
