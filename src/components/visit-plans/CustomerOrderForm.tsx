@@ -67,8 +67,8 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
   }
 
   return (
-    <Card className="p-3">
-      <h3 className="text-sm font-medium mb-2">Nova porudžbina - {customer.name}</h3>
+    <Card className="p-3 shadow-md border border-gray-200">
+      <h3 className="text-sm font-medium mb-2 text-accent">Nova porudžbina - {customer.name}</h3>
       
       {products && products.length > 0 ? (
         <ProductSelect

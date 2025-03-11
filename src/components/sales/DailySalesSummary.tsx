@@ -14,9 +14,9 @@ const DailySalesSummary = () => {
   const invoiceSales = todaySales.filter(sale => sale.payment_status === 'racun');
 
   return (
-    <Card className="mt-4 md:mt-6">
-      <CardHeader>
-        <CardTitle className="text-lg md:text-xl">Današnje porudžbine</CardTitle>
+    <Card className="mt-4 md:mt-6 shadow-md">
+      <CardHeader className="bg-accent/5 rounded-t-lg">
+        <CardTitle className="text-lg md:text-xl text-accent">Današnje porudžbine</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -31,17 +31,17 @@ const DailySalesSummary = () => {
                   <TabsTrigger value="invoice">Račun</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="all" className="space-y-4">
+                <TabsContent value="all" className="space-y-4 animate-fade-in">
                   <SalesTableSection sales={todaySales} />
                   {todaySales.length > 0 && <TotalsSummary sales={todaySales} />}
                 </TabsContent>
 
-                <TabsContent value="cash" className="space-y-4">
+                <TabsContent value="cash" className="space-y-4 animate-fade-in">
                   <SalesTableSection sales={cashSales} />
                   {cashSales.length > 0 && <TotalsSummary sales={cashSales} />}
                 </TabsContent>
 
-                <TabsContent value="invoice" className="space-y-4">
+                <TabsContent value="invoice" className="space-y-4 animate-fade-in">
                   <SalesTableSection sales={invoiceSales} />
                   {invoiceSales.length > 0 && <TotalsSummary sales={invoiceSales} />}
                 </TabsContent>

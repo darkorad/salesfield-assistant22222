@@ -1,3 +1,4 @@
+
 import { Outlet, useLocation } from "react-router-dom";
 import NavLogo from "./navigation/NavLogo";
 import NavActions from "./navigation/NavActions";
@@ -8,7 +9,7 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
 
   if (isLoginPage) {
     return (
-      <main className="container mx-auto">
+      <main className="container mx-auto animate-fade-in">
         {children || <Outlet />}
       </main>
     );
@@ -24,7 +25,7 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
           </div>
         </div>
       </nav>
-      <main className="container mx-auto py-6 md:py-8 px-4 md:px-6">
+      <main className="container mx-auto py-6 md:py-8 px-4 md:px-6 animate-fade-in">
         {children || <Outlet />}
       </main>
     </div>

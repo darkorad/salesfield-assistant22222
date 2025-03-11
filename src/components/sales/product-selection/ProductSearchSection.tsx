@@ -22,18 +22,18 @@ export const ProductSearchSection = ({
   return (
     <div className="relative">
       <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-accent" />
         <Input
           type="text"
           placeholder="Pretraži proizvode..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9 w-full text-sm"
+          className="pl-9 w-full text-sm ring-offset-accent focus-visible:ring-accent/30"
         />
         {searchTerm && (
           <button 
             onClick={() => setSearchTerm("")}
-            className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
+            className="absolute right-2.5 top-2.5 text-gray-400 hover:text-accent transition-colors"
           >
             <X className="h-4 w-4" />
           </button>

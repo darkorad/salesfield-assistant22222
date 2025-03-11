@@ -28,15 +28,15 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
   };
 
   return (
-    <div className="overflow-x-auto -mx-2 md:mx-0">
+    <div className="overflow-x-auto -mx-2 md:mx-0 rounded-md">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="whitespace-nowrap text-sm min-w-[150px]">Kupac</TableHead>
-            <TableHead className="whitespace-nowrap text-sm hidden md:table-cell min-w-[200px]">Adresa</TableHead>
-            <TableHead className="whitespace-nowrap text-sm min-w-[100px]">Plaćanje</TableHead>
-            <TableHead className="text-right whitespace-nowrap text-sm min-w-[100px]">Iznos</TableHead>
-            <TableHead className="text-center whitespace-nowrap text-sm min-w-[80px]">Stavke</TableHead>
+          <TableRow className="bg-accent/5">
+            <TableHead className="whitespace-nowrap text-sm min-w-[150px] font-medium">Kupac</TableHead>
+            <TableHead className="whitespace-nowrap text-sm hidden md:table-cell min-w-[200px] font-medium">Adresa</TableHead>
+            <TableHead className="whitespace-nowrap text-sm min-w-[100px] font-medium">Plaćanje</TableHead>
+            <TableHead className="text-right whitespace-nowrap text-sm min-w-[100px] font-medium">Iznos</TableHead>
+            <TableHead className="text-center whitespace-nowrap text-sm min-w-[80px] font-medium">Stavke</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -48,7 +48,7 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
                 key={sale.id}
                 className={`${sentOrderIds.includes(sale.id) ? "text-red-500" : ""} ${
                   sale.payment_status === 'gotovina' ? "bg-blue-50" : ""
-                }`}
+                } hover:bg-accent/5 transition-colors`}
               >
                 <TableCell className="whitespace-nowrap text-sm font-medium">
                   <div>{sale.customer?.name || 'Nepoznat kupac'}</div>
