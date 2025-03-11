@@ -24,6 +24,10 @@ export const MonthlyReportButtons = () => {
         <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5 text-accent" />
         Mesečna prodaja po artiklima
       </Button>
+
+      <div className="mt-6 border-t pt-5">
+        <h3 className="text-base font-medium mb-4">Export keš kupovina</h3>
+      </div>
     </>
   );
 };

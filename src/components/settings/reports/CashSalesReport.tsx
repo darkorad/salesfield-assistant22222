@@ -125,8 +125,8 @@ export const CashSalesReport = () => {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-sm font-medium text-start mb-1">Izaberi datum</div>
+    <div className="flex flex-col gap-3 mt-1">
+      <div className="text-sm font-medium text-start">Izaberi datum</div>
       <Popover>
         <PopoverTrigger asChild>
           <Button 
