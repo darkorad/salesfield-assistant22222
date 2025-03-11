@@ -1,7 +1,6 @@
 
 import { CustomerPriceForm } from "@/components/settings/customer-prices/CustomerPriceForm";
 import { GroupPriceForm } from "@/components/settings/group-prices/GroupPriceForm";
-import { GroupSearch } from "@/components/settings/GroupSearch";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,10 +47,6 @@ const Settings = () => {
 
             <div>
               <GroupPriceForm />
-            </div>
-
-            <div>
-              <GroupSearch />
             </div>
           </div>
         </TabsContent>
