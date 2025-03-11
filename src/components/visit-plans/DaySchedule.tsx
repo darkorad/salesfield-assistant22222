@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Customer } from "@/types";
 import { Card } from "@/components/ui/card";
-import { Check, History, X } from "lucide-react";
+import { Check, History, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerOrderForm } from "./CustomerOrderForm";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { OrderHistory } from "../sales/OrderHistory";
+import { Input } from "@/components/ui/input";
 
 interface DayScheduleProps {
   day: string;
@@ -20,6 +22,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const orderFormRef = useRef<HTMLDivElement>(null);
 
@@ -90,6 +93,21 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     }, 100);
   };
 
+  // Filter customers based on search term
+  const filteredCustomers = React.useMemo(() => {
+    if (!searchTerm.trim()) return customers;
+    
+    const term = searchTerm.toLowerCase().trim();
+    return customers.filter(customer => {
+      return (
+        (customer.name || '').toLowerCase().includes(term) ||
+        (customer.address || '').toLowerCase().includes(term) ||
+        (customer.city || '').toLowerCase().includes(term) ||
+        (customer.phone || '').toLowerCase().includes(term)
+      );
+    });
+  }, [customers, searchTerm]);
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -102,32 +120,57 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
 
   return (
     <div className="space-y-4">
+      {/* Search input */}
+      <div className="relative w-full">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Pretraži kupce..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9 text-sm w-full"
+        />
+        {searchTerm && (
+          <button 
+            onClick={() => setSearchTerm("")}
+            className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-        {customers.map((customer) => (
-          <div key={customer.id}>
-            <Card
-              className={`p-1.5 cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${
-                completedCustomers.has(customer.id) ? 'bg-green-100' : ''
-              } ${selectedCustomer?.id === customer.id ? 'ring-2 ring-primary' : ''}`}
-              onClick={() => handleCustomerClick(customer)}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xs font-medium">{customer.name}</h3>
-                  <p className="text-[10px] text-gray-600">{customer.address}</p>
-                  <p className="text-[10px] text-gray-600">{customer.city}</p>
-                  {customer.phone && (
-                    <p className="text-[10px] text-gray-600">{customer.phone}</p>
+        {filteredCustomers.length > 0 ? (
+          filteredCustomers.map((customer) => (
+            <div key={customer.id}>
+              <Card
+                className={`p-1.5 cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${
+                  completedCustomers.has(customer.id) ? 'bg-green-100' : ''
+                } ${selectedCustomer?.id === customer.id ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => handleCustomerClick(customer)}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xs font-medium">{customer.name}</h3>
+                    <p className="text-[10px] text-gray-600">{customer.address}</p>
+                    <p className="text-[10px] text-gray-600">{customer.city}</p>
+                    {customer.phone && (
+                      <p className="text-[10px] text-gray-600">{customer.phone}</p>
+                    )}
+                  </div>
+                  {completedCustomers.has(customer.id) && (
+                    <Check className="text-green-500 h-3 w-3" />
                   )}
                 </div>
-                {completedCustomers.has(customer.id) && (
-                  <Check className="text-green-500 h-3 w-3" />
-                )}
-              </div>
-            </Card>
+              </Card>
+            </div>
+          ))
+        ) : searchTerm ? (
+          <div className="col-span-full text-center text-gray-500 py-2 text-xs">
+            Nema rezultata za "{searchTerm}"
           </div>
-        ))}
-        {customers.length === 0 && (
+        ) : (
           <div className="col-span-full text-center text-gray-500 py-2 text-xs">
             Nema planiranih poseta za ovaj dan
           </div>
