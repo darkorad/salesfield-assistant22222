@@ -1,6 +1,6 @@
 
 import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory, WriteFileOptions, ShareOptions } from '@capacitor/filesystem';
+import { Filesystem, Directory, WriteFileOptions } from '@capacitor/filesystem';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -26,8 +26,8 @@ export const exportWorkbook = async (wb: XLSX.WorkBook, fileName: string): Promi
       
       // Then share it so the user can see it
       if (savedFile?.uri) {
-        await shareFile(savedFile.uri, `${fileName}.xlsx`);
-        toast.success("Izveštaj je uspešno izvezen i spreman za deljenje");
+        await openFile(savedFile.uri);
+        toast.success("Izveštaj je uspešno izvezen i spreman za pregled");
       } else {
         throw new Error("Failed to save file");
       }
@@ -74,23 +74,32 @@ const saveFile = async (fileName: string, data: string) => {
   }
 };
 
-// Share file with other apps
-const shareFile = async (filePath: string, fileName: string) => {
-  const options: ShareOptions = {
-    title: 'Share Excel Report',
-    file: filePath,
-    filename: fileName
-  };
-  
+// Open file with system default app
+const openFile = async (filePath: string) => {
   try {
-    await Filesystem.getInfo({
-      path: filePath,
-      directory: Directory.Documents
-    });
-    
-    return await Filesystem.share(options);
+    // On iOS and Android, we can use Capacitor.openUrl to view the file
+    if (Capacitor.getPlatform() === 'ios' || Capacitor.getPlatform() === 'android') {
+      // Convert file:// to a URL that can be opened
+      let fileUrl = filePath;
+      if (!fileUrl.startsWith('file://')) {
+        fileUrl = `file://${fileUrl}`;
+      }
+      
+      // Use Capacitor Browser plugin or App.openUrl if available
+      if (Capacitor.isPluginAvailable('Browser')) {
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.open({ url: fileUrl });
+      } else {
+        const { App } = await import('@capacitor/app');
+        await App.openUrl({ url: fileUrl });
+      }
+      
+      return true;
+    }
+    return false;
   } catch (error) {
-    console.error('Error sharing file:', error);
+    console.error('Error opening file:', error);
+    toast.error("Greška pri otvaranju fajla. Fajl je sačuvan u Documents direktorijumu.");
     throw error;
   }
 };
