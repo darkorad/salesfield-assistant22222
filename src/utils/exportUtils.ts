@@ -1,5 +1,5 @@
 
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory, Encoding, GetUriResult, GetUriOptions } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
@@ -36,11 +36,42 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
 }
 
 /**
+ * Check if we have permission to write to external storage on Android
+ * and request it if necessary
+ */
+async function checkAndRequestPermissions() {
+  try {
+    // Check current permissions status
+    const permResult = await Filesystem.checkPermissions();
+    console.log('Current permissions status:', permResult);
+    
+    if (permResult.publicStorage !== 'granted') {
+      console.log('Requesting storage permissions...');
+      const requestResult = await Filesystem.requestPermissions();
+      console.log('Permission request result:', requestResult);
+      
+      if (requestResult.publicStorage !== 'granted') {
+        throw new Error('Potrebna je dozvola za pristup skladištu. Molimo omogućite u podešavanjima aplikacije.');
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Permission error:', error);
+    throw error;
+  }
+}
+
+/**
  * Exports a file on mobile platforms using Capacitor
  */
 async function exportFileMobile(blob: Blob, fileName: string) {
   try {
     console.log('Starting mobile export process');
+    
+    // First check/request permissions
+    await checkAndRequestPermissions();
+    
     // Convert blob to base64
     const base64Data = await blobToBase64(blob);
     
@@ -60,10 +91,13 @@ async function exportFileMobile(blob: Blob, fileName: string) {
     
     let saved = false;
     let savedPath = '';
+    let savedDirectory = Directory.Documents;
     
     // Try each directory until one works
     for (const directory of directoriesToTry) {
       try {
+        console.log(`Attempting to save to ${directory} directory...`);
+        
         const result = await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
@@ -72,19 +106,40 @@ async function exportFileMobile(blob: Blob, fileName: string) {
         });
         
         console.log(`File saved successfully to ${directory}:`, result.uri);
-        toast.success(`Fajl sačuvan: ${fileName} u ${getDirectoryName(directory)}`);
         saved = true;
         savedPath = result.uri || '';
+        savedDirectory = directory;
         break;
-      } catch (error) {
-        console.error(`Error saving to ${directory}:`, error);
+      } catch (directoryError) {
+        console.error(`Error saving to ${directory}:`, directoryError);
         continue; // Try next directory
       }
     }
     
     if (!saved) {
-      throw new Error("Nije moguće sačuvati fajl ni u jednom direktorijumu");
+      throw new Error("Nije moguće sačuvati fajl ni u jednom direktorijumu. Proverite dozvole aplikacije.");
     }
+    
+    // Try to get a shareable URI for the file
+    try {
+      if (savedPath) {
+        const options: GetUriOptions = {
+          path: fileName,
+          directory: savedDirectory
+        };
+        
+        const uriResult = await Filesystem.getUri(options);
+        if (uriResult && uriResult.uri) {
+          savedPath = uriResult.uri;
+          console.log('Got shareable URI:', savedPath);
+        }
+      }
+    } catch (uriError) {
+      console.warn('Could not get shareable URI, will use direct path:', uriError);
+    }
+    
+    // Show success message with location
+    toast.success(`Fajl sačuvan: ${fileName} u ${getDirectoryName(savedDirectory)}`);
     
     // Attempt to open the file if we have a URI
     if (savedPath) {
@@ -95,7 +150,7 @@ async function exportFileMobile(blob: Blob, fileName: string) {
         });
       } catch (openError) {
         console.error('Could not open file, but it was saved:', openError);
-        toast.info('Fajl je sačuvan ali nije moguće otvoriti ga automatski. Proverite folder za preuzimanja.');
+        toast.info(`Fajl je sačuvan u ${getDirectoryName(savedDirectory)}. Koristite aplikaciju Fajlovi da ga pronađete.`);
       }
     }
   } catch (error) {
