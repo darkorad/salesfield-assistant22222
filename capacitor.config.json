@@ -36,7 +36,7 @@
     },
     "Filesystem": {
       "appendExtension": true,
-      "directory": "External"
+      "directory": "Documents"
     },
     "Browser": {
       "launchLogout": true

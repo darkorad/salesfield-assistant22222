@@ -20,17 +20,21 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
     });
 
-    // Check if running on mobile
+    // Check if running on mobile (Capacitor environment)
     const isMobile = 'Capacitor' in window;
-    console.log('Is running on mobile:', isMobile);
+    console.log('Is running on mobile/Capacitor:', isMobile);
 
     if (isMobile) {
-      // On mobile devices, save to Downloads folder
+      console.log('Using mobile export path for Android');
+      // On mobile devices, save to Downloads folder using Capacitor
       await exportFileMobile(blob, fileName);
+      console.log('Mobile export completed');
     } else {
+      console.log('Using web export path');
       // On web browsers, trigger immediate download
       exportFileWeb(blob, fileName);
-      toast.success(`Fajl "${fileName}.xlsx" je uspešno preuzet u Downloads folder`);
+      toast.success(`Fajl "${fileName}.xlsx" je uspešno preuzet`);
+      console.log('Web export completed');
     }
     
     return true;
