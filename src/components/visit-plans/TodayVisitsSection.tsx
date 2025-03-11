@@ -43,7 +43,11 @@ export const TodayVisitsSection = ({
           <span>Učitavanje...</span>
         </div>
       ) : (
-        <TodayVisits visitPlans={visitPlans} date={new Date().toLocaleDateString('sr-Latn-RS')} />
+        <TodayVisits 
+          visitPlans={visitPlans} 
+          date={new Date().toLocaleDateString('sr-Latn-RS')} 
+          isLoading={isLoading} 
+        />
       )}
     </div>
   );
