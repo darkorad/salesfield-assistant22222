@@ -1,12 +1,15 @@
 
 import { Customer } from "@/types";
-import { ArrowPathIcon, LoaderIcon } from "lucide-react";
+import { RefreshCw, LoaderIcon } from "lucide-react";
 import { TodayVisits } from "./TodayVisits";
 import { Button } from "@/components/ui/button";
 
 interface VisitPlan {
   id: string;
   customer_id: string;
+  visit_day: string;
+  visit_time: string | null;
+  notes: string | null;
   completed: boolean;
   customer: {
     name: string;
@@ -40,7 +43,7 @@ export const TodayVisitsSection = ({
           <span>Učitavanje...</span>
         </div>
       ) : (
-        <TodayVisits visitPlans={visitPlans} />
+        <TodayVisits visitPlans={visitPlans} date={new Date().toLocaleDateString('sr-Latn-RS')} />
       )}
     </div>
   );
