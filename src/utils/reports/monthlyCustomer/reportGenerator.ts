@@ -69,33 +69,33 @@ export const createDetailedReportData = (customerSalesDetails: Record<string, an
 export const createSummaryReportData = (customerSalesSummary: Record<string, any>) => {
   // Create customer summary data for second sheet, sorted by total amount
   const summaryData = Object.values(customerSalesSummary)
-    .sort((a: any, b: any) => b.totalAmount - a.totalAmount)
+    .sort((a: any, b: any) => Number(b.totalAmount) - Number(a.totalAmount))
     .map((customer: any, index: number) => ({
       'Rbr': index + 1,
       'Kupac': customer.name,
       'PIB': customer.pib,
       'Adresa': customer.address,
       'Grad': customer.city,
-      'Ukupno gotovina': customer.totalCash,
-      'Ukupno račun': customer.totalInvoice,
-      'Ukupan iznos': customer.totalAmount
+      'Ukupno gotovina': Number(customer.totalCash),
+      'Ukupno račun': Number(customer.totalInvoice),
+      'Ukupan iznos': Number(customer.totalAmount)
     }));
 
-  // Calculate monthly totals
-  const totalCash = summaryData.reduce((sum, item) => sum + item['Ukupno gotovina'], 0);
-  const totalInvoice = summaryData.reduce((sum, item) => sum + item['Ukupno račun'], 0);
-  const totalAmount = summaryData.reduce((sum, item) => sum + item['Ukupan iznos'], 0);
+  // Calculate monthly totals ensuring numeric values
+  const totalCash = summaryData.reduce((sum, item) => sum + Number(item['Ukupno gotovina']), 0);
+  const totalInvoice = summaryData.reduce((sum, item) => sum + Number(item['Ukupno račun']), 0);
+  const totalAmount = summaryData.reduce((sum, item) => sum + Number(item['Ukupan iznos']), 0);
 
-  // Add totals row
+  // Add totals row with explicit number conversion
   summaryData.push({
     'Rbr': '',
     'Kupac': 'UKUPNO:',
     'PIB': '',
     'Adresa': '',
     'Grad': '',
-    'Ukupno gotovina': totalCash,
-    'Ukupno račun': totalInvoice,
-    'Ukupan iznos': totalAmount
+    'Ukupno gotovina': Number(totalCash),
+    'Ukupno račun': Number(totalInvoice),
+    'Ukupan iznos': Number(totalAmount)
   });
 
   return summaryData;
