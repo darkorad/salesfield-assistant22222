@@ -31,13 +31,21 @@ export const exportDailyDetailedReport = async () => {
     toast.info("Učitavanje podataka za današnji dan...");
 
     // Get all sales for today for the current user
-    // Use specific relationship references to avoid ambiguity
+    // Use explicit join to avoid relationship ambiguity
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
-        *,
-        customers:customer_id(*),
-        kupci_darko:darko_customer_id(*)
+        id,
+        date,
+        total,
+        items,
+        payment_type,
+        payment_status,
+        manufacturer,
+        customer_id,
+        darko_customer_id,
+        customers:customer_id (id, name, pib, address, city),
+        kupci_darko:darko_customer_id (id, name, pib, address, city)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())

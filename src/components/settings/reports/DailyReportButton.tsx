@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileSpreadsheet } from "lucide-react";
 import { exportDailyDetailedReport } from "@/utils/reports/dailyDetailedReport";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export const DailyReportButton = () => {
   const [isExporting, setIsExporting] = useState(false);
@@ -15,6 +16,7 @@ export const DailyReportButton = () => {
       await exportDailyDetailedReport();
     } catch (error) {
       console.error("Export failed:", error);
+      toast.error(`Izvoz nije uspeo: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsExporting(false);
     }
