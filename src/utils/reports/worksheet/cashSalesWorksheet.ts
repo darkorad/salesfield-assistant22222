@@ -33,7 +33,8 @@ export const generateCashSalesWorksheet = (salesData: CashSale[]) => {
   // Set print settings for A4 landscape
   ws['!print'] = getA4LandscapePrintSettings();
 
-  XLSX.utils.book_append_sheet(wb, ws, "Gotovinska prodaja");
+  // No tab name is provided here - will be set in the exportWorkbook function
+  XLSX.utils.book_append_sheet(wb, ws, "");
 
   return { wb, ws };
 };
