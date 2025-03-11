@@ -7,7 +7,7 @@ import { Share } from '@capacitor/share';
 
 /**
  * Exports a file on mobile platforms using Capacitor
- * Focuses on saving to the Downloads directory and sharing the file
+ * Uses multiple approaches to ensure file is saved to an accessible location
  */
 export async function exportFileMobile(blob: Blob, fileName: string) {
   try {
@@ -26,22 +26,74 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
 
     console.log('Attempting to save file on Android:', fileName);
     
-    // Try multiple approaches to save the file, ensuring it's accessible to the user
+    // First, try the most compatible approach for modern Android
     try {
-      // First try Download directory in external storage (most compatible with Android 10+)
+      // Try all possible download directory names
+      const downloadPaths = [
+        'Download', 'Downloads', 'download', 'downloads'
+      ];
+      
+      let savedResult = null;
+      
+      // Try each download path until one works
+      for (const downloadPath of downloadPaths) {
+        try {
+          const result = await Filesystem.writeFile({
+            path: `${downloadPath}/${fileName}`,
+            data: base64Data,
+            directory: Directory.External,
+            recursive: true
+          });
+          
+          console.log(`File saved successfully to External/${downloadPath} directory:`, result);
+          savedResult = result;
+          break; // Exit loop on success
+        } catch (err) {
+          console.warn(`Could not save to External/${downloadPath}:`, err);
+          // Continue to next path
+        }
+      }
+      
+      if (savedResult) {
+        toast.success(`Fajl "${fileName}" sačuvan`, {
+          description: "Pogledajte u Download/Preuzimanja folderu ili 'Moji fajlovi'/'My Files' aplikaciji.",
+          duration: 8000
+        });
+        
+        // Try to share the file to make it immediately accessible
+        try {
+          await Share.share({
+            title: 'Izveštaj je spreman',
+            text: `Izveštaj "${fileName}" je dostupan za pregled`,
+            url: savedResult.uri,
+            dialogTitle: 'Otvori ili podeli izveštaj'
+          });
+        } catch (shareError) {
+          console.error('Error sharing file, but file was saved:', shareError);
+        }
+        
+        return;
+      }
+    } catch (externalError) {
+      console.error('Error with all External directory attempts:', externalError);
+    }
+    
+    // Second approach: Try Documents directory
+    try {
       const result = await Filesystem.writeFile({
-        path: `Download/${fileName}`,
+        path: fileName,
         data: base64Data,
-        directory: Directory.External,
+        directory: Directory.Documents,
         recursive: true
       });
       
-      console.log('File saved successfully to External/Download directory:', result);
-      toast.success(`Fajl "${fileName}" sačuvan u Download folderu`, {
-        description: "Idite u My Files/Download da pristupite fajlu."
+      console.log('File saved successfully to Documents directory:', result);
+      
+      toast.success(`Fajl "${fileName}" sačuvan u Documents folderu`, {
+        description: "Pogledajte 'Documents' folder u 'Moji fajlovi'/'My Files' aplikaciji.",
+        duration: 8000
       });
       
-      // Try to share the file to make it immediately accessible
       try {
         await Share.share({
           title: 'Izveštaj je spreman',
@@ -50,99 +102,44 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
           dialogTitle: 'Otvori ili podeli izveštaj'
         });
       } catch (shareError) {
-        console.error('Error sharing file, but file was saved:', shareError);
+        console.error('Error sharing file from Documents:', shareError);
       }
       
       return;
-    } catch (externalDownloadError) {
-      console.error('Error saving to External/Download directory:', externalDownloadError);
-      
-      // Try root of external storage
-      try {
-        const result = await Filesystem.writeFile({
-          path: fileName,
-          data: base64Data,
-          directory: Directory.External,
-          recursive: true
-        });
-        
-        console.log('File saved successfully to External directory root:', result);
-        toast.success(`Fajl "${fileName}" sačuvan u Download folderu`, {
-          description: "Idite u Downloads da pristupite fajlu."
-        });
-        
-        try {
-          await Share.share({
-            title: 'Izveštaj je spreman',
-            text: `Izveštaj "${fileName}" je dostupan za pregled`,
-            url: result.uri,
-            dialogTitle: 'Otvori ili podeli izveštaj'
-          });
-        } catch (shareError) {
-          console.error('Error sharing file from External directory:', shareError);
-        }
-        
-        return;
-      } catch (externalRootError) {
-        console.error('Error saving to External directory root:', externalRootError);
-        
-        // Try Documents directory as fallback
-        try {
-          const result = await Filesystem.writeFile({
-            path: `Download/${fileName}`,
-            data: base64Data,
-            directory: Directory.Documents,
-            recursive: true
-          });
-          
-          console.log('File saved successfully to Documents/Download directory:', result);
-          toast.success(`Fajl "${fileName}" sačuvan u Documents/Download folderu`, {
-            description: "Idite u Documents/Download da pristupite fajlu."
-          });
-          
+    } catch (docsError) {
+      console.error('Error saving to Documents directory:', docsError);
+    }
+    
+    // Last resort - save to Data directory
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Data
+    });
+    
+    console.log('File saved to app data directory:', result);
+    
+    toast.info(`Fajl "${fileName}" privremeno sačuvan`, {
+      description: "Za pristup fajlu, koristite dugme ispod za otvaranje",
+      duration: 10000,
+      action: {
+        label: "Otvori fajl",
+        onClick: async () => {
           try {
             await Share.share({
               title: 'Izveštaj je spreman',
-              text: `Izveštaj "${fileName}" je dostupan za pregled`,
+              text: `Izveštaj "${fileName}"`,
               url: result.uri,
-              dialogTitle: 'Otvori ili podeli izveštaj'
+              dialogTitle: 'Otvori izveštaj'
             });
-          } catch (shareError) {
-            console.error('Error sharing file from Documents directory:', shareError);
-          }
-          
-          return;
-        } catch (docsError) {
-          console.error('Error saving to Documents directory:', docsError);
-          
-          // Last resort - try saving to data directory and share immediately
-          const result = await Filesystem.writeFile({
-            path: fileName,
-            data: base64Data,
-            directory: Directory.Data
-          });
-          
-          toast.success(`Fajl "${fileName}" privremeno sačuvan`, {
-            duration: 10000,
-            description: "Kliknite na dugme da bi preuzeli fajl direktno"
-          });
-          
-          // Always try to share from Data directory since it's not directly accessible
-          try {
-            await Share.share({
-              title: 'Izveštaj je spreman',
-              text: `Izveštaj "${fileName}" je dostupan za pregled`,
-              url: result.uri,
-              dialogTitle: 'Preuzmi izveštaj'
-            });
-          } catch (shareError) {
-            console.error('Final share attempt failed:', shareError);
-            
-            toast.error(`Problem sa deljenjem fajla. Pokušajte ponovo kasnije.`);
+          } catch (error) {
+            console.error('Error opening file:', error);
+            toast.error("Nije moguće otvoriti fajl");
           }
         }
       }
-    }
+    });
+    
   } catch (error) {
     console.error('Error in exportFileMobile:', error);
     toast.error(`Greška pri čuvanju fajla: ${error instanceof Error ? error.message : String(error)}`);

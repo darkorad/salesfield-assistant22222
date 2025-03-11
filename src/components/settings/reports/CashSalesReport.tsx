@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { FileSpreadsheet, CalendarIcon } from "lucide-react";
+import { FileSpreadsheet, CalendarIcon, Download } from "lucide-react";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -137,7 +137,7 @@ export const CashSalesReport = () => {
       
       try {
         await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
-        toast.success(`Izveštaj gotovinske prodaje za ${format(selectedDate, 'dd.MM.yyyy')} je uspešno izvezen i nalazi se u Download folderu`);
+        toast.success(`Izveštaj gotovinske prodaje za ${format(selectedDate, 'dd.MM.yyyy')} je uspešno izvezen`);
       } catch (exportError) {
         console.error("Error during export:", exportError);
         toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
@@ -190,9 +190,23 @@ export const CashSalesReport = () => {
         onClick={handleExportTodayCashSales}
         disabled={isExporting}
       >
-        <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-        {isExporting ? "Izvoz u toku..." : "Export keš kupovina"}
+        {isExporting ? (
+          <>
+            <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5 animate-pulse" />
+            Izvoz u toku...
+          </>
+        ) : (
+          <>
+            <Download className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+            Export keš kupovina
+          </>
+        )}
       </Button>
+      
+      <div className="mt-3 text-xs text-muted-foreground">
+        Nakon izvoza, fajl se čuva u Download/Preuzimanja folderu.
+        Proverite i u "Moji fajlovi"/"Files" aplikaciji.
+      </div>
     </div>
   );
 };

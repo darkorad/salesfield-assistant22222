@@ -29,7 +29,10 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       console.log('Using mobile export path for Android');
       // On mobile devices, save to Downloads folder using Capacitor
       await exportFileMobile(blob, fileName);
-      toast.success(`Fajl "${fileName}.xlsx" je uspešno sačuvan u Download folderu`);
+      toast.success(`Fajl "${fileName}.xlsx" je uspešno sačuvan u Download folderu`, {
+        description: "Proverite u Download ili 'Preuzimanja'/'Downloads' folderu, ili pogledajte u 'Moji fajlovi'/'Files' aplikaciji.",
+        duration: 8000
+      });
       console.log('Mobile export completed successfully');
     } else {
       console.log('Using web export path');
@@ -55,7 +58,7 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       if ('Capacitor' in window) {
         toast.info('Pokušaj alternativnog preuzimanja...', {
           duration: 10000,
-          description: "Fajl će biti sačuvan u Download folderu"
+          description: "Fajl će biti sačuvan u Download folderu ili pogledajte u 'Moji fajlovi'/'My Files' aplikaciji."
         });
         
         // Try direct download as fallback on mobile
