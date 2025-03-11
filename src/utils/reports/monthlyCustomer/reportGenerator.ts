@@ -67,9 +67,21 @@ export const createDetailedReportData = (customerSalesDetails: Record<string, an
 };
 
 export const createSummaryReportData = (customerSalesSummary: Record<string, any>) => {
+  // Create an interface for the summary row to ensure type safety
+  interface SummaryRow {
+    'Rbr': number | string;
+    'Kupac': string;
+    'PIB': string;
+    'Adresa': string;
+    'Grad': string;
+    'Ukupno gotovina': number;
+    'Ukupno račun': number;
+    'Ukupan iznos': number;
+  }
+  
   // Create customer summary data for second sheet, sorted by total amount
-  const summaryData = Object.values(customerSalesSummary)
-    .sort((a: any, b: any) => Number(b.totalAmount) - Number(a.totalAmount))
+  const summaryData: SummaryRow[] = Object.values(customerSalesSummary)
+    .sort((a: any, b: any) => Number(b.totalAmount || 0) - Number(a.totalAmount || 0))
     .map((customer: any, index: number) => ({
       'Rbr': index + 1,
       'Kupac': customer.name,
@@ -82,9 +94,9 @@ export const createSummaryReportData = (customerSalesSummary: Record<string, any
     }));
 
   // Calculate monthly totals ensuring numeric values
-  const totalCash = summaryData.reduce((sum, item) => sum + Number(item['Ukupno gotovina'] || 0), 0);
-  const totalInvoice = summaryData.reduce((sum, item) => sum + Number(item['Ukupno račun'] || 0), 0);
-  const totalAmount = summaryData.reduce((sum, item) => sum + Number(item['Ukupan iznos'] || 0), 0);
+  const totalCash = summaryData.reduce((sum, item) => sum + item['Ukupno gotovina'], 0);
+  const totalInvoice = summaryData.reduce((sum, item) => sum + item['Ukupno račun'], 0);
+  const totalAmount = summaryData.reduce((sum, item) => sum + item['Ukupan iznos'], 0);
 
   // Add totals row with explicit number conversion
   summaryData.push({
