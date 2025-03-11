@@ -26,6 +26,7 @@ export function exportFileWeb(blob: Blob, fileName: string) {
     
     // Force download by simulating a direct click
     document.body.appendChild(a);
+    console.log('Triggering download for:', fileName);
     a.click();
     
     // Small delay before cleanup to ensure download starts
@@ -34,7 +35,7 @@ export function exportFileWeb(blob: Blob, fileName: string) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       console.log('Web export completed for:', fileName);
-    }, 1000); // Extended timeout to ensure download starts
+    }, 1500); // Extended timeout to ensure download starts
   } catch (error) {
     console.error('Error in web export:', error);
     throw error;

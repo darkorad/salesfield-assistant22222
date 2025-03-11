@@ -37,7 +37,7 @@ export const exportDailyDetailedReport = async () => {
       .select(`
         *,
         customers:customer_id(*),
-        kupci_darko:fk_sales_kupci_darko(*)
+        kupci_darko:darko_customer_id(*)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -138,11 +138,6 @@ export const exportDailyDetailedReport = async () => {
     XLSX.utils.book_append_sheet(wb, ws, "Dnevni izveštaj");
 
     // Generate more descriptive filename with current date
-    const monthNames = [
-      'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Jun',
-      'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
-    ];
-    const monthName = monthNames[today.getMonth()];
     const day = today.getDate().toString().padStart(2, '0');
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
     const year = today.getFullYear();
@@ -153,6 +148,7 @@ export const exportDailyDetailedReport = async () => {
     // Export the workbook
     console.log(`Exporting workbook with filename: ${filename}`);
     await exportWorkbook(wb, filename);
+    toast.success(`Dnevni izveštaj je uspešno izvezen i nalazi se u Download folderu`);
 
   } catch (error) {
     console.error("Error generating report:", error);

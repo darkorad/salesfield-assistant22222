@@ -14,6 +14,7 @@ import { exportWorkbook } from "@/utils/fileExport";
 export const CashSalesReport = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isExporting, setIsExporting] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleExportTodayCashSales = async () => {
     try {
@@ -136,15 +137,15 @@ export const CashSalesReport = () => {
       
       try {
         await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
+        toast.success(`Izveštaj gotovinske prodaje za ${format(selectedDate, 'dd.MM.yyyy')} je uspešno izvezen i nalazi se u Download folderu`);
       } catch (exportError) {
         console.error("Error during export:", exportError);
         toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
       }
-      
-      setIsExporting(false);
     } catch (error) {
       console.error("Error exporting cash sales:", error);
       toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
       setIsExporting(false);
     }
   };
@@ -152,7 +153,7 @@ export const CashSalesReport = () => {
   return (
     <div className="flex flex-col gap-3 mt-1">
       <div className="text-sm font-medium text-start">Izaberi datum</div>
-      <Popover>
+      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
         <PopoverTrigger asChild>
           <Button 
             variant="outline"
@@ -174,7 +175,10 @@ export const CashSalesReport = () => {
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={setSelectedDate}
+            onSelect={(date) => {
+              setSelectedDate(date);
+              setIsCalendarOpen(false);
+            }}
             initialFocus
             className={cn("p-3 pointer-events-auto")}
           />

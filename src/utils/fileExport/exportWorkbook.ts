@@ -29,12 +29,13 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       console.log('Using mobile export path for Android');
       // On mobile devices, save to Downloads folder using Capacitor
       await exportFileMobile(blob, fileName);
+      toast.success(`Fajl "${fileName}.xlsx" je uspešno sačuvan u Download folderu`);
       console.log('Mobile export completed successfully');
     } else {
       console.log('Using web export path');
       // On web browsers, trigger immediate download
       exportFileWeb(blob, fileName);
-      toast.success(`Fajl "${fileName}.xlsx" je uspešno preuzet`);
+      toast.success(`Fajl "${fileName}.xlsx" je preuzet i nalazi se u Download folderu`);
       console.log('Web export completed successfully');
     }
     
@@ -54,8 +55,12 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       if ('Capacitor' in window) {
         toast.info('Pokušaj alternativnog preuzimanja...', {
           duration: 10000,
-          description: "Ako fajl nije vidljiv, probajte da izvezete izveštaj ponovo"
+          description: "Fajl će biti sačuvan u Download folderu"
         });
+        
+        // Try direct download as fallback on mobile
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
       } else {
         const url = URL.createObjectURL(blob);
         toast.info('Pokušaj alternativnog preuzimanja...', {
