@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "@/types";
@@ -33,6 +32,7 @@ export const DuplicateCustomersChecker = () => {
   const [selectedCustomers, setSelectedCustomers] = useState<Customer[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [primaryCustomer, setPrimaryCustomer] = useState<Customer | null>(null);
+  const [autoDeleting, setAutoDeleting] = useState(false);
 
   const checkForDuplicates = async () => {
     setIsChecking(true);
@@ -83,6 +83,15 @@ export const DuplicateCustomersChecker = () => {
         toast.success("Nema duplikata kupaca");
       } else {
         toast.info(`Pronađeno ${result.length} grupa duplikata`);
+        
+        // Auto process groups with exactly 2 customers
+        const toAutoProcess = result.filter(group => group.customers.length === 2);
+        
+        if (toAutoProcess.length > 0) {
+          setAutoDeleting(true);
+          await autoDeleteDuplicates(toAutoProcess);
+          setAutoDeleting(false);
+        }
       }
     } catch (error) {
       console.error("Error checking for duplicates:", error);
@@ -90,6 +99,40 @@ export const DuplicateCustomersChecker = () => {
     } finally {
       setLoading(false);
       setIsChecking(false);
+    }
+  };
+
+  const autoDeleteDuplicates = async (groups: DuplicateGroup[]) => {
+    try {
+      let deletedCount = 0;
+      
+      for (const group of groups) {
+        if (group.customers.length === 2) {
+          // Always keep the customer with the oldest record (lowest ID usually)
+          const [customerToKeep, customerToDelete] = group.customers.sort((a, b) => 
+            a.id.localeCompare(b.id)
+          );
+          
+          await supabase
+            .from("customers")
+            .delete()
+            .eq('id', customerToDelete.id);
+            
+          deletedCount++;
+        }
+      }
+      
+      // Update the duplicates list after auto-deletion
+      setDuplicates(prevDuplicates => 
+        prevDuplicates.filter(group => group.customers.length !== 2)
+      );
+      
+      if (deletedCount > 0) {
+        toast.success(`Automatski obrisano ${deletedCount} duplikata`);
+      }
+    } catch (error) {
+      console.error("Error during auto deletion:", error);
+      toast.error(`Greška pri automatskom brisanju: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -162,10 +205,10 @@ export const DuplicateCustomersChecker = () => {
       <CardContent>
         <Button 
           onClick={checkForDuplicates} 
-          disabled={isChecking}
+          disabled={isChecking || autoDeleting}
           className="mb-4"
         >
-          {isChecking ? "Provera u toku..." : "Proveri duplikate"}
+          {isChecking ? "Provera u toku..." : autoDeleting ? "Automatsko brisanje..." : "Proveri duplikate"}
         </Button>
 
         {loading ? (
