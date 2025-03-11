@@ -34,7 +34,11 @@
       "spinnerColor": "#4F46E5"
     },
     "Filesystem": {
-      "appendExtension": true
+      "appendExtension": true,
+      "directory": "Documents"
+    },
+    "Browser": {
+      "launchLogout": true
     }
   }
 }
