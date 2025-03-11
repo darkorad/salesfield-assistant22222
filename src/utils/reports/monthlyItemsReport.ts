@@ -133,10 +133,12 @@ export const exportMonthlyItemsReport = async () => {
     // Create more descriptive filename with month name and year
     const fileName = `Prodaja_artikli_${monthName}_${today.getFullYear()}`;
     
-    // Export the workbook
+    toast.info(`Preuzimanje fajla "${fileName}.xlsx"...`);
+    
+    // Export the workbook with a more direct approach
     try {
       await exportWorkbook(wb, fileName);
-      toast.success(`Izveštaj "${fileName}" je uspešno izvezen`);
+      console.log('Export completed successfully');
     } catch (exportError) {
       console.error('Error during export:', exportError);
       toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);

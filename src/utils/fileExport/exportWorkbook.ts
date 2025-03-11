@@ -23,13 +23,14 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
     console.log('Is running on mobile:', isMobile);
 
     if (isMobile) {
+      // On mobile devices, try to save the file to device storage
       await exportFileMobile(blob, fileName);
     } else {
+      // On web browsers, trigger immediate download
       exportFileWeb(blob, fileName);
       toast.success(`Fajl "${fileName}.xlsx" je uspešno preuzet`);
     }
     
-    // Note: Success toast is now shown in the respective exporters
     return true;
   } catch (error) {
     console.error('Error exporting workbook:', error);
