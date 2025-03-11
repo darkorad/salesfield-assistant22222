@@ -14,6 +14,16 @@
       "keystoreAlias": null,
       "keystorePassword": null,
       "keystoreAliasPassword": null
+    },
+    "gradleArgs": [
+      "-Dorg.gradle.jvmargs=-Xmx2048m",
+      "-Pandroid.enableJetifier=true"
+    ],
+    "dependencyResolutionStrategy": {
+      "kotlin": {
+        "version": "1.8.22",
+        "excludeOldVersions": true
+      }
     }
   },
   "plugins": {
