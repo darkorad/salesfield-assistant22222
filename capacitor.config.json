@@ -24,7 +24,8 @@
         "version": "1.8.22",
         "excludeOldVersions": true
       }
-    }
+    },
+    "useLegacyStorage": false
   },
   "plugins": {
     "SplashScreen": {
@@ -43,6 +44,12 @@
     "Permissions": {
       "permissions": [
         "storage"
+      ]
+    },
+    "AndroidPermissions": {
+      "permissions": [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE"
       ]
     }
   }

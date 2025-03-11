@@ -1,3 +1,4 @@
+
 import { Filesystem, Directory, Encoding, GetUriResult, GetUriOptions } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
 import * as XLSX from 'xlsx';
@@ -40,20 +41,32 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
  */
 async function checkAndRequestPermissions() {
   try {
+    console.log('Starting permission check process');
+    
     // Check current permissions status
     const permResult = await Filesystem.checkPermissions();
     console.log('Current permissions status:', permResult);
     
-    // Always request permissions to ensure we get the prompt
-    console.log('Requesting storage permissions...');
-    const requestResult = await Filesystem.requestPermissions();
-    console.log('Permission request result:', requestResult);
+    // On Android, always request permissions explicitly 
+    // This ensures the user sees the permission dialog
+    console.log('Explicitly requesting storage permissions...');
     
-    if (requestResult.publicStorage !== 'granted') {
-      throw new Error('Potrebna je dozvola za pristup skladištu. Molimo omogućite u podešavanjima aplikacije.');
+    try {
+      const requestResult = await Filesystem.requestPermissions();
+      console.log('Permission request result:', requestResult);
+      
+      if (requestResult.publicStorage !== 'granted') {
+        console.warn('Permission not granted after request');
+        throw new Error('Potrebna je dozvola za pristup skladištu. Molimo omogućite u podešavanjima aplikacije.');
+      }
+      
+      console.log('Storage permission granted successfully');
+      return true;
+    } catch (permError) {
+      console.error('Error requesting permissions:', permError);
+      toast.error('Greška pri traženju dozvola. Molimo omogućite pristup skladištu ručno u podešavanjima aplikacije.');
+      throw permError;
     }
-    
-    return true;
   } catch (error) {
     console.error('Permission error:', error);
     throw error;
@@ -78,7 +91,7 @@ async function exportFileMobile(blob: Blob, fileName: string) {
       fileName += '.xlsx';
     }
 
-    console.log('Saving file to Downloads directory:', fileName);
+    console.log('Attempting to save file:', fileName);
     
     // Try multiple directories in sequence until one works
     const directoriesToTry = [
@@ -110,12 +123,16 @@ async function exportFileMobile(blob: Blob, fileName: string) {
         break;
       } catch (directoryError) {
         console.error(`Error saving to ${directory}:`, directoryError);
+        // Log more detailed error information
+        if (directoryError instanceof Error) {
+          console.error('Error details:', directoryError.message, directoryError.stack);
+        }
         continue; // Try next directory
       }
     }
     
     if (!saved) {
-      throw new Error("Nije moguće sačuvati fajl. Proverite da li ste dozvolili pristup skladištu u podešavanjima aplikacije.");
+      throw new Error("Nije moguće sačuvati fajl. Proverite da li ste dozvolili pristup skladištu u podešavanjima aplikacije. Pokušajte deinstalirati i ponovo instalirati aplikaciju.");
     }
     
     // Try to get a shareable URI for the file
@@ -137,7 +154,7 @@ async function exportFileMobile(blob: Blob, fileName: string) {
     }
     
     // Show success message with location
-    toast.success(`Izveštaj sačuvan: ${fileName}`);
+    toast.success(`Izveštaj sačuvan u ${getDirectoryName(savedDirectory)}: ${fileName}`);
     
     // Attempt to open the file if we have a URI
     if (savedPath) {
@@ -148,7 +165,7 @@ async function exportFileMobile(blob: Blob, fileName: string) {
         });
       } catch (openError) {
         console.error('Could not open file:', openError);
-        toast.info(`Izveštaj je sačuvan u Downloads folderu. Koristite File Manager aplikaciju da ga pronađete.`);
+        toast.info(`Izveštaj je sačuvan u ${getDirectoryName(savedDirectory)} folderu. Koristite File Manager aplikaciju da ga pronađete.`);
       }
     }
   } catch (error) {
