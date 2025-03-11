@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
@@ -19,58 +20,87 @@ export const exportDailyDetailedReport = async () => {
     }
 
     // Get all sales for today for the current user
-    const { data: sales, error } = await supabase
+    const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
         *,
-        customers (
+        customers:customer_id(
           name,
           address,
           city,
-          pib
+          pib,
+          is_vat_registered
         ),
-        kupci_darko (
+        darko_customer:darko_customer_id(
           name,
           address,
           city,
-          pib
+          pib,
+          is_vat_registered
         )
       `)
       .eq('user_id', session.user.id)
-      .gte('created_at', today.toISOString())
-      .lt('created_at', tomorrow.toISOString())
-      .order('created_at', { ascending: true });
+      .gte('date', today.toISOString())
+      .lt('date', tomorrow.toISOString())
+      .order('date', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error loading sales:", error);
+      throw error;
+    }
 
-    if (!sales || sales.length === 0) {
+    if (!salesData || salesData.length === 0) {
       toast.error("Nema prodaje za današnji dan");
       return;
     }
 
+    console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
+      id: sale.id,
+      customer: (sale.customers?.name || sale.darko_customer?.name || "Unknown"),
+      items: sale.items ? (sale.items as any[]).length : 0,
+      itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
+    })));
+
     // Create flat array of all items from all sales
-    const reportData = sales.map(sale => {
-      const customer = sale.customer_id ? sale.customers : sale.kupci_darko;
+    const reportData = salesData.flatMap(sale => {
+      const customer = sale.customers || sale.darko_customer;
+      if (!customer) {
+        console.warn(`No customer found for sale ${sale.id}`);
+        return [];
+      }
+      
       const items = sale.items as any[];
+      if (!items || !Array.isArray(items)) {
+        console.warn(`No items or invalid items for sale ${sale.id}`);
+        return [];
+      }
 
       return items.map(item => ({
-        'Datum': new Date(sale.created_at!).toLocaleString('sr-RS'),
-        'Kupac': customer?.name || '',
-        'PIB': customer?.pib || '',
-        'Adresa': customer?.address || '',
-        'Grad': customer?.city || '',
+        'Datum': new Date(sale.date).toLocaleString('sr-RS'),
+        'Kupac': customer.name || 'Nepoznat',
+        'PIB': customer.pib || '',
+        'Adresa': customer.address || '',
+        'Grad': customer.city || '',
         'Proizvod': item.product.Naziv,
         'Proizvođač': item.product.Proizvođač,
         'Količina': item.quantity,
         'Jedinica mere': item.product["Jedinica mere"],
-        'Cena': item.product.Cena,
-        'Ukupno': item.quantity * item.product.Cena,
-        'Način plaćanja': sale.payment_type === 'cash' ? 'Gotovina' : 'Račun'
+        'Cena': item.price || item.product.Cena,
+        'Ukupno': (item.quantity * (item.price || item.product.Cena)),
+        'Način plaćanja': item.paymentType === 'cash' ? 'Gotovina' : 'Račun'
       }));
-    }).flat();
+    });
 
-    // Calculate daily total
-    const dailyTotal = reportData.reduce((sum, item) => sum + item['Ukupno'], 0);
+    // Calculate totals
+    const cashTotal = reportData
+      .filter(item => item['Način plaćanja'] === 'Gotovina')
+      .reduce((sum, item) => sum + item['Ukupno'], 0);
+    
+    const invoiceTotal = reportData
+      .filter(item => item['Način plaćanja'] === 'Račun')
+      .reduce((sum, item) => sum + item['Ukupno'], 0);
+    
+    const grandTotal = cashTotal + invoiceTotal;
 
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
@@ -92,10 +122,12 @@ export const exportDailyDetailedReport = async () => {
       { wch: 15 }   // Način plaćanja
     ];
 
-    // Add daily total row
+    // Add summary rows
     XLSX.utils.sheet_add_aoa(ws, [
       [],  // Empty row
-      ['UKUPNO:', '', '', '', '', '', '', '', '', '', dailyTotal, '']
+      ['UKUPNO GOTOVINA:', '', '', '', '', '', '', '', '', '', cashTotal, ''],
+      ['UKUPNO RAČUN:', '', '', '', '', '', '', '', '', '', invoiceTotal, ''],
+      ['UKUPNO:', '', '', '', '', '', '', '', '', '', grandTotal, '']
     ], { origin: -1 });
 
     // Add worksheet to workbook
@@ -107,6 +139,7 @@ export const exportDailyDetailedReport = async () => {
 
     // Export the workbook
     await exportWorkbook(wb, filename);
+    toast.success(`Izveštaj je uspešno eksportovan: ${filename}`);
 
   } catch (error) {
     console.error("Error generating report:", error);
