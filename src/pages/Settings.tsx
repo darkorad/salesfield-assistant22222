@@ -10,6 +10,7 @@ import { Reports } from "@/components/settings/Reports";
 import MonthlySales from "./MonthlySales";
 import { AddCustomerCard } from "@/components/settings/AddCustomerCard";
 import { DuplicateCustomersChecker } from "@/components/settings/DuplicateCustomersChecker";
+import { DataManagement } from "@/components/settings/data-management/DataManagement";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -39,6 +40,10 @@ const Settings = () => {
         <TabsContent value="settings">
           <div className="space-y-8">
             <h2 className="text-2xl font-bold">Podešavanja</h2>
+            
+            <div className="w-full">
+              <DataManagement />
+            </div>
             
             <div className="w-full">
               <AddCustomerCard />

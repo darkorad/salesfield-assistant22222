@@ -19,6 +19,8 @@ export const CustomerImport = () => {
       const file = event.target.files?.[0];
       if (!file) return;
 
+      toast.info("Učitavanje kupaca u toku...");
+      
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
