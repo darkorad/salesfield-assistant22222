@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { CustomerFormData, initialCustomerFormData } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerFormFields } from "./customer/CustomerFormFields";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp, UserPlus } from "lucide-react";
 
 // Helper function to normalize day names for consistency
 const normalizeDay = (day: string | undefined): string | undefined => {
@@ -16,6 +18,7 @@ const normalizeDay = (day: string | undefined): string | undefined => {
 export const AddCustomerCard = () => {
   const [customer, setCustomer] = useState<CustomerFormData>(initialCustomerFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,25 +108,46 @@ export const AddCustomerCard = () => {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Dodaj novog kupca</CardTitle>
+      <CardHeader className="pb-3">
+        <CollapsibleTrigger 
+          asChild
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center justify-between w-full cursor-pointer"
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-accent" />
+              <CardTitle>Dodaj novog kupca</CardTitle>
+            </div>
+            {isOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </div>
+        </CollapsibleTrigger>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="grid gap-4">
-          <CustomerFormFields 
-            customer={customer}
-            handleInputChange={handleInputChange}
-            setCustomer={setCustomer}
-          />
-          <Button 
-            type="submit" 
-            className="w-full mt-4"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Dodavanje..." : "Dodaj kupca"}
-          </Button>
-        </form>
-      </CardContent>
+      
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleContent>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="grid gap-4">
+              <CustomerFormFields 
+                customer={customer}
+                handleInputChange={handleInputChange}
+                setCustomer={setCustomer}
+              />
+              <Button 
+                type="submit" 
+                className="w-full mt-4"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Dodavanje..." : "Dodaj kupca"}
+              </Button>
+            </form>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 };
