@@ -91,10 +91,10 @@ const VisitPlans = () => {
 
       console.log("Fetched plans:", plansData?.length || 0);
 
-      // Fetch customers
+      // Fetch customers - only get distinct customers to avoid duplicates
       const { data: customersData, error: customersError } = await supabase
         .from("kupci_darko")
-        .select("*")
+        .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
         .order("name");
 
       if (customersError) {
@@ -106,8 +106,22 @@ const VisitPlans = () => {
 
       console.log("Fetched customers:", customersData?.length || 0);
 
+      // Deduplicate customers by ID and name+address
+      const uniqueCustomers = new Map<string, Customer>();
+      
+      // First add all customers by ID
+      customersData?.forEach(customer => {
+        if (!uniqueCustomers.has(customer.id)) {
+          uniqueCustomers.set(customer.id, customer as Customer);
+        }
+      });
+      
+      // Get unique customers array
+      const finalCustomers = Array.from(uniqueCustomers.values());
+      console.log("Unique customers after deduplication:", finalCustomers.length);
+
       setVisitPlans(plansData || []);
-      setCustomers(customersData || []);
+      setCustomers(finalCustomers);
     } catch (error) {
       console.error("Unexpected error:", error);
       setError("Neočekivana greška pri učitavanju podataka");
