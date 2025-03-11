@@ -65,7 +65,7 @@ export const exportDailyDetailedReport = async () => {
 
     console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
       id: sale.id,
-      customer: (sale.customers ? sale.customers.name : (sale.kupci_darko ? sale.kupci_darko.name : "Unknown")),
+      customer: (sale.customers && sale.customers[0] ? sale.customers[0].name : (sale.kupci_darko && sale.kupci_darko[0] ? sale.kupci_darko[0].name : "Unknown")),
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
@@ -74,12 +74,15 @@ export const exportDailyDetailedReport = async () => {
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer data from either table - handle as single object, not array
-      const customer = sale.customers || sale.kupci_darko;
-      if (!customer) {
+      // Get customer data from either table - handle as array elements now
+      const customerArray = sale.customers || sale.kupci_darko;
+      if (!customerArray || !Array.isArray(customerArray) || customerArray.length === 0) {
         console.warn(`No customer found for sale ${sale.id}`);
         return [];
       }
+      
+      // Use the first customer in the array
+      const customer = customerArray[0];
       
       const items = sale.items as any[];
       if (!items || !Array.isArray(items)) {
