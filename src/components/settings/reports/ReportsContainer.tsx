@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DailyReportButton } from "./DailyReportButton";
 import { MonthlyReportButtons } from "./MonthlyReportButtons";
 import { CashSalesReport } from "./CashSalesReport";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 
 export const ReportsContainer = () => {
   return (
@@ -16,7 +16,7 @@ export const ReportsContainer = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="text-sm bg-muted/30 p-3 rounded-md flex gap-2">
-            <InfoCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <p>
               Svi izveštaji se automatski čuvaju u Download folder na vašem uređaju. 
               Možete ih pronaći u aplikaciji Files ili My Files.
