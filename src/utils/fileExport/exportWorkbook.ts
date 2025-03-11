@@ -38,7 +38,9 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       console.log('Using web export path');
       // On web browsers, trigger immediate download
       exportFileWeb(blob, fileName);
-      toast.success(`Fajl "${fileName}.xlsx" je preuzet i nalazi se u Download folderu`);
+      toast.success(`Fajl "${fileName}.xlsx" je preuzet i nalazi se u 'Downloads' ili 'Preuzimanja' folderu vašeg računara`, {
+        duration: 8000
+      });
       console.log('Web export completed successfully');
     }
     

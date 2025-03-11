@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Customer, Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,12 +9,13 @@ import { PriceInputs } from "./components/PriceInputs";
 import { usePriceForm } from "./hooks/usePriceForm";
 import { CustomerSearchInput } from "@/components/sales/CustomerSearchInput";
 import { CustomerSearchResults } from "@/components/sales/CustomerSearchResults";
+import { useCustomerSearch } from "@/components/visit-plans/hooks/useCustomerSearch";
+import { toast } from "sonner";
 
 export const CustomerPriceForm = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   
   const {
     selectedCustomer,
@@ -33,24 +33,41 @@ export const CustomerPriceForm = () => {
     handleSubmit
   } = usePriceForm();
 
+  // Use the improved customer search
+  const filteredCustomers = useCustomerSearch(customers, customerSearch);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+        if (!session) {
+          toast.error("Niste prijavljeni");
+          return;
+        }
 
-        const [customersResponse, productsResponse] = await Promise.all([
-          supabase.from("customers").select("*").eq('user_id', session.user.id),
-          supabase.from('products').select("*").eq('user_id', session.user.id)
+        // Fetch both data sources concurrently
+        const [productsResponse, customersResponse] = await Promise.all([
+          supabase.from('products_darko').select("*").not('Naziv', 'eq', ''),
+          supabase.from("kupci_darko").select("*").order('name')
         ]);
 
-        if (customersResponse.error) throw customersResponse.error;
-        if (productsResponse.error) throw productsResponse.error;
+        // Check for errors
+        if (productsResponse.error) {
+          console.error("Error fetching products:", productsResponse.error);
+          toast.error("Greška pri učitavanju proizvoda");
+        } else {
+          setProducts(productsResponse.data || []);
+        }
 
-        setCustomers(customersResponse.data || []);
-        setProducts(productsResponse.data || []);
+        if (customersResponse.error) {
+          console.error("Error fetching customers:", customersResponse.error);
+          toast.error("Greška pri učitavanju kupaca");
+        } else {
+          setCustomers(customersResponse.data || []);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
+        toast.error("Greška pri učitavanju podataka");
       }
     };
 
@@ -64,14 +81,6 @@ export const CustomerPriceForm = () => {
     );
     setFilteredProducts(filtered);
   }, [productSearch, products]);
-
-  useEffect(() => {
-    // Filter customers based on search
-    const filtered = customers.filter(customer =>
-      customer.name.toLowerCase().includes(customerSearch.toLowerCase())
-    );
-    setFilteredCustomers(filtered);
-  }, [customerSearch, customers]);
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -97,7 +106,7 @@ export const CustomerPriceForm = () => {
               value={customerSearch}
               onChange={setCustomerSearch}
             />
-            {customerSearch && !selectedCustomer && (
+            {customerSearch && !selectedCustomer && filteredCustomers.length > 0 && (
               <CustomerSearchResults
                 customers={filteredCustomers}
                 onCustomerSelect={handleCustomerSelect}
@@ -114,7 +123,7 @@ export const CustomerPriceForm = () => {
                 value={productSearch}
                 onChange={setProductSearch}
               />
-              {productSearch && !selectedProduct && (
+              {productSearch && !selectedProduct && filteredProducts.length > 0 && (
                 <ProductSearchResults
                   products={filteredProducts}
                   onSelect={handleProductSelect}

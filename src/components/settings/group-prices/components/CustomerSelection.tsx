@@ -1,6 +1,8 @@
+
 import { Customer } from "@/types";
 import { CustomerSearchInput } from "@/components/sales/CustomerSearchInput";
 import { CustomerSearchResults } from "@/components/sales/CustomerSearchResults";
+import { useCustomerSearch } from "@/components/visit-plans/hooks/useCustomerSearch";
 
 interface CustomerSelectionProps {
   selectedGroup: { id: string; name: string } | null;
@@ -20,6 +22,9 @@ export const CustomerSelection = ({
   onCustomerSelect,
 }: CustomerSelectionProps) => {
   if (!selectedGroup) return null;
+  
+  // Use the existing useCustomerSearch hook for better search functionality
+  const filteredCustomers = useCustomerSearch(customers, customerSearch);
 
   return (
     <div>
@@ -29,11 +34,9 @@ export const CustomerSelection = ({
           value={customerSearch}
           onChange={onCustomerSearchChange}
         />
-        {customerSearch && !selectedCustomer && (
+        {customerSearch && !selectedCustomer && filteredCustomers.length > 0 && (
           <CustomerSearchResults
-            customers={customers.filter(c => 
-              c.name.toLowerCase().includes(customerSearch.toLowerCase())
-            )}
+            customers={filteredCustomers}
             onCustomerSelect={onCustomerSelect}
           />
         )}

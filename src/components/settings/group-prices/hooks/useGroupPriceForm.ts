@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, Product } from "@/types";
@@ -18,28 +19,61 @@ export const useGroupPriceForm = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error('No session found');
-        toast.error("Niste prijavljeni");
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.error('No session found');
+          toast.error("Niste prijavljeni");
+          return;
+        }
 
-      const { data: productsData, error } = await supabase
-        .from('products_darko')
-        .select('*')
-        .not('Naziv', 'eq', '');
+        const { data: productsData, error } = await supabase
+          .from('products_darko')
+          .select('*')
+          .not('Naziv', 'eq', '');
 
-      if (error) {
+        if (error) {
+          console.error('Error fetching products:', error);
+          toast.error("Greška pri učitavanju proizvoda");
+          return;
+        }
+
+        setProducts(productsData || []);
+      } catch (error) {
         console.error('Error fetching products:', error);
         toast.error("Greška pri učitavanju proizvoda");
-        return;
       }
+    };
 
-      setProducts(productsData || []);
+    const fetchCustomers = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.error('No session found');
+          return;
+        }
+
+        // Fetch customers from kupci_darko table (safely)
+        const { data: customerData, error } = await supabase
+          .from('kupci_darko')
+          .select('*')
+          .order('name');
+
+        if (error) {
+          console.error('Error fetching customers:', error);
+          toast.error("Greška pri učitavanju kupaca");
+          return;
+        }
+
+        setCustomers(customerData || []);
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+        toast.error("Greška pri učitavanju kupaca");
+      }
     };
 
     fetchProducts();
+    fetchCustomers();
   }, []);
 
   useEffect(() => {
@@ -120,7 +154,7 @@ export const useGroupPriceForm = () => {
 
       const { error: priceError } = await supabase
         .from('price_changes')
-        .insert(priceData);
+        .insert([priceData]);
 
       if (priceError) {
         console.error('Error saving price:', priceError);
