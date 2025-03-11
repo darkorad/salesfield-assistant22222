@@ -1,3 +1,4 @@
+
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { App } from '@capacitor/app';
 import * as XLSX from 'xlsx';
@@ -67,9 +68,9 @@ async function exportFileMobile(blob: Blob, fileName: string) {
       }).then(uriResult => {
         console.log('File URI:', uriResult.uri);
         try {
-          // Fix the TypeScript error by using proper typings
-          void App.openUrl({ url: uriResult.uri }).catch(err => {
-            console.log('Could not open file with App.openUrl:', err);
+          // Use AppLauncher to open the file instead of App.openUrl which is not available
+          void App.openUrl({ url: uriResult.uri }).catch(openError => {
+            console.log('Could not open file with App.openUrl:', openError);
           });
         } catch (openError) {
           console.log('Could not open file automatically, but it is saved:', openError);
