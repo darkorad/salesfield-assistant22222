@@ -23,6 +23,7 @@ export const exportMonthlyItemsReport = async () => {
       'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
     ];
     const monthName = monthNames[today.getMonth()];
+    const year = today.getFullYear();
 
     toast.info("Učitavanje podataka o prodaji za tekući mesec...");
 
@@ -135,10 +136,12 @@ export const exportMonthlyItemsReport = async () => {
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Mesečna prodaja po artiklima");
     
-    // Create more descriptive filename with month name and year
-    const fileName = `Prodaja_artikli_${monthName}_${today.getFullYear()}`;
+    // Create more descriptive filename with month name and year 
+    // Format: MesecnaArtikli-Mesec-Godina (e.g., MesecnaArtikli-Mart-2025)
+    const fileName = `MesecnaArtikli-${monthName}-${year}`;
     
     // Export the workbook with a more direct approach
+    console.log(`Exporting monthly items report with filename: ${fileName}`);
     await exportWorkbook(wb, fileName);
     
   } catch (error) {

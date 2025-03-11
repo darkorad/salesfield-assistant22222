@@ -11,6 +11,8 @@ export const exportDailyDetailedReport = async () => {
 
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    console.log(`Generating report for date range: ${today.toISOString()} to ${tomorrow.toISOString()}`);
 
     // Format date for the filename (today's date)
     const dateFormatted = today.toLocaleDateString('sr-RS', {
@@ -35,7 +37,7 @@ export const exportDailyDetailedReport = async () => {
       .select(`
         *,
         customers:customer_id(*),
-        kupci_darko!fk_sales_kupci_darko(*)
+        kupci_darko:fk_sales_kupci_darko(*)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -44,7 +46,8 @@ export const exportDailyDetailedReport = async () => {
 
     if (error) {
       console.error("Error loading sales:", error);
-      throw error;
+      toast.error(`Greška pri učitavanju prodaje: ${error.message}`);
+      return;
     }
 
     if (!salesData || salesData.length === 0) {
@@ -140,13 +143,19 @@ export const exportDailyDetailedReport = async () => {
       'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
     ];
     const monthName = monthNames[today.getMonth()];
-    const filename = `Detaljan_dnevni_izvestaj_${dateFormatted}_${monthName}`;
+    const day = today.getDate().toString().padStart(2, '0');
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const year = today.getFullYear();
+    
+    // Format: DnevniIzvestaj-DD-MM-YYYY
+    const filename = `DnevniIzvestaj-${day}-${month}-${year}`;
 
     // Export the workbook
+    console.log(`Exporting workbook with filename: ${filename}`);
     await exportWorkbook(wb, filename);
 
   } catch (error) {
     console.error("Error generating report:", error);
-    toast.error("Greška pri generisanju izveštaja");
+    toast.error(`Greška pri generisanju izveštaja: ${error instanceof Error ? error.message : String(error)}`);
   }
 };

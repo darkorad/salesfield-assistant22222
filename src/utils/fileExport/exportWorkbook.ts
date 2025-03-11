@@ -10,6 +10,7 @@ import { exportFileWeb } from './webExporter';
  */
 export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) {
   try {
+    console.log(`Starting export process for file: ${fileName}`);
     toast.info(`Priprema fajla "${fileName}.xlsx" za preuzimanje...`);
     
     // Generate the Excel file as an array buffer
@@ -28,13 +29,13 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       console.log('Using mobile export path for Android');
       // On mobile devices, save to Downloads folder using Capacitor
       await exportFileMobile(blob, fileName);
-      console.log('Mobile export completed');
+      console.log('Mobile export completed successfully');
     } else {
       console.log('Using web export path');
       // On web browsers, trigger immediate download
       exportFileWeb(blob, fileName);
       toast.success(`Fajl "${fileName}.xlsx" je uspešno preuzet`);
-      console.log('Web export completed');
+      console.log('Web export completed successfully');
     }
     
     return true;
@@ -44,15 +45,20 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
     
     // Provide fallback download option if primary method fails
     try {
-      if (!('Capacitor' in window)) {
-        // Fallback method for web browsers
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([excelBuffer], { 
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      console.log('Attempting fallback export method');
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      
+      if ('Capacitor' in window) {
+        toast.info('Pokušaj alternativnog preuzimanja...', {
+          duration: 10000,
+          description: "Ako fajl nije vidljiv, probajte da izvezete izveštaj ponovo"
         });
+      } else {
         const url = URL.createObjectURL(blob);
-        
-        toast.info('Pokušavam alternativni način preuzimanja...', {
+        toast.info('Pokušaj alternativnog preuzimanja...', {
           action: {
             label: 'Preuzmi',
             onClick: () => {

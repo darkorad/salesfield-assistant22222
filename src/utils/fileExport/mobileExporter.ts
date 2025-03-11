@@ -26,121 +26,96 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
 
     console.log('Attempting to save file on Android:', fileName);
     
-    // Use a consistent storage approach - Documents directory first 
+    // Try to use the Download directory directly as the primary option
     try {
-      // Try to save to documents - most accessible location
+      // First try to save directly to Downloads folder (most user-visible location)
       const result = await Filesystem.writeFile({
         path: fileName,
         data: base64Data,
-        directory: Directory.Documents,
+        directory: Directory.External,
         recursive: true
       });
       
-      console.log('File saved successfully to Documents directory:', result);
+      console.log('File saved successfully to External directory:', result);
+      toast.success(`Fajl "${fileName}" sačuvan u Downloads folderu`, {
+        description: "Idite u My Files/Download da pristupite fajlu."
+      });
       
-      // Check if we can share the file directly
+      // Try to share the file to make it immediately accessible
       try {
-        // After saving, open share sheet so user can immediately see and share the file
         await Share.share({
-          title: 'Izvoz završen',
-          text: `Izveštaj "${fileName}" je spreman`,
+          title: 'Izveštaj je spreman',
+          text: `Izveštaj "${fileName}" je dostupan za pregled`,
           url: result.uri,
-          dialogTitle: 'Podeli ili otvori izveštaj'
-        });
-        
-        toast.success(`Fajl "${fileName}" sačuvan`, {
-          description: "Fajl je otvoren za pregled ili deljenje."
+          dialogTitle: 'Otvori ili podeli izveštaj'
         });
       } catch (shareError) {
-        console.error('Error sharing file:', shareError);
-        
-        // If sharing fails, provide detailed location info
-        toast.success(`Fajl "${fileName}" sačuvan u Documents folderu`, {
-          duration: 10000,
-          description: "Idite na Files/My Files/Documents da pronađete fajl. Takođe možete koristiti file manager aplikaciju."
-        });
+        console.error('Error sharing file, but file was saved:', shareError);
       }
       
       return;
-    } catch (error) {
-      console.error('Error saving to Documents directory:', error);
+    } catch (externalError) {
+      console.error('Error saving to External directory:', externalError);
       
-      // Fallback to External directory (should work on most Android devices)
+      // Fallback to Documents directory if External fails
       try {
         const result = await Filesystem.writeFile({
-          path: `Download/${fileName}`, // Explicitly use Download folder
+          path: `Download/${fileName}`, // Explicitly put in Download subfolder
           data: base64Data,
-          directory: Directory.External,
+          directory: Directory.Documents,
           recursive: true
         });
         
-        console.log('File saved successfully to External/Download directory:', result);
+        console.log('File saved successfully to Documents/Download directory:', result);
+        toast.success(`Fajl "${fileName}" sačuvan u Download folderu`, {
+          description: "Idite u Documents/Download da pristupite fajlu."
+        });
         
-        // Try to share the file after saving
         try {
           await Share.share({
-            title: 'Izvoz završen',
-            text: `Izveštaj "${fileName}" je spreman`,
+            title: 'Izveštaj je spreman',
+            text: `Izveštaj "${fileName}" je dostupan za pregled`,
             url: result.uri,
-            dialogTitle: 'Podeli ili otvori izveštaj'
-          });
-          
-          toast.success(`Fajl "${fileName}" sačuvan u Downloads folderu`, {
-            description: "Fajl je otvoren za pregled ili deljenje."
+            dialogTitle: 'Otvori ili podeli izveštaj'
           });
         } catch (shareError) {
-          console.error('Error sharing file:', shareError);
-          
-          toast.success(`Fajl "${fileName}" sačuvan u Downloads folderu`, {
-            duration: 10000,
-            description: "Idite na My Files/Download da pronađete fajl."
-          });
+          console.error('Error sharing file from Documents directory:', shareError);
         }
         
         return;
-      } catch (externalError) {
-        console.error('Error saving to External directory:', externalError);
+      } catch (docsError) {
+        console.error('Error saving to Documents directory:', docsError);
         
-        // Last resort - try saving to app's private Data directory and immediately share
+        // Last resort - try saving to data directory and share immediately
         const result = await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
           directory: Directory.Data
         });
         
-        console.log('File saved to app private directory:', result);
+        toast.success(`Fajl "${fileName}" privremeno sačuvan`, {
+          duration: 10000,
+          description: "Kliknite na dugme da bi preuzeli fajl direktno"
+        });
         
-        // Always try to share the file if we saved to private directory
+        // Always try to share from Data directory since it's not directly accessible
         try {
           await Share.share({
-            title: 'Izvoz završen',
-            text: `Izveštaj "${fileName}" je spreman`,
+            title: 'Izveštaj je spreman',
+            text: `Izveštaj "${fileName}" je dostupan za pregled`,
             url: result.uri,
-            dialogTitle: 'Podeli ili otvori izveštaj'
-          });
-          
-          toast.success(`Fajl "${fileName}" je dostupan`, {
-            description: "Fajl je dostupan za pregled ili deljenje."
+            dialogTitle: 'Preuzmi izveštaj'
           });
         } catch (shareError) {
-          console.error('Error sharing file from private directory:', shareError);
+          console.error('Final share attempt failed:', shareError);
           
-          toast.success(`Fajl "${fileName}" sačuvan`, {
-            duration: 10000,
-            description: "Fajl je sačuvan, ali je u privatnom prostoru aplikacije. Koristite opciju izvoza podataka u podešavanjima da pristupite fajlovima."
-          });
+          toast.error(`Problem sa deljenjem fajla. Pokušajte ponovo kasnije.`);
         }
       }
     }
   } catch (error) {
     console.error('Error in exportFileMobile:', error);
     toast.error(`Greška pri čuvanju fajla: ${error instanceof Error ? error.message : String(error)}`);
-    
-    // Display more information to help debug
-    if (error instanceof Error) {
-      console.error('Error details:', error.stack);
-    }
-    
     throw error;
   }
 }

@@ -34,7 +34,7 @@ export function exportFileWeb(blob: Blob, fileName: string) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       console.log('Web export completed for:', fileName);
-    }, 500); // Longer timeout to ensure download starts
+    }, 1000); // Extended timeout to ensure download starts
   } catch (error) {
     console.error('Error in web export:', error);
     throw error;
