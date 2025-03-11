@@ -1,6 +1,5 @@
 
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
@@ -19,8 +18,8 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
     });
 
-    // Check if running on web or mobile
-    const isMobile = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isPluginAvailable('Filesystem');
+    // Check if running on mobile
+    const isMobile = 'Capacitor' in window;
 
     if (isMobile) {
       await exportFileMobile(blob, fileName);
@@ -47,38 +46,29 @@ async function exportFileMobile(blob: Blob, fileName: string) {
     if (!fileName.toLowerCase().endsWith('.xlsx')) {
       fileName += '.xlsx';
     }
-    
-    // Write file to device
+
+    // Write file to downloads directory
     const result = await Filesystem.writeFile({
       path: fileName,
       data: base64Data,
       directory: Directory.Documents,
       recursive: true
     });
-    
-    console.log('File saved to', result.uri);
+
+    console.log('File saved to:', result.uri);
     
     // Show toast with file location
     toast.success(`Fajl sačuvan u Documents/${fileName}`);
-    
-    // Try to open the file with the default app
-    try {
-      await Filesystem.getUri({
-        path: fileName,
-        directory: Directory.Documents
-      }).then(uriResult => {
-        console.log('File URI:', uriResult.uri);
-        try {
-          // Use Browser plugin to open the file instead of App.openUrl
-          void Browser.open({ url: uriResult.uri }).catch(openError => {
-            console.log('Could not open file with Browser.open:', openError);
-          });
-        } catch (openError) {
-          console.log('Could not open file automatically, but it is saved:', openError);
-        }
-      });
-    } catch (openError) {
-      console.log('Could not open file automatically:', openError);
+
+    // Attempt to open the file
+    if (result.uri) {
+      try {
+        await Browser.open({
+          url: result.uri
+        });
+      } catch (error) {
+        console.log('Could not open file, but it was saved:', error);
+      }
     }
   } catch (error) {
     console.error('Error saving file on mobile:', error);
