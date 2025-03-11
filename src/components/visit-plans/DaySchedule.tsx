@@ -6,6 +6,7 @@ import { CustomerGrid } from "./customer-list/CustomerGrid";
 import { CustomerOrderSection } from "./customer-order/CustomerOrderSection";
 import { useCompletedCustomers } from "./hooks/useCompletedCustomers";
 import { useCustomerSearch } from "./hooks/useCustomerSearch";
+import { useCustomersByDay } from "./hooks/useCustomersByDay";
 
 interface DayScheduleProps {
   day: string;
@@ -14,13 +15,17 @@ interface DayScheduleProps {
 }
 
 export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
-  const { completedCustomers, isLoading, loadCompletedCustomers } = useCompletedCustomers();
+  const { completedCustomers, isLoading: completedLoading, loadCompletedCustomers } = useCompletedCustomers();
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const orderFormRef = useRef<HTMLDivElement>(null);
-
-  const filteredCustomers = useCustomerSearch(customers, searchTerm);
+  
+  // Filter customers for this specific day using the useCustomersByDay hook
+  const customersForDay = useCustomersByDay(customers, day);
+  
+  // Then apply text search on the day-filtered customers
+  const filteredCustomers = useCustomerSearch(customersForDay, searchTerm);
 
   const handleCustomerClick = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -36,7 +41,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     loadCompletedCustomers();
   };
 
-  if (isLoading) {
+  if (completedLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         <div className="col-span-full text-center text-gray-500 py-2 text-xs">

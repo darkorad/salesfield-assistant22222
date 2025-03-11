@@ -50,34 +50,11 @@ export const useVisitPlansData = () => {
       console.log("Fetching visit plans for date:", today);
       console.log("User ID:", session.session?.user.id);
 
-      // Fetch visit plans
-      const { data: plansData, error: plansError } = await supabase
-        .from("visit_plans")
-        .select(`
-          *,
-          customer:kupci_darko!visit_plans_customer_id_fkey (
-            name,
-            address,
-            city
-          )
-        `)
-        .eq("user_id", session.session?.user.id)
-        .eq("dan_obilaska", today)
-        .order("visit_time", { ascending: true });
-
-      if (plansError) {
-        console.error("Error fetching visit plans:", plansError);
-        setError("Greška pri učitavanju planova poseta");
-        toast.error("Greška pri učitavanju planova poseta");
-        return;
-      }
-
-      console.log("Fetched plans:", plansData?.length || 0);
-
-      // Fetch customers - only get distinct customers to avoid duplicates
+      // Fetch customers with a valid visit day
       const { data: customersData, error: customersError } = await supabase
         .from("kupci_darko")
         .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+        .not('name', 'is', null)
         .order("name");
 
       if (customersError) {
@@ -89,21 +66,21 @@ export const useVisitPlansData = () => {
 
       console.log("Fetched customers:", customersData?.length || 0);
 
-      // Deduplicate customers by ID and name+address
+      // Deduplicate customers
       const uniqueCustomers = new Map<string, Customer>();
       
-      // First add all customers by ID
       customersData?.forEach(customer => {
         if (!uniqueCustomers.has(customer.id)) {
           uniqueCustomers.set(customer.id, customer as Customer);
         }
       });
       
-      // Get unique customers array
       const finalCustomers = Array.from(uniqueCustomers.values());
       console.log("Unique customers after deduplication:", finalCustomers.length);
 
-      setVisitPlans(plansData || []);
+      // We're not fetching visit plans since we deleted them all,
+      // we'll generate them on demand from customer data
+      setVisitPlans([]);
       setCustomers(finalCustomers);
     } catch (error) {
       console.error("Unexpected error:", error);

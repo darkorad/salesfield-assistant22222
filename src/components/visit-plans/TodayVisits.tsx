@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { CustomerSelection } from "@/components/settings/group-prices/components/CustomerSelection";
+import { Customer } from "@/types";
+import { useCustomersByDay } from "./hooks/useCustomersByDay";
+import { format } from "date-fns";
 
 interface VisitPlan {
   id: string;
@@ -38,6 +43,11 @@ interface TodayVisitsProps {
 
 export const TodayVisits = ({ isLoading, visitPlans, date }: TodayVisitsProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  
+  // Get today's day name in Serbian
+  const today = new Date().toLocaleString('sr-Latn-RS', { weekday: 'long' }).toLowerCase();
 
   if (isLoading) {
     return (
@@ -92,8 +102,28 @@ export const TodayVisits = ({ isLoading, visitPlans, date }: TodayVisitsProps) =
             <DialogHeader>
               <DialogTitle>Dodaj novu posetu za {date}</DialogTitle>
             </DialogHeader>
-            <div className="p-4">
-              <p className="text-gray-500">Forma za dodavanje posete će biti implementirana uskoro.</p>
+            <div className="p-4 space-y-4">
+              <CustomerSelection
+                selectedGroup={null}
+                customers={[]}
+                customerSearch={customerSearch}
+                selectedCustomer={selectedCustomer}
+                onCustomerSearchChange={setCustomerSearch}
+                onCustomerSelect={(customer) => setSelectedCustomer(customer)}
+              />
+              {selectedCustomer && (
+                <div className="text-sm">
+                  <p><span className="font-medium">Kupac:</span> {selectedCustomer.name}</p>
+                  <p><span className="font-medium">Adresa:</span> {selectedCustomer.address}, {selectedCustomer.city}</p>
+                </div>
+              )}
+              <Button 
+                className="w-full mt-4" 
+                disabled={!selectedCustomer}
+                onClick={() => setIsAddDialogOpen(false)}
+              >
+                Dodaj posetu
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
