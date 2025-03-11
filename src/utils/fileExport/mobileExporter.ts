@@ -1,12 +1,12 @@
 
-import { Filesystem, Directory, GetUriOptions } from '@capacitor/filesystem';
-import { Browser } from '@capacitor/browser';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { toast } from 'sonner';
 import { checkAndRequestPermissions } from './permissions';
-import { blobToBase64, getDirectoryName } from './utils';
+import { blobToBase64 } from './utils';
 
 /**
  * Exports a file on mobile platforms using Capacitor
+ * Focuses on saving to the Downloads directory
  */
 export async function exportFileMobile(blob: Blob, fileName: string) {
   try {
@@ -25,56 +25,42 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
 
     console.log('Attempting to save file:', fileName);
     
-    // Try multiple directories in sequence until one works
-    const directoriesToTry = [
-      Directory.External,  // Try External (Download) first
-      Directory.Documents,
-      Directory.Data
-    ];
-    
-    let saved = false;
-    let savedPath = '';
-    let savedDirectory = Directory.External;
-    
-    // Try each directory until one works
-    for (const directory of directoriesToTry) {
-      try {
-        console.log(`Attempting to save to ${directory} directory...`);
-        
-        const result = await Filesystem.writeFile({
-          path: fileName,
-          data: base64Data,
-          directory: directory,
-          recursive: true
-        });
-        
-        console.log(`File saved successfully to ${directory}:`, result);
-        saved = true;
-        savedPath = result.uri || '';
-        savedDirectory = directory;
-        break;
-      } catch (directoryError) {
-        console.error(`Error saving to ${directory}:`, directoryError);
-        // Log more detailed error information
-        if (directoryError instanceof Error) {
-          console.error('Error details:', directoryError.message, directoryError.stack);
-        }
-        continue; // Try next directory
-      }
+    // Explicitly focus on saving to Downloads (External directory)
+    try {
+      const result = await Filesystem.writeFile({
+        path: `Downloads/${fileName}`,  // Explicitly put in Downloads subfolder
+        data: base64Data,
+        directory: Directory.External,
+        recursive: true
+      });
+      
+      console.log('File saved successfully to Downloads:', result);
+      
+      toast.success(`Fajl "${fileName}" sačuvan u Download folderu`, {
+        duration: 5000,
+        description: "Proverite u vašem fajl menadžeru."
+      });
+      
+      return;
+    } catch (directoryError) {
+      console.error('Error saving to Downloads:', directoryError);
+      // If that fails, try saving directly to root of External storage
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.External,
+        recursive: true
+      });
+      
+      console.log('File saved successfully to External storage root:', result);
+      
+      toast.success(`Fajl "${fileName}" sačuvan u External folderu`, {
+        duration: 5000,
+        description: "Proverite u vašem fajl menadžeru."
+      });
+      
+      return;
     }
-    
-    if (!saved) {
-      throw new Error("Nije moguće sačuvati fajl. Proverite da li ste dozvolili pristup skladištu u podešavanjima aplikacije.");
-    }
-    
-    // Show success message with the specific location
-    const dirName = getDirectoryName(savedDirectory);
-    toast.success(`Izveštaj "${fileName}" sačuvan u "${dirName}" folderu`, {
-      duration: 5000,
-      description: "Proverite Downloads folder u svom fajl menadžeru."
-    });
-    
-    return;
   } catch (error) {
     console.error('Error in exportFileMobile:', error);
     toast.error(`Greška pri čuvanju fajla: ${error instanceof Error ? error.message : String(error)}`);

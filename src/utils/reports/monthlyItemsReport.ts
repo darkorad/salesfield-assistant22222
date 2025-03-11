@@ -55,20 +55,25 @@ export const exportMonthlyItemsReport = async () => {
         if (!item.product) return;
         const product = item.product;
         
-        const key = `${product.Naziv || 'Nepoznat'}_${product.Proizvođač || 'Nepoznat'}_${product["Jedinica mere"] || '1'}`;
+        // Use consistent property access - note that property names may vary
+        const productName = product.Naziv || product.naziv || product.name || 'Nepoznat';
+        const manufacturer = product.Proizvođač || product.proizvođač || product.manufacturer || 'Nepoznat';
+        const unit = product["Jedinica mere"] || product.jedinicaMere || product.unit || '1';
+        const price = parseFloat(product.Cena || product.cena || product.price || 0);
+        
+        const key = `${productName}_${manufacturer}_${unit}`;
         
         if (!acc[key]) {
           acc[key] = {
-            name: product.Naziv || 'Nepoznat',
-            manufacturer: product.Proizvođač || 'Nepoznat',
-            unit: product["Jedinica mere"] || '1',
+            name: productName,
+            manufacturer: manufacturer,
+            unit: unit,
             totalQuantity: 0,
             totalValue: 0
           };
         }
         
         const quantity = parseFloat(item.quantity) || 0;
-        const price = parseFloat(product.Cena) || 0;
         const value = quantity * price;
         
         acc[key].totalQuantity += quantity;
@@ -133,19 +138,11 @@ export const exportMonthlyItemsReport = async () => {
     // Create more descriptive filename with month name and year
     const fileName = `Prodaja_artikli_${monthName}_${today.getFullYear()}`;
     
-    toast.info(`Preuzimanje fajla "${fileName}.xlsx"...`);
-    
     // Export the workbook with a more direct approach
-    try {
-      await exportWorkbook(wb, fileName);
-      console.log('Export completed successfully');
-    } catch (exportError) {
-      console.error('Error during export:', exportError);
-      toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
-    }
+    await exportWorkbook(wb, fileName);
     
   } catch (error) {
     console.error('Error generating monthly items report:', error);
-    toast.error("Greška pri generisanju izveštaja");
+    toast.error(`Greška pri generisanju izveštaja: ${error instanceof Error ? error.message : String(error)}`);
   }
 };

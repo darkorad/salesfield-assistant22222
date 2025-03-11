@@ -1,7 +1,7 @@
 
 /**
  * Exports a file on web platforms using download link
- * Triggers a direct file download in the browser
+ * Forces file to download directly to user's Downloads folder
  */
 export function exportFileWeb(blob: Blob, fileName: string) {
   try {
@@ -12,13 +12,19 @@ export function exportFileWeb(blob: Blob, fileName: string) {
       fileName += '.xlsx';
     }
     
-    // Create download link
-    const url = window.URL.createObjectURL(blob);
+    // Create a direct download link with specific MIME type
+    const url = window.URL.createObjectURL(
+      new Blob([blob], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      })
+    );
+    
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
+    a.style.display = 'none';
     
-    // Append to body, trigger click, then remove
+    // Force download by simulating a direct click
     document.body.appendChild(a);
     a.click();
     
@@ -28,7 +34,7 @@ export function exportFileWeb(blob: Blob, fileName: string) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       console.log('Web export completed for:', fileName);
-    }, 100);
+    }, 500); // Longer timeout to ensure download starts
   } catch (error) {
     console.error('Error in web export:', error);
     throw error;
