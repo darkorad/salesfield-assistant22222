@@ -22,6 +22,9 @@
       "backgroundColor": "#ffffff",
       "showSpinner": true,
       "spinnerColor": "#4F46E5"
+    },
+    "Filesystem": {
+      "appendExtension": true
     }
   }
 }

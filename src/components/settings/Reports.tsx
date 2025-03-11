@@ -1,11 +1,10 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, CalendarIcon } from "lucide-react";
 import { exportDailyDetailedReport } from "@/utils/reports/dailyDetailedReport";
 import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
 import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
-import { generateCashSalesWorksheet } from "@/utils/reports/worksheetGenerator";
+import { generateCashSalesWorksheet } from "@/utils/reports/worksheet/cashSalesWorksheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -18,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { exportWorkbook } from "@/utils/exportUtils";
 
 export const Reports = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -118,12 +118,13 @@ export const Reports = () => {
         };
       });
 
-      const { wb, ws } = generateCashSalesWorksheet(formattedSales);
+      const { wb } = generateCashSalesWorksheet(formattedSales);
 
       // Generate filename with selected date
       const dateStr = format(selectedDate, 'dd-MM-yyyy');
-      XLSX.writeFile(wb, `gotovinska-prodaja-${dateStr}.xlsx`);
-      toast.success("Izveštaj je uspešno izvezen");
+      
+      // Using the new exportWorkbook utility instead of XLSX.writeFile
+      await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
 
     } catch (error) {
       console.error("Error exporting cash sales:", error);

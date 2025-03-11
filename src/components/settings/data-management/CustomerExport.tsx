@@ -4,6 +4,7 @@ import { FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
+import { exportWorkbook } from "@/utils/exportUtils";
 
 export const CustomerExport = () => {
   const handleExportBuyers = async () => {
@@ -84,8 +85,8 @@ export const CustomerExport = () => {
       ];
       ws['!cols'] = colWidths;
 
-      XLSX.writeFile(wb, `lista-kupaca.xlsx`);
-      toast.success("Lista kupaca je uspešno izvezena");
+      // Use the exportWorkbook utility instead of XLSX.writeFile
+      await exportWorkbook(wb, `lista-kupaca`);
     } catch (error) {
       console.error('Error exporting customers:', error);
       toast.error("Greška pri izvozu kupaca");

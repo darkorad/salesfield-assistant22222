@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
+import { exportWorkbook } from "@/utils/exportUtils";
 
 export const exportMonthlyItemsReport = async () => {
   try {
@@ -149,10 +150,11 @@ export const exportMonthlyItemsReport = async () => {
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Mesečna prodaja po artiklima");
     
-    const fileName = `Mesecna_prodaja_po_artiklima_${today.getMonth() + 1}_${today.getFullYear()}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    const fileName = `Mesecna_prodaja_po_artiklima_${today.getMonth() + 1}_${today.getFullYear()}`;
     
-    toast.success("Izveštaj je uspešno izvezen");
+    // Use the exportWorkbook utility
+    await exportWorkbook(wb, fileName);
+    
   } catch (error) {
     console.error('Error generating monthly items report:', error);
     toast.error("Greška pri generisanju izveštaja");

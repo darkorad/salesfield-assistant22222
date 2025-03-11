@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
+import { exportWorkbook } from "@/utils/exportUtils";
 
 export const exportDailyDetailedReport = async () => {
   try {
@@ -116,11 +117,10 @@ export const exportDailyDetailedReport = async () => {
 
     // Generate filename with current date
     const dateStr = today.toLocaleDateString('sr-RS').replace(/\./g, '_');
-    const filename = `Dnevni_izvestaj_${dateStr}.xlsx`;
+    const filename = `Dnevni_izvestaj_${dateStr}`;
 
-    // Save the file
-    XLSX.writeFile(wb, filename);
-    toast.success("Izveštaj je uspešno izvezen");
+    // Using the new exportWorkbook utility
+    await exportWorkbook(wb, filename);
 
   } catch (error) {
     console.error("Error generating report:", error);
