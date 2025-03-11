@@ -74,7 +74,7 @@ export const exportDailyDetailedReport = async () => {
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer data from either table
+      // Get customer data from either table - handle as single object, not array
       const customer = sale.customers || sale.kupci_darko;
       if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);
