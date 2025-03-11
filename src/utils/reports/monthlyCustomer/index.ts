@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { exportWorkbook } from "@/utils/exportUtils";
+import { exportWorkbook } from "@/utils/fileExport";
 import { fetchMonthlySalesData } from "./data";
 import { processCustomerSales } from "./customerSalesProcessor";
 import { createDetailedReportData, createSummaryReportData, createWorkbook } from "./reportGenerator";

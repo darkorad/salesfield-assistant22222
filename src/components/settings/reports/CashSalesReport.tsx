@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -9,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateCashSalesWorksheet } from "@/utils/reports/worksheet/cashSalesWorksheet";
-import { exportWorkbook } from "@/utils/exportUtils";
+import { exportWorkbook } from "@/utils/fileExport";
 
 export const CashSalesReport = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -38,18 +37,14 @@ export const CashSalesReport = () => {
         return;
       }
 
-      // Get the start of the selected date in local timezone
       const startDate = new Date(selectedDate);
       startDate.setHours(0, 0, 0, 0);
 
-      // Get the end of the selected date (next day at 00:00)
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 1);
 
-      // Show loading toast
       toast.info(`Učitavanje prodaje za ${format(selectedDate, 'dd.MM.yyyy')}...`);
 
-      // Get all sales for the selected date - don't filter by payment_type at database level
       const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
@@ -69,7 +64,6 @@ export const CashSalesReport = () => {
         return;
       }
 
-      // Log all sales and their payment types for debugging
       console.log("All sales for selected date:", salesData?.length, salesData?.map(s => ({
         id: s.id,
         customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
@@ -77,7 +71,6 @@ export const CashSalesReport = () => {
         itemsPaymentTypes: s.items.map((i: any) => i.paymentType || 'unknown')
       })));
 
-      // Filter for cash sales by checking if ANY items have paymentType 'cash'
       const cashSales = salesData?.filter(sale => {
         return sale.items.some((item: any) => item.paymentType === 'cash');
       }) || [];
@@ -96,12 +89,8 @@ export const CashSalesReport = () => {
 
       toast.info("Generisanje izveštaja...");
 
-      // Transform data for worksheet generator
       const formattedSales = cashSales.map(sale => {
-        // Get only cash items from the sale
         const cashItems = sale.items.filter((item: any) => item.paymentType === 'cash');
-        
-        // Calculate the total only for cash items
         const cashTotal = cashItems.reduce((sum: number, item: any) => {
           const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
           return sum + (item.product.Cena * item.quantity * unitSize);
@@ -124,19 +113,17 @@ export const CashSalesReport = () => {
             total: item.quantity * item.product.Cena * (parseFloat(item.product["Jedinica mere"]) || 1)
           })),
           total: cashTotal,
-          previousDebt: 0 // You might want to fetch this from somewhere
+          previousDebt: 0
         };
       });
 
       const { wb } = generateCashSalesWorksheet(formattedSales);
 
-      // Generate filename with selected date
       const dateStr = format(selectedDate, 'dd-MM-yyyy');
       
       toast.info("Izvoz izveštaja u toku...");
       
       try {
-        // Using the exportWorkbook utility
         await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
         toast.success("Izveštaj je uspešno izvezen");
       } catch (exportError) {
