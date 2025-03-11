@@ -108,27 +108,26 @@ export const AddCustomerCard = () => {
 
   return (
     <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CollapsibleTrigger 
-          asChild
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center justify-between w-full cursor-pointer"
-        >
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-accent" />
-              <CardTitle>Dodaj novog kupca</CardTitle>
-            </div>
-            {isOpen ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            )}
-          </div>
-        </CollapsibleTrigger>
-      </CardHeader>
-      
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CardHeader className="pb-3">
+          <CollapsibleTrigger 
+            asChild
+            className="flex items-center justify-between w-full cursor-pointer"
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-accent" />
+                <CardTitle>Dodaj novog kupca</CardTitle>
+              </div>
+              {isOpen ? (
+                <ChevronUp className="h-5 w-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-500" />
+              )}
+            </div>
+          </CollapsibleTrigger>
+        </CardHeader>
+        
         <CollapsibleContent>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-4">
