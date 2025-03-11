@@ -39,7 +39,7 @@
     },
     "Filesystem": {
       "appendExtension": true,
-      "directory": "Documents"
+      "directory": "Downloads"
     },
     "Browser": {
       "launchLogout": true

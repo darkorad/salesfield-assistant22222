@@ -1,5 +1,5 @@
+
 import { useState, useEffect } from "react";
-import { CustomerSelect } from "@/components/sales/CustomerSelect";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Customer, Product } from "@/types";
@@ -8,11 +8,14 @@ import { ProductSearchInput } from "@/components/sales/ProductSearchInput";
 import { ProductSearchResults } from "@/components/sales/ProductSearchResults";
 import { PriceInputs } from "./components/PriceInputs";
 import { usePriceForm } from "./hooks/usePriceForm";
+import { CustomerSearchInput } from "@/components/sales/CustomerSearchInput";
+import { CustomerSearchResults } from "@/components/sales/CustomerSearchResults";
 
 export const CustomerPriceForm = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   
   const {
     selectedCustomer,
@@ -55,11 +58,20 @@ export const CustomerPriceForm = () => {
   }, []);
 
   useEffect(() => {
+    // Filter products based on search
     const filtered = products.filter(product =>
       product.Naziv.toLowerCase().includes(productSearch.toLowerCase())
     );
     setFilteredProducts(filtered);
   }, [productSearch, products]);
+
+  useEffect(() => {
+    // Filter customers based on search
+    const filtered = customers.filter(customer =>
+      customer.name.toLowerCase().includes(customerSearch.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+  }, [customerSearch, customers]);
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -80,12 +92,18 @@ export const CustomerPriceForm = () => {
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium">Kupac</label>
-          <CustomerSelect
-            customers={customers}
-            customerSearch={customerSearch}
-            onCustomerSearchChange={setCustomerSearch}
-            onCustomerSelect={handleCustomerSelect}
-          />
+          <div className="relative">
+            <CustomerSearchInput
+              value={customerSearch}
+              onChange={setCustomerSearch}
+            />
+            {customerSearch && !selectedCustomer && (
+              <CustomerSearchResults
+                customers={filteredCustomers}
+                onCustomerSelect={handleCustomerSelect}
+              />
+            )}
+          </div>
         </div>
 
         {selectedCustomer && (
