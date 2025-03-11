@@ -1,5 +1,5 @@
 
-import { Product, Customer } from "@/types";
+import { Product } from "@/types";
 import { Input } from "@/components/ui/input";
 import { ProductSearchResults } from "../ProductSearchResults";
 import { Search, X } from "lucide-react";
@@ -28,7 +28,7 @@ export const ProductSearchSection = ({
           placeholder="Pretraži proizvode..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9 w-full"
+          className="pl-9 w-full text-sm"
         />
         {searchTerm && (
           <button 
