@@ -35,10 +35,15 @@
     },
     "Filesystem": {
       "appendExtension": true,
-      "directory": "Documents"
+      "directory": "External"
     },
     "Browser": {
       "launchLogout": true
+    },
+    "Permissions": {
+      "permissions": [
+        "storage"
+      ]
     }
   }
 }

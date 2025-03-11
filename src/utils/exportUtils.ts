@@ -1,4 +1,3 @@
-
 import { Filesystem, Directory, Encoding, GetUriResult, GetUriOptions } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
 import * as XLSX from 'xlsx';
@@ -45,14 +44,13 @@ async function checkAndRequestPermissions() {
     const permResult = await Filesystem.checkPermissions();
     console.log('Current permissions status:', permResult);
     
-    if (permResult.publicStorage !== 'granted') {
-      console.log('Requesting storage permissions...');
-      const requestResult = await Filesystem.requestPermissions();
-      console.log('Permission request result:', requestResult);
-      
-      if (requestResult.publicStorage !== 'granted') {
-        throw new Error('Potrebna je dozvola za pristup skladištu. Molimo omogućite u podešavanjima aplikacije.');
-      }
+    // Always request permissions to ensure we get the prompt
+    console.log('Requesting storage permissions...');
+    const requestResult = await Filesystem.requestPermissions();
+    console.log('Permission request result:', requestResult);
+    
+    if (requestResult.publicStorage !== 'granted') {
+      throw new Error('Potrebna je dozvola za pristup skladištu. Molimo omogućite u podešavanjima aplikacije.');
     }
     
     return true;
@@ -84,14 +82,14 @@ async function exportFileMobile(blob: Blob, fileName: string) {
     
     // Try multiple directories in sequence until one works
     const directoriesToTry = [
+      Directory.External,  // Try External (Download) first
       Directory.Documents,
-      Directory.External,
       Directory.Data
     ];
     
     let saved = false;
     let savedPath = '';
-    let savedDirectory = Directory.Documents;
+    let savedDirectory = Directory.External;
     
     // Try each directory until one works
     for (const directory of directoriesToTry) {
@@ -105,7 +103,7 @@ async function exportFileMobile(blob: Blob, fileName: string) {
           recursive: true
         });
         
-        console.log(`File saved successfully to ${directory}:`, result.uri);
+        console.log(`File saved successfully to ${directory}:`, result);
         saved = true;
         savedPath = result.uri || '';
         savedDirectory = directory;
@@ -117,7 +115,7 @@ async function exportFileMobile(blob: Blob, fileName: string) {
     }
     
     if (!saved) {
-      throw new Error("Nije moguće sačuvati fajl ni u jednom direktorijumu. Proverite dozvole aplikacije.");
+      throw new Error("Nije moguće sačuvati fajl. Proverite da li ste dozvolili pristup skladištu u podešavanjima aplikacije.");
     }
     
     // Try to get a shareable URI for the file
@@ -135,11 +133,11 @@ async function exportFileMobile(blob: Blob, fileName: string) {
         }
       }
     } catch (uriError) {
-      console.warn('Could not get shareable URI, will use direct path:', uriError);
+      console.warn('Could not get shareable URI:', uriError);
     }
     
     // Show success message with location
-    toast.success(`Fajl sačuvan: ${fileName} u ${getDirectoryName(savedDirectory)}`);
+    toast.success(`Izveštaj sačuvan: ${fileName}`);
     
     // Attempt to open the file if we have a URI
     if (savedPath) {
@@ -149,8 +147,8 @@ async function exportFileMobile(blob: Blob, fileName: string) {
           url: savedPath
         });
       } catch (openError) {
-        console.error('Could not open file, but it was saved:', openError);
-        toast.info(`Fajl je sačuvan u ${getDirectoryName(savedDirectory)}. Koristite aplikaciju Fajlovi da ga pronađete.`);
+        console.error('Could not open file:', openError);
+        toast.info(`Izveštaj je sačuvan u Downloads folderu. Koristite File Manager aplikaciju da ga pronađete.`);
       }
     }
   } catch (error) {
