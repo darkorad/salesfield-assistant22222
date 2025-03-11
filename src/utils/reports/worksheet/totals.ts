@@ -1,6 +1,6 @@
 
 import * as XLSX from "xlsx";
-import { defaultCellStyle, totalRowStyle } from "./styles";
+import { totalRowStyle } from "./styles";
 import { applyStyleToRow } from "./utils";
 import { CashSale } from "@/types/reports";
 
@@ -9,57 +9,30 @@ export const addSaleTotals = (
   sale: CashSale, 
   startRow: number
 ) => {
-  const totalsRows = [
-    [
-      'Ukupno:', 
-      '', 
-      '', 
-      sale.total, // Pre-calculated total for all items
-      '',
-      'Ukupno:', 
-      '', 
-      '', 
-      sale.total // Pre-calculated total for all items
-    ],
-    [
-      'Dug iz prethodnog perioda:', 
-      '', 
-      '', 
-      sale.previousDebt || 0,
-      '',
-      'Dug iz prethodnog perioda:', 
-      '', 
-      '', 
-      sale.previousDebt || 0
-    ],
-    [
-      'ZBIR:', 
-      '', 
-      '', 
-      sale.total + (sale.previousDebt || 0),
-      '',
-      'ZBIR:', 
-      '', 
-      '', 
-      sale.total + (sale.previousDebt || 0)
-    ],
-    [''],
-    ['potpis kupca', '', 'potpis vozaca', '', '', 'potpis kupca', '', 'potpis vozaca']
-  ];
-
-  totalsRows.forEach((row, index) => {
-    XLSX.utils.sheet_add_aoa(ws, [row], { origin: startRow + index });
+  // Calculate totals
+  const leftTotal = sale.items
+    .slice(0, Math.ceil(sale.items.length / 2))
+    .reduce((sum, item) => sum + item.total, 0);
     
-    // Skip styling for empty row
-    if (index === 3) return;
-    
-    // Apply styles to all cells except spacing column
-    const columns = Array.from({ length: row.length }, (_, i) => i).filter(i => i !== 4);
-    
-    // Use bold style for the ZBIR row
-    const style = index === 2 ? totalRowStyle : defaultCellStyle;
-    applyStyleToRow(ws, startRow + index, columns, style);
-  });
-
-  return startRow + totalsRows.length;
+  const rightTotal = sale.items
+    .slice(Math.ceil(sale.items.length / 2))
+    .reduce((sum, item) => sum + item.total, 0);
+  
+  // Add totals row
+  const totalsRow = ['UKUPNO:', '', '', leftTotal, '', 'UKUPNO:', '', '', rightTotal];
+  XLSX.utils.sheet_add_aoa(ws, [totalsRow], { origin: startRow });
+  
+  // Apply styles to total cells
+  const columns = [0, 3, 5, 8]; // Total label and value cells
+  applyStyleToRow(ws, startRow, columns, totalRowStyle);
+  
+  // Add grand total
+  const grandTotal = leftTotal + rightTotal;
+  const grandTotalRow = ['UKUPNO ZA KUPCA:', '', '', '', '', '', '', '', grandTotal];
+  XLSX.utils.sheet_add_aoa(ws, [grandTotalRow], { origin: startRow + 2 });
+  
+  // Apply styles to grand total
+  applyStyleToRow(ws, startRow + 2, [0, 8], totalRowStyle);
+  
+  return startRow + 3;
 };
