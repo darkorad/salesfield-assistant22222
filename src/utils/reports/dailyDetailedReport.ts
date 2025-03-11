@@ -31,7 +31,7 @@ export const exportDailyDetailedReport = async () => {
           pib,
           is_vat_registered
         ),
-        darko_customer:darko_customer_id(
+        kupci_darko:darko_customer_id(
           name,
           address,
           city,
@@ -56,14 +56,14 @@ export const exportDailyDetailedReport = async () => {
 
     console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
       id: sale.id,
-      customer: (sale.customers?.name || sale.darko_customer?.name || "Unknown"),
+      customer: (sale.customers?.name || sale.kupci_darko?.name || "Unknown"),
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      const customer = sale.customers || sale.darko_customer;
+      const customer = sale.customers || sale.kupci_darko;
       if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);
         return [];
