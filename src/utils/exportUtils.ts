@@ -1,105 +1,126 @@
 
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory, WriteFileOptions } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { App } from '@capacitor/app';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 /**
- * Exports an Excel workbook, handling differences between web and mobile platforms
- * @param wb The XLSX workbook to export
- * @param fileName The name to use for the file (without extension)
+ * Exports a workbook to an Excel file
+ * Works on both web and mobile platforms
  */
-export const exportWorkbook = async (wb: XLSX.WorkBook, fileName: string): Promise<void> => {
+export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) {
   try {
-    // Generate the Excel file as array buffer
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
-    
-    // If on mobile device, use Capacitor Filesystem
-    if (Capacitor.isNativePlatform()) {
-      // Convert blob to base64
-      const arrayBuffer = await blob.arrayBuffer();
-      const base64Data = arrayBufferToBase64(arrayBuffer);
-      
-      // First save the file to device
-      const savedFile = await saveFile(`${fileName}.xlsx`, base64Data);
-      
-      // Then share it so the user can see it
-      if (savedFile?.uri) {
-        await openFile(savedFile.uri);
-        toast.success("Izveštaj je uspešno izvezen i spreman za pregled");
-      } else {
-        throw new Error("Failed to save file");
-      }
+    // Generate the Excel file as an array buffer
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+    // Convert array buffer to Blob
+    const blob = new Blob([excelBuffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    });
+
+    // Check if running on web or mobile
+    const isMobile = typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform();
+
+    if (isMobile) {
+      await exportFileMobile(blob, fileName);
     } else {
-      // On web, use the standard XLSX.writeFile approach
-      XLSX.writeFile(wb, `${fileName}.xlsx`);
-      toast.success("Izveštaj je uspešno izvezen");
+      exportFileWeb(blob, fileName);
     }
+
+    toast.success("Izveštaj je uspešno izvezen");
   } catch (error) {
-    console.error("Error exporting workbook:", error);
+    console.error('Error exporting workbook:', error);
     toast.error("Greška pri izvozu izveštaja");
   }
-};
+}
 
-// Helper function to convert ArrayBuffer to base64 string
-const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  
-  return window.btoa(binary);
-};
-
-// Save file to device
-const saveFile = async (fileName: string, data: string) => {
-  const options: WriteFileOptions = {
-    path: fileName,
-    data: data,
-    directory: Directory.Documents,
-    recursive: true
-  };
-  
+/**
+ * Exports a file on mobile platforms using Capacitor
+ */
+async function exportFileMobile(blob: Blob, fileName: string) {
   try {
-    const result = await Filesystem.writeFile(options);
-    console.log('File saved:', result);
-    return result;
-  } catch (error) {
-    console.error('Error saving file:', error);
-    throw error;
-  }
-};
-
-// Open file with system default app
-const openFile = async (filePath: string) => {
-  try {
-    // On iOS and Android, we can use Capacitor.openUrl to view the file
-    if (Capacitor.getPlatform() === 'ios' || Capacitor.getPlatform() === 'android') {
-      // Convert file:// to a URL that can be opened
-      let fileUrl = filePath;
-      if (!fileUrl.startsWith('file://')) {
-        fileUrl = `file://${fileUrl}`;
-      }
-      
-      // Use Capacitor Browser plugin or App.openUrl if available
-      if (Capacitor.isPluginAvailable('Browser')) {
-        const { Browser } = await import('@capacitor/browser');
-        await Browser.open({ url: fileUrl });
-      } else {
-        const { App } = await import('@capacitor/app');
-        await App.openUrl({ url: fileUrl });
-      }
-      
-      return true;
+    // Convert blob to base64
+    const base64Data = await blobToBase64(blob);
+    
+    // Add file extension if not present
+    if (!fileName.toLowerCase().endsWith('.xlsx')) {
+      fileName += '.xlsx';
     }
-    return false;
+    
+    // Write file to device
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Documents,
+      recursive: true
+    });
+    
+    console.log('File saved to', result.uri);
+    
+    // Show toast with file location
+    toast.success(`Fajl sačuvan u Documents/${fileName}`);
+    
+    // Try to open the file with the default app
+    try {
+      await Filesystem.getUri({
+        path: fileName,
+        directory: Directory.Documents
+      }).then(uriResult => {
+        console.log('File URI:', uriResult.uri);
+        // Open the file if possible
+        if (App && typeof App.openUrl === 'function') {
+          App.openUrl({ url: uriResult.uri });
+        } else {
+          console.log('App.openUrl not available, file can be found at', uriResult.uri);
+        }
+      });
+    } catch (openError) {
+      console.log('Could not open file automatically:', openError);
+    }
   } catch (error) {
-    console.error('Error opening file:', error);
-    toast.error("Greška pri otvaranju fajla. Fajl je sačuvan u Documents direktorijumu.");
+    console.error('Error saving file on mobile:', error);
     throw error;
   }
-};
+}
+
+/**
+ * Exports a file on web platforms using download link
+ */
+function exportFileWeb(blob: Blob, fileName: string) {
+  // Add file extension if not present
+  if (!fileName.toLowerCase().endsWith('.xlsx')) {
+    fileName += '.xlsx';
+  }
+  
+  // Create download link
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  
+  // Clean up
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+/**
+ * Converts a Blob to a base64 string
+ */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        // Remove data URL prefix
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      } else {
+        reject(new Error('Failed to convert blob to base64'));
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
