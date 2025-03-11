@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -64,6 +65,12 @@ export const CashSalesReport = () => {
         return;
       }
 
+      if (!salesData || salesData.length === 0) {
+        toast.error(`Nema prodaje za dan ${format(selectedDate, 'dd.MM.yyyy')}`);
+        setIsExporting(false);
+        return;
+      }
+
       console.log("All sales for selected date:", salesData?.length, salesData?.map(s => ({
         id: s.id,
         customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
@@ -72,7 +79,7 @@ export const CashSalesReport = () => {
       })));
 
       const cashSales = salesData?.filter(sale => {
-        return sale.items.some((item: any) => item.paymentType === 'cash');
+        return Array.isArray(sale.items) && sale.items.some((item: any) => item.paymentType === 'cash');
       }) || [];
 
       if (cashSales.length === 0) {
@@ -90,10 +97,14 @@ export const CashSalesReport = () => {
       toast.info("Generisanje izveštaja...");
 
       const formattedSales = cashSales.map(sale => {
-        const cashItems = sale.items.filter((item: any) => item.paymentType === 'cash');
+        const cashItems = Array.isArray(sale.items) 
+          ? sale.items.filter((item: any) => item.paymentType === 'cash')
+          : [];
+          
         const cashTotal = cashItems.reduce((sum: number, item: any) => {
+          if (!item.product) return sum;
           const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
-          return sum + (item.product.Cena * item.quantity * unitSize);
+          return sum + ((item.product.Cena || 0) * item.quantity * unitSize);
         }, 0);
 
         return {
@@ -105,12 +116,12 @@ export const CashSalesReport = () => {
           },
           items: cashItems.map((item: any) => ({
             product: {
-              Naziv: item.product.Naziv,
-              "Jedinica mere": item.product["Jedinica mere"],
-              Cena: item.product.Cena
+              Naziv: item.product?.Naziv || 'Nepoznat proizvod',
+              "Jedinica mere": item.product?.["Jedinica mere"] || '1',
+              Cena: item.product?.Cena || 0
             },
-            quantity: item.quantity,
-            total: item.quantity * item.product.Cena * (parseFloat(item.product["Jedinica mere"]) || 1)
+            quantity: item.quantity || 0,
+            total: (item.quantity || 0) * (item.product?.Cena || 0) * (parseFloat(item.product?.["Jedinica mere"]) || 1)
           })),
           total: cashTotal,
           previousDebt: 0
@@ -125,7 +136,6 @@ export const CashSalesReport = () => {
       
       try {
         await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
-        toast.success("Izveštaj je uspešno izvezen");
       } catch (exportError) {
         console.error("Error during export:", exportError);
         toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);

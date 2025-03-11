@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
@@ -15,6 +16,8 @@ export const exportMonthlyItemsReport = async () => {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const firstDayOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+    toast.info("Učitavanje podataka o prodaji za tekući mesec...");
 
     const { data: sales, error } = await supabase
       .from('sales')
@@ -34,21 +37,24 @@ export const exportMonthlyItemsReport = async () => {
       return;
     }
 
+    toast.info("Obrada podataka...");
+
     // Group items from all sales
     const itemsSummary = sales.reduce((acc, sale) => {
-      const items = sale.items as any[];
+      // Ensure items is an array
+      const items = Array.isArray(sale.items) ? sale.items : [];
       
       items.forEach(item => {
+        if (!item.product) return;
         const product = item.product;
-        if (!product) return;
         
-        const key = `${product.Naziv}_${product.Proizvođač}_${product["Jedinica mere"]}`;
+        const key = `${product.Naziv || 'Nepoznat'}_${product.Proizvođač || 'Nepoznat'}_${product["Jedinica mere"] || '1'}`;
         
         if (!acc[key]) {
           acc[key] = {
-            name: product.Naziv,
-            manufacturer: product.Proizvođač,
-            unit: product["Jedinica mere"],
+            name: product.Naziv || 'Nepoznat',
+            manufacturer: product.Proizvođač || 'Nepoznat',
+            unit: product["Jedinica mere"] || '1',
             totalQuantity: 0,
             totalValue: 0
           };
@@ -76,9 +82,14 @@ export const exportMonthlyItemsReport = async () => {
         'Ukupna vrednost': parseFloat(item.totalValue.toFixed(2))
       }));
 
+    if (reportData.length === 0) {
+      toast.error("Nema prodaje artikala za tekući mesec");
+      return;
+    }
+
     // Calculate total values
-    const totalQuantity = reportData.reduce((sum, item) => sum + item['Ukupna količina'], 0);
-    const totalValue = reportData.reduce((sum, item) => sum + item['Ukupna vrednost'], 0);
+    const totalQuantity = reportData.reduce((sum, item) => sum + (item['Ukupna količina'] || 0), 0);
+    const totalValue = reportData.reduce((sum, item) => sum + (item['Ukupna vrednost'] || 0), 0);
 
     // Add totals row
     reportData.push({
@@ -88,6 +99,8 @@ export const exportMonthlyItemsReport = async () => {
       'Ukupna količina': parseFloat(totalQuantity.toFixed(2)),
       'Ukupna vrednost': parseFloat(totalValue.toFixed(2))
     });
+
+    toast.info("Generisanje Excel izveštaja...");
 
     // Create workbook
     const wb = XLSX.utils.book_new();
@@ -113,7 +126,12 @@ export const exportMonthlyItemsReport = async () => {
     const fileName = `Mesecna_prodaja_po_artiklima_${today.getMonth() + 1}_${today.getFullYear()}`;
     
     // Export the workbook
-    await exportWorkbook(wb, fileName);
+    try {
+      await exportWorkbook(wb, fileName);
+    } catch (exportError) {
+      console.error('Error during export:', exportError);
+      toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
+    }
     
   } catch (error) {
     console.error('Error generating monthly items report:', error);

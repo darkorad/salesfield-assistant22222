@@ -28,7 +28,7 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       exportFileWeb(blob, fileName);
     }
 
-    toast.success("Izveštaj je uspešno izvezen");
+    // Success toast is shown in the respective exporters
   } catch (error) {
     console.error('Error exporting workbook:', error);
     toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);

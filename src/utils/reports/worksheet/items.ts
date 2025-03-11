@@ -20,18 +20,18 @@ export const addSaleItems = (
     
     if (i < leftItems.length) {
       const item = leftItems[i];
-      row[0] = item.product.name;
-      row[1] = item.quantity;
-      row[2] = item.product.price;
-      row[3] = item.total;
+      row[0] = item.product.Naziv || ''; // Use Naziv instead of name
+      row[1] = String(item.quantity); // Convert to string
+      row[2] = String(item.product.Cena || 0); // Use Cena instead of price and convert to string
+      row[3] = String(item.total); // Convert to string
     }
     
     if (i < rightItems.length) {
       const item = rightItems[i];
-      row[5] = item.product.name;
-      row[6] = item.quantity;
-      row[7] = item.product.price;
-      row[8] = item.total;
+      row[5] = item.product.Naziv || ''; // Use Naziv instead of name
+      row[6] = String(item.quantity); // Convert to string
+      row[7] = String(item.product.Cena || 0); // Use Cena instead of price and convert to string
+      row[8] = String(item.total); // Convert to string
     }
     
     XLSX.utils.sheet_add_aoa(ws, [row], { origin: startRow + i });
