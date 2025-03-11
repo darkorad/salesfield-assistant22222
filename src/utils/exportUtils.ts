@@ -68,8 +68,11 @@ async function exportFileMobile(blob: Blob, fileName: string) {
       }).then(uriResult => {
         console.log('File URI:', uriResult.uri);
         try {
-          // The correct way to open a URL with Capacitor App plugin
-          void App.openUrl({ url: uriResult.uri });
+          // Use openUrl method from App plugin
+          // In @capacitor/app v5+, this is the correct method signature
+          App.openUrl({ url: uriResult.uri }).catch(err => {
+            console.log('Could not open file with App.openUrl:', err);
+          });
         } catch (openError) {
           console.log('Could not open file automatically, but it is saved:', openError);
         }
