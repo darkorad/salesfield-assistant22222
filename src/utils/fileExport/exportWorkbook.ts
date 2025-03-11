@@ -26,11 +26,14 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       await exportFileMobile(blob, fileName);
     } else {
       exportFileWeb(blob, fileName);
+      toast.success(`Fajl "${fileName}.xlsx" je uspešno preuzet`);
     }
-
-    // Success toast is shown in the respective exporters
+    
+    // Note: Success toast is now shown in the respective exporters
+    return true;
   } catch (error) {
     console.error('Error exporting workbook:', error);
     toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);
+    throw error;
   }
 }

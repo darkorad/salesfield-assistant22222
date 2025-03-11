@@ -67,10 +67,13 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
       throw new Error("Nije moguće sačuvati fajl. Proverite da li ste dozvolili pristup skladištu u podešavanjima aplikacije.");
     }
     
-    // Show success message with location without trying to open the file
-    toast.success(`Izveštaj sačuvan u ${getDirectoryName(savedDirectory)}: ${fileName}`);
+    // Show success message with the specific location
+    const dirName = getDirectoryName(savedDirectory);
+    toast.success(`Izveštaj "${fileName}" sačuvan u "${dirName}" folderu`, {
+      duration: 5000,
+      description: "Proverite Downloads folder u svom fajl menadžeru."
+    });
     
-    // We won't try to open the file directly, as this causes the browser to open the URI which may not work properly
     return;
   } catch (error) {
     console.error('Error in exportFileMobile:', error);

@@ -136,6 +136,7 @@ export const exportMonthlyItemsReport = async () => {
     // Export the workbook
     try {
       await exportWorkbook(wb, fileName);
+      toast.success(`Izveštaj "${fileName}" je uspešno izvezen`);
     } catch (exportError) {
       console.error('Error during export:', exportError);
       toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
