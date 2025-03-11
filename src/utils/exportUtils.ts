@@ -51,67 +51,73 @@ async function exportFileMobile(blob: Blob, fileName: string) {
 
     console.log('Saving file to Downloads directory:', fileName);
     
-    // First try to save to Downloads directory
-    try {
-      const result = await Filesystem.writeFile({
-        path: fileName,
-        data: base64Data,
-        directory: Directory.Documents,
-        recursive: true
-      });
-
-      console.log('File saved successfully to:', result.uri);
-      
-      // Show toast with file location
-      toast.success(`Fajl sačuvan: ${fileName}`);
-
-      // Attempt to open the file
-      if (result.uri) {
-        try {
-          console.log('Attempting to open file with URI:', result.uri);
-          await Browser.open({
-            url: result.uri
-          });
-        } catch (openError) {
-          console.error('Could not open file, but it was saved:', openError);
-          toast.info('Fajl je sačuvan ali nije moguće otvoriti ga automatski');
-        }
+    // Try multiple directories in sequence until one works
+    const directoriesToTry = [
+      Directory.Documents,
+      Directory.External,
+      Directory.Data
+    ];
+    
+    let saved = false;
+    let savedPath = '';
+    
+    // Try each directory until one works
+    for (const directory of directoriesToTry) {
+      try {
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: directory,
+          recursive: true
+        });
+        
+        console.log(`File saved successfully to ${directory}:`, result.uri);
+        toast.success(`Fajl sačuvan: ${fileName} u ${getDirectoryName(directory)}`);
+        saved = true;
+        savedPath = result.uri || '';
+        break;
+      } catch (error) {
+        console.error(`Error saving to ${directory}:`, error);
+        continue; // Try next directory
       }
-      
-      return;
-    } catch (error) {
-      console.error('Error saving to Documents, trying External directory:', error);
     }
     
-    // If Documents directory fails, try External (SD card) directory
-    try {
-      const result = await Filesystem.writeFile({
-        path: fileName,
-        data: base64Data,
-        directory: Directory.External,
-        recursive: true
-      });
-      
-      console.log('File saved to external storage:', result.uri);
-      toast.success(`Fajl sačuvan u Download folderu: ${fileName}`);
-      
-      if (result.uri) {
-        try {
-          await Browser.open({
-            url: result.uri
-          });
-        } catch (openError) {
-          console.error('Could not open file from external storage:', openError);
-          toast.info('Fajl je sačuvan ali nije moguće otvoriti ga automatski');
-        }
+    if (!saved) {
+      throw new Error("Nije moguće sačuvati fajl ni u jednom direktorijumu");
+    }
+    
+    // Attempt to open the file if we have a URI
+    if (savedPath) {
+      try {
+        console.log('Attempting to open file with URI:', savedPath);
+        await Browser.open({
+          url: savedPath
+        });
+      } catch (openError) {
+        console.error('Could not open file, but it was saved:', openError);
+        toast.info('Fajl je sačuvan ali nije moguće otvoriti ga automatski. Proverite folder za preuzimanja.');
       }
-    } catch (finalError) {
-      console.error('Final error saving file:', finalError);
-      throw new Error(`Nije moguće sačuvati fajl: ${finalError instanceof Error ? finalError.message : String(finalError)}`);
     }
   } catch (error) {
     console.error('Error in exportFileMobile:', error);
+    toast.error(`Greška pri čuvanju fajla: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
+  }
+}
+
+/**
+ * Get a readable directory name for toast messages
+ */
+function getDirectoryName(directory: Directory): string {
+  switch (directory) {
+    case Directory.Documents:
+      return 'Documents';
+    case Directory.External:
+      return 'Downloads';
+    case Directory.Data:
+      return 'App Storage';
+    default:
+      return 'Storage';
   }
 }
 

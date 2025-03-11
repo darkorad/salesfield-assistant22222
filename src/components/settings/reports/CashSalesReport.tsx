@@ -135,8 +135,14 @@ export const CashSalesReport = () => {
       
       toast.info("Izvoz izveštaja u toku...");
       
-      // Using the exportWorkbook utility
-      await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
+      try {
+        // Using the exportWorkbook utility
+        await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
+        toast.success("Izveštaj je uspešno izvezen");
+      } catch (exportError) {
+        console.error("Error during export:", exportError);
+        toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
+      }
       
       setIsExporting(false);
     } catch (error) {
