@@ -1,6 +1,8 @@
+
 import { Product, Customer } from "@/types";
 import { Input } from "@/components/ui/input";
 import { ProductSearchResults } from "../ProductSearchResults";
+import { Search, X } from "lucide-react";
 
 interface ProductSearchSectionProps {
   searchTerm: string;
@@ -19,13 +21,24 @@ export const ProductSearchSection = ({
 }: ProductSearchSectionProps) => {
   return (
     <div className="relative">
-      <Input
-        type="text"
-        placeholder="Pretraži proizvode..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full"
-      />
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Pretraži proizvode..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9 w-full"
+        />
+        {searchTerm && (
+          <button 
+            onClick={() => setSearchTerm("")}
+            className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
       {searchTerm && (
         <ProductSearchResults
           products={filteredProducts}

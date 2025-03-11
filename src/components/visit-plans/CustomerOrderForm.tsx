@@ -81,11 +81,11 @@ export const CustomerOrderForm = ({ customer, onOrderComplete }: CustomerOrderFo
         <div className="text-sm text-gray-500">Nema dostupnih proizvoda</div>
       )}
 
-      <div className="mt-3">
+      <div className="mt-6 pt-3 border-t">
         <Button 
           onClick={handleSubmit}
           disabled={isSubmitting || orderItems.length === 0}
-          className="w-full text-sm py-1"
+          className="w-full text-sm py-2"
         >
           {isSubmitting ? "Slanje..." : "Pošalji porudžbinu"}
         </Button>

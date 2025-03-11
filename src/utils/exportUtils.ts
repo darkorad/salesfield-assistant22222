@@ -20,6 +20,7 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
 
     // Check if running on mobile
     const isMobile = 'Capacitor' in window;
+    console.log('Is running on mobile:', isMobile);
 
     if (isMobile) {
       await exportFileMobile(blob, fileName);
@@ -39,6 +40,7 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
  */
 async function exportFileMobile(blob: Blob, fileName: string) {
   try {
+    console.log('Starting mobile export process');
     // Convert blob to base64
     const base64Data = await blobToBase64(blob);
     
@@ -47,6 +49,7 @@ async function exportFileMobile(blob: Blob, fileName: string) {
       fileName += '.xlsx';
     }
 
+    console.log('Saving file to Documents directory:', fileName);
     // Write file to downloads directory
     const result = await Filesystem.writeFile({
       path: fileName,
@@ -63,11 +66,12 @@ async function exportFileMobile(blob: Blob, fileName: string) {
     // Attempt to open the file
     if (result.uri) {
       try {
+        console.log('Attempting to open file with URI:', result.uri);
         await Browser.open({
           url: result.uri
         });
       } catch (error) {
-        console.log('Could not open file, but it was saved:', error);
+        console.error('Could not open file, but it was saved:', error);
       }
     }
   } catch (error) {
