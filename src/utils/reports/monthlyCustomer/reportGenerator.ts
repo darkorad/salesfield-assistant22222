@@ -76,15 +76,15 @@ export const createSummaryReportData = (customerSalesSummary: Record<string, any
       'PIB': customer.pib,
       'Adresa': customer.address,
       'Grad': customer.city,
-      'Ukupno gotovina': Number(customer.totalCash),
-      'Ukupno račun': Number(customer.totalInvoice),
-      'Ukupan iznos': Number(customer.totalAmount)
+      'Ukupno gotovina': Number(customer.totalCash || 0),
+      'Ukupno račun': Number(customer.totalInvoice || 0),
+      'Ukupan iznos': Number(customer.totalAmount || 0)
     }));
 
   // Calculate monthly totals ensuring numeric values
-  const totalCash = summaryData.reduce((sum, item) => sum + Number(item['Ukupno gotovina']), 0);
-  const totalInvoice = summaryData.reduce((sum, item) => sum + Number(item['Ukupno račun']), 0);
-  const totalAmount = summaryData.reduce((sum, item) => sum + Number(item['Ukupan iznos']), 0);
+  const totalCash = summaryData.reduce((sum, item) => sum + Number(item['Ukupno gotovina'] || 0), 0);
+  const totalInvoice = summaryData.reduce((sum, item) => sum + Number(item['Ukupno račun'] || 0), 0);
+  const totalAmount = summaryData.reduce((sum, item) => sum + Number(item['Ukupan iznos'] || 0), 0);
 
   // Add totals row with explicit number conversion
   summaryData.push({
@@ -93,9 +93,9 @@ export const createSummaryReportData = (customerSalesSummary: Record<string, any
     'PIB': '',
     'Adresa': '',
     'Grad': '',
-    'Ukupno gotovina': Number(totalCash),
-    'Ukupno račun': Number(totalInvoice),
-    'Ukupan iznos': Number(totalAmount)
+    'Ukupno gotovina': totalCash,
+    'Ukupno račun': totalInvoice,
+    'Ukupan iznos': totalAmount
   });
 
   return summaryData;
