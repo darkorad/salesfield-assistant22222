@@ -19,7 +19,7 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
     });
 
     // Check if running on web or mobile
-    const isMobile = typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform();
+    const isMobile = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isPluginAvailable('Filesystem');
 
     if (isMobile) {
       await exportFileMobile(blob, fileName);
@@ -67,11 +67,10 @@ async function exportFileMobile(blob: Blob, fileName: string) {
         directory: Directory.Documents
       }).then(uriResult => {
         console.log('File URI:', uriResult.uri);
-        // Open the file if possible
-        if (App && typeof App.openUrl === 'function') {
+        try {
           App.openUrl({ url: uriResult.uri });
-        } else {
-          console.log('App.openUrl not available, file can be found at', uriResult.uri);
+        } catch (openError) {
+          console.log('Could not open file automatically, but it is saved:', openError);
         }
       });
     } catch (openError) {
