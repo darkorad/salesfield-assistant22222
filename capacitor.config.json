@@ -1,7 +1,7 @@
 
 {
   "appId": "com.salesapp.app",
-  "appName": "Sales App",
+  "appName": "ŽIR-MD COMPANY",
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
@@ -32,7 +32,10 @@
       "launchShowDuration": 2000,
       "backgroundColor": "#ffffff",
       "showSpinner": true,
-      "spinnerColor": "#4F46E5"
+      "spinnerColor": "#4F46E5",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "icon": "public/lovable-uploads/46d09936-801a-49ed-b585-95bccf81c0c8.png"
     },
     "Filesystem": {
       "appendExtension": true,
