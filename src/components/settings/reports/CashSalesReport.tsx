@@ -13,17 +13,28 @@ import { exportWorkbook } from "@/utils/exportUtils";
 
 export const CashSalesReport = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleExportTodayCashSales = async () => {
     try {
+      if (isExporting) {
+        toast.info("Izvoz je već u toku, sačekajte");
+        return;
+      }
+
+      setIsExporting(true);
+      toast.info("Priprema izveštaja u toku...");
+
       if (!selectedDate) {
         toast.error("Izaberite datum");
+        setIsExporting(false);
         return;
       }
 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Niste prijavljeni");
+        setIsExporting(false);
         return;
       }
 
@@ -34,6 +45,9 @@ export const CashSalesReport = () => {
       // Get the end of the selected date (next day at 00:00)
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 1);
+
+      // Show loading toast
+      toast.info(`Učitavanje prodaje za ${format(selectedDate, 'dd.MM.yyyy')}...`);
 
       // Get all sales for the selected date - don't filter by payment_type at database level
       const { data: salesData, error } = await supabase
@@ -50,7 +64,8 @@ export const CashSalesReport = () => {
 
       if (error) {
         console.error("Error loading sales:", error);
-        toast.error("Greška pri učitavanju prodaje");
+        toast.error(`Greška pri učitavanju prodaje: ${error.message}`);
+        setIsExporting(false);
         return;
       }
 
@@ -69,6 +84,7 @@ export const CashSalesReport = () => {
 
       if (cashSales.length === 0) {
         toast.error(`Nema prodaje za gotovinu na dan ${format(selectedDate, 'dd.MM.yyyy')}`);
+        setIsExporting(false);
         return;
       }
 
@@ -77,6 +93,8 @@ export const CashSalesReport = () => {
         itemsCount: s.items.length,
         cashItemsCount: s.items.filter((i: any) => i.paymentType === 'cash').length
       })));
+
+      toast.info("Generisanje izveštaja...");
 
       // Transform data for worksheet generator
       const formattedSales = cashSales.map(sale => {
@@ -115,12 +133,16 @@ export const CashSalesReport = () => {
       // Generate filename with selected date
       const dateStr = format(selectedDate, 'dd-MM-yyyy');
       
+      toast.info("Izvoz izveštaja u toku...");
+      
       // Using the exportWorkbook utility
       await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
-
+      
+      setIsExporting(false);
     } catch (error) {
       console.error("Error exporting cash sales:", error);
-      toast.error("Greška pri izvozu izveštaja");
+      toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);
+      setIsExporting(false);
     }
   };
 
@@ -159,9 +181,10 @@ export const CashSalesReport = () => {
       <Button
         className="w-full py-4 text-sm md:text-base font-medium mt-2"
         onClick={handleExportTodayCashSales}
+        disabled={isExporting}
       >
         <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-        Export keš kupovina
+        {isExporting ? "Izvoz u toku..." : "Export keš kupovina"}
       </Button>
     </div>
   );

@@ -31,7 +31,7 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
     toast.success("Izveštaj je uspešno izvezen");
   } catch (error) {
     console.error('Error exporting workbook:', error);
-    toast.error("Greška pri izvozu izveštaja");
+    toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -49,33 +49,68 @@ async function exportFileMobile(blob: Blob, fileName: string) {
       fileName += '.xlsx';
     }
 
-    console.log('Saving file to Documents directory:', fileName);
-    // Write file to downloads directory
-    const result = await Filesystem.writeFile({
-      path: fileName,
-      data: base64Data,
-      directory: Directory.Documents,
-      recursive: true
-    });
-
-    console.log('File saved to:', result.uri);
+    console.log('Saving file to Downloads directory:', fileName);
     
-    // Show toast with file location
-    toast.success(`Fajl sačuvan u Documents/${fileName}`);
+    // First try to save to Downloads directory
+    try {
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents,
+        recursive: true
+      });
 
-    // Attempt to open the file
-    if (result.uri) {
-      try {
-        console.log('Attempting to open file with URI:', result.uri);
-        await Browser.open({
-          url: result.uri
-        });
-      } catch (error) {
-        console.error('Could not open file, but it was saved:', error);
+      console.log('File saved successfully to:', result.uri);
+      
+      // Show toast with file location
+      toast.success(`Fajl sačuvan: ${fileName}`);
+
+      // Attempt to open the file
+      if (result.uri) {
+        try {
+          console.log('Attempting to open file with URI:', result.uri);
+          await Browser.open({
+            url: result.uri
+          });
+        } catch (openError) {
+          console.error('Could not open file, but it was saved:', openError);
+          toast.info('Fajl je sačuvan ali nije moguće otvoriti ga automatski');
+        }
       }
+      
+      return;
+    } catch (error) {
+      console.error('Error saving to Documents, trying External directory:', error);
+    }
+    
+    // If Documents directory fails, try External (SD card) directory
+    try {
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.External,
+        recursive: true
+      });
+      
+      console.log('File saved to external storage:', result.uri);
+      toast.success(`Fajl sačuvan u Download folderu: ${fileName}`);
+      
+      if (result.uri) {
+        try {
+          await Browser.open({
+            url: result.uri
+          });
+        } catch (openError) {
+          console.error('Could not open file from external storage:', openError);
+          toast.info('Fajl je sačuvan ali nije moguće otvoriti ga automatski');
+        }
+      }
+    } catch (finalError) {
+      console.error('Final error saving file:', finalError);
+      throw new Error(`Nije moguće sačuvati fajl: ${finalError instanceof Error ? finalError.message : String(finalError)}`);
     }
   } catch (error) {
-    console.error('Error saving file on mobile:', error);
+    console.error('Error in exportFileMobile:', error);
     throw error;
   }
 }
