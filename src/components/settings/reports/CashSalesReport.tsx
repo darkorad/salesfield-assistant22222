@@ -125,13 +125,14 @@ export const CashSalesReport = () => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-2">
+    <div className="flex flex-col gap-2">
+      <div className="text-sm font-medium text-start mb-1">Izaberi datum</div>
       <Popover>
         <PopoverTrigger asChild>
           <Button 
             variant="outline"
             className={cn(
-              "w-full sm:w-auto justify-start text-left font-normal",
+              "w-full justify-start text-left text-sm md:text-base font-normal",
               "border-dashed border-input",
               !selectedDate && "text-muted-foreground"
             )}
@@ -156,10 +157,10 @@ export const CashSalesReport = () => {
       </Popover>
 
       <Button
-        className="w-full sm:w-auto text-sm sm:text-base py-2"
+        className="w-full py-4 text-sm md:text-base font-medium mt-2"
         onClick={handleExportTodayCashSales}
       >
-        <FileSpreadsheet className="mr-2 h-4 w-4" />
+        <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5" />
         Export keš kupovina
       </Button>
     </div>
