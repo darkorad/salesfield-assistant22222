@@ -33,7 +33,7 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
     isVatRegistered: customer.is_vat_registered || false,
     gpsCoordinates: customer.gps_coordinates || "",
     naselje: customer.naselje || "",
-    visitDay: customer.visit_day || "",
+    visitDay: customer.dan_posete || customer.visit_day || "",
     danObilaska: customer.dan_obilaska || ""
   });
 
@@ -67,7 +67,8 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
             gps_coordinates: customerData.gpsCoordinates,
             naselje: customerData.naselje,
             dan_posete: normalizedVisitDay, // Use as dan_posete in kupci_darko
-            dan_obilaska: normalizedDanObilaska
+            dan_obilaska: normalizedDanObilaska,
+            visit_day: normalizedVisitDay // Also set visit_day for consistency
           })
           .eq('id', customer.id);
 
@@ -86,7 +87,8 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
             gps_coordinates: customerData.gpsCoordinates,
             naselje: customerData.naselje,
             visit_day: normalizedVisitDay,
-            dan_obilaska: normalizedDanObilaska
+            dan_obilaska: normalizedDanObilaska,
+            dan_posete: normalizedVisitDay // Also set dan_posete for consistency
           })
           .eq('id', customer.id);
 

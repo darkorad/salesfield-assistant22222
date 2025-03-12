@@ -34,7 +34,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       email: (rawData as any).Email || (rawData as any).email,
       dan_posete: (rawData as any)["Dan posete"] || (rawData as any).dan_posete,
       dan_obilaska: (rawData as any)["Dan obilaska"] || (rawData as any).dan_obilaska,
-      visit_day: (rawData as any)["Dan obilaska"] || (rawData as any).visit_day,
+      visit_day: (rawData as any)["Dan obilaska"] || (rawData as any)["Dan posete"] || (rawData as any).visit_day,
       is_vat_registered: ((rawData as any)["PDV Obveznik"] === "DA" || 
                          (rawData as any).is_vat_registered === "DA" || 
                          (rawData as any).is_vat_registered === true),
@@ -69,15 +69,29 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       console.log(`Generated temporary PIB for ${data.name}`);
     }
 
-    // Normalize dan_posete and dan_obilaska to lowercase
+    // Normalize day fields and ensure consistency
     if (data.dan_posete) {
       data.dan_posete = data.dan_posete.toString().toLowerCase().trim();
+      // Make sure visit_day is set if dan_posete is available
+      if (!data.visit_day) {
+        data.visit_day = data.dan_posete;
+      }
     }
+    
     if (data.dan_obilaska) {
       data.dan_obilaska = data.dan_obilaska.toString().toLowerCase().trim();
+      // Make sure visit_day is set if dan_obilaska is available
+      if (!data.visit_day) {
+        data.visit_day = data.dan_obilaska;
+      }
     }
+    
     if (data.visit_day) {
       data.visit_day = data.visit_day.toString().toLowerCase().trim();
+      // Make sure dan_posete is set if visit_day is available
+      if (!data.dan_posete) {
+        data.dan_posete = data.visit_day;
+      }
     }
 
     const customerData = {

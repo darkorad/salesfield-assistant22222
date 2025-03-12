@@ -1,3 +1,4 @@
+
 import { Customer } from "@/types";
 import { EditCustomerDialog } from "@/components/settings/EditCustomerDialog";
 
@@ -25,11 +26,14 @@ export const CustomerInfoCard = ({ customer, onCustomerUpdate }: CustomerInfoCar
         {customer.email && (
           <p><span className="font-medium">Email:</span> {customer.email}</p>
         )}
-        {customer.visit_day && (
-          <p><span className="font-medium">Dan obilaska:</span> {customer.visit_day}</p>
+        {customer.dan_posete && (
+          <p><span className="font-medium">Dan posete:</span> {customer.dan_posete}</p>
+        )}
+        {customer.visit_day && !customer.dan_posete && (
+          <p><span className="font-medium">Dan posete:</span> {customer.visit_day}</p>
         )}
         {customer.dan_obilaska && (
-          <p><span className="font-medium">Dan obilaska (novi):</span> {customer.dan_obilaska}</p>
+          <p><span className="font-medium">Dan obilaska:</span> {customer.dan_obilaska}</p>
         )}
       </div>
     </div>

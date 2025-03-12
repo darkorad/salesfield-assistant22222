@@ -47,7 +47,17 @@ export const CustomerImport = () => {
           let successCount = 0;
           let errorCount = 0;
 
+          // Map the day fields for consistency
           for (const row of jsonData) {
+            // Make sure the day values are synchronized
+            if ((row as any)["Dan posete"] && !(row as any)["Dan obilaska"]) {
+              (row as any)["Dan obilaska"] = (row as any)["Dan posete"];
+              (row as any)["visit_day"] = (row as any)["Dan posete"];
+            } else if ((row as any)["Dan obilaska"] && !(row as any)["Dan posete"]) {
+              (row as any)["Dan posete"] = (row as any)["Dan obilaska"];
+              (row as any)["visit_day"] = (row as any)["Dan obilaska"];
+            }
+            
             const success = await processCustomerData(row, session.user.id);
             if (success) successCount++; else errorCount++;
           }

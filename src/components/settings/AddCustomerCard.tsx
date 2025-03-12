@@ -55,7 +55,8 @@ export const AddCustomerCard = () => {
             gps_coordinates: customer.gpsCoordinates,
             naselje: customer.naselje,
             dan_posete: normalizedVisitDay,
-            dan_obilaska: normalizedDanObilaska
+            dan_obilaska: normalizedDanObilaska,
+            visit_day: normalizedVisitDay // Also set visit_day for consistency
           }])
           .select()
           .single();
@@ -80,7 +81,8 @@ export const AddCustomerCard = () => {
             gps_coordinates: customer.gpsCoordinates,
             naselje: customer.naselje,
             visit_day: normalizedVisitDay,
-            dan_obilaska: normalizedDanObilaska
+            dan_obilaska: normalizedDanObilaska,
+            dan_posete: normalizedVisitDay // Also set dan_posete for consistency
           }])
           .select()
           .single();
