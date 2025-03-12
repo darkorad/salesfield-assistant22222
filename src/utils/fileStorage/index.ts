@@ -42,6 +42,11 @@ export const saveWorkbookToStorage = async (
     // Convert blob to base64
     const base64Data = await blobToBase64(blob);
     
+    // Make sure base64Data is a string before proceeding
+    if (typeof base64Data !== 'string') {
+      throw new Error('Failed to convert file to base64 string');
+    }
+    
     // Save file to app storage
     const result = await Filesystem.writeFile({
       path: `documents/${fileName}`,
@@ -236,6 +241,11 @@ export const openStoredFile = async (fileId: string): Promise<boolean> => {
     
     if (!result || !result.data) {
       return false;
+    }
+    
+    // Make sure result.data is a string before proceeding
+    if (typeof result.data !== 'string') {
+      throw new Error('Failed to read file data as string');
     }
     
     // Convert base64 to blob

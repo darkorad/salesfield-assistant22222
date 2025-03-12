@@ -1,13 +1,13 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { ReactQueryDevtools } from '@tanstack/react-query/build/lib/devtools'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './App.css'
 import { Toaster } from './components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
 import Login from './pages/Login'
 import Sales from './pages/Sales'
 import Prodaja2 from './pages/Prodaja2'
-import { MainLayout } from './components/Layout'
+import { Layout } from './components/Layout'
 import Settings from './pages/Settings'
 import DailyOrders from './pages/DailyOrders'
 import VisitPlans from './pages/VisitPlans'
@@ -19,7 +19,7 @@ function App() {
       <SonnerToaster richColors />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route element={<MainLayout />}>
+        <Route element={<Layout />}>
           <Route path="/" element={<Navigate to="/sales" replace />} />
           <Route path="/sales" element={<Sales />} />
           <Route path="/prodaja2" element={<Prodaja2 />} />
