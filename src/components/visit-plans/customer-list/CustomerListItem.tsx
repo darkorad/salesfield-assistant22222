@@ -25,7 +25,7 @@ export const CustomerListItem = ({
       onClick={() => onClick(customer)}
     >
       <div className="flex justify-between items-start">
-        <div>
+        <div className="text-left w-full">
           <h3 className="text-xs font-medium">{customer.name}</h3>
           <p className="text-[10px] text-gray-600">{customer.address}</p>
           <p className="text-[10px] text-gray-600">{customer.city}</p>
@@ -34,7 +34,7 @@ export const CustomerListItem = ({
           )}
         </div>
         {isCompleted && (
-          <Check className="text-green-500 h-3 w-3" />
+          <Check className="text-green-500 h-3 w-3 flex-shrink-0 ml-1" />
         )}
       </div>
     </Card>
