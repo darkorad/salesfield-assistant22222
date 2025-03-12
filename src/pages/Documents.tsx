@@ -15,7 +15,7 @@ const Documents = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [files, setFiles] = useState<StoredFile[]>([]);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("documents");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,14 +49,21 @@ const Documents = () => {
     loadFiles();
   };
 
+  const navigateTo = (path: string) => {
+    navigate(path);
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-1">
-          <TabsTrigger value="all">Dokumenti</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="documents">Dokumenti</TabsTrigger>
+          <TabsTrigger value="sales" onClick={() => navigateTo('/sales')}>Prodaja</TabsTrigger>
+          <TabsTrigger value="settings" onClick={() => navigateTo('/settings')}>Podešavanja</TabsTrigger>
+          <TabsTrigger value="daily-orders" onClick={() => navigateTo('/daily-orders')}>Dnevni nalozi</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="all">
+        <TabsContent value="documents">
           <div className="space-y-6">
             <Card>
               <CardHeader>

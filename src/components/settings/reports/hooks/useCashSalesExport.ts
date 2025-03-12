@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -145,8 +146,8 @@ export const useCashSalesExport = () => {
         const namedWb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(namedWb, worksheet, worksheetName);
         
-        // Save the workbook to app storage
-        const fileName = `gotovinska-prodaja-${dateStr}`;
+        // Save the workbook to app storage with explicit date in filename
+        const fileName = `Gotovinska-prodaja-${dateStr}`;
         const storedFile = await saveWorkbookToStorage(namedWb, fileName);
         
         if (storedFile) {

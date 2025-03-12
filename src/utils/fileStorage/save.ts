@@ -16,6 +16,15 @@ export const saveWorkbookToStorage = async (
   try {
     console.log('Saving workbook to app storage:', fileName);
     
+    // Add current date to the filename if not already included
+    if (!fileName.match(/\d{2}-\d{2}-\d{4}/)) {
+      const today = new Date();
+      const day = today.getDate().toString().padStart(2, '0');
+      const month = (today.getMonth() + 1).toString().padStart(2, '0');
+      const year = today.getFullYear();
+      fileName = `${fileName}-${day}-${month}-${year}`;
+    }
+    
     // Add file extension if not present
     if (!fileName.toLowerCase().endsWith('.xlsx')) {
       fileName += '.xlsx';
