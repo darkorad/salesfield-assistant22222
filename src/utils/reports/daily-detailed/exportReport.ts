@@ -53,9 +53,13 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
       });
     }
     
-    // Also try regular export as fallback
+    // Also try regular export as fallback with explicit options
     try {
-      await exportWorkbook(wb, filename);
+      await exportWorkbook(wb, filename, {
+        showToasts: true,
+        onSuccess: () => console.log("Export successful"),
+        onError: (err) => console.error("Export error:", err)
+      });
     } catch (exportErr) {
       console.log("Regular export failed, but file is saved to app storage:", exportErr);
     }
