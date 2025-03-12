@@ -1,10 +1,10 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
 import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
 
-export const exportMonthlyCustomerReport = async () => {
+export const exportMonthlyCustomerReport = async (redirectToDocuments?: () => void) => {
   try {
     // Get the current month date range
     const today = new Date();

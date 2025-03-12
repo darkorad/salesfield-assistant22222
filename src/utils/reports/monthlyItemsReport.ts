@@ -5,7 +5,16 @@ import { toast } from "sonner";
 import { exportWorkbook } from "@/utils/fileExport";
 import { saveWorkbookToStorage } from "@/utils/fileStorage";
 import { createRedirectToDocuments } from "@/utils/fileExport";
-import { useNavigate } from "react-router-dom";
+
+// Define interface for item summary
+interface ItemSummary {
+  name: string;
+  manufacturer: string;
+  unit: string;
+  totalQuantity: number;
+  totalValue: number;
+  customers: Set<string>;
+}
 
 export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void) => {
   try {
@@ -57,7 +66,7 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
     toast.info("Obrada podataka...");
 
     // Group items from all sales
-    const itemsSummary = {};
+    const itemsSummary: Record<string, ItemSummary> = {};
     
     sales.forEach(sale => {
       // Get customer name
