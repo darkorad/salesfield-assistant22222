@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
@@ -182,6 +183,24 @@ export const exportMonthlyCustomerReport = async (redirectToDocuments?: () => vo
     
     // Format: MesecniIzvestajKupci-MM-YYYY
     const filename = `MesecniIzvestajKupci-${month}-${year}`;
+
+    // Save to storage
+    const storedFile = await saveWorkbookToStorage(wb, filename);
+    
+    if (storedFile) {
+      toast.success(`Mesečni izveštaj je uspešno sačuvan`, {
+        description: `Možete ga pronaći u meniju Dokumenti`,
+        action: {
+          label: 'Otvori Dokumenti',
+          onClick: () => {
+            if (redirectToDocuments) {
+              redirectToDocuments();
+            }
+          }
+        },
+        duration: 10000
+      });
+    }
 
     // Export the workbook
     console.log(`Exporting workbook with filename: ${filename}`);
