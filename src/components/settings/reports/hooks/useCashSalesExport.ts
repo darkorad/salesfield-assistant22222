@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import * as XLSX from 'xlsx'; // Add this import to fix the errors
 import { supabase } from "@/integrations/supabase/client";
 import { generateCashSalesWorksheet } from "@/utils/reports/worksheet/cashSalesWorksheet";
 import { exportWorkbook } from "@/utils/fileExport";
