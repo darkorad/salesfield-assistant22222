@@ -67,7 +67,7 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
       id: sale.id,
       customer_id: sale.customer_id,
       darko_customer_id: sale.darko_customer_id,
-      customer_name: sale.customer ? sale.customer.name : (sale.darko_customer ? sale.darko_customer.name : 'Nepoznat'),
+      customer_name: getCustomerName(sale.customer, sale.darko_customer),
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
@@ -76,19 +76,8 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer from the sales data with type guard
-      const customerObj = sale.customer || sale.darko_customer;
-      const customer = customerObj ? {
-        name: customerObj.name || 'Nepoznat kupac',
-        pib: customerObj.pib || '',
-        address: customerObj.address || '',
-        city: customerObj.city || ''
-      } : {
-        name: 'Nepoznat kupac',
-        pib: '',
-        address: '',
-        city: ''
-      };
+      // Get customer data safely
+      const customer = extractCustomerData(sale.customer, sale.darko_customer);
       
       const items = sale.items as any[];
       if (!items || !Array.isArray(items)) {
@@ -195,3 +184,50 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
     toast.error(`Greška pri generisanju izveštaja: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
+
+// Helper function to safely extract customer name
+function getCustomerName(customer: any, darkoCustomer: any): string {
+  if (customer && typeof customer === 'object' && !Array.isArray(customer) && customer.name) {
+    return customer.name;
+  }
+  
+  if (darkoCustomer && typeof darkoCustomer === 'object' && !Array.isArray(darkoCustomer) && darkoCustomer.name) {
+    return darkoCustomer.name;
+  }
+  
+  return 'Nepoznat';
+}
+
+// Helper function to safely extract customer data
+function extractCustomerData(customer: any, darkoCustomer: any) {
+  // Default empty customer data
+  const defaultCustomer = {
+    name: 'Nepoznat kupac',
+    pib: '',
+    address: '',
+    city: ''
+  };
+  
+  // Check if customer is a valid object with required properties
+  if (customer && typeof customer === 'object' && !Array.isArray(customer) && customer.name) {
+    return {
+      name: customer.name || defaultCustomer.name,
+      pib: customer.pib || defaultCustomer.pib,
+      address: customer.address || defaultCustomer.address,
+      city: customer.city || defaultCustomer.city
+    };
+  }
+  
+  // Check if darkoCustomer is a valid object with required properties
+  if (darkoCustomer && typeof darkoCustomer === 'object' && !Array.isArray(darkoCustomer) && darkoCustomer.name) {
+    return {
+      name: darkoCustomer.name || defaultCustomer.name,
+      pib: darkoCustomer.pib || defaultCustomer.pib,
+      address: darkoCustomer.address || defaultCustomer.address,
+      city: darkoCustomer.city || defaultCustomer.city
+    };
+  }
+  
+  // Return default if neither is valid
+  return defaultCustomer;
+}

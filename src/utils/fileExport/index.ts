@@ -9,5 +9,5 @@ export const createRedirectToDocuments = (navigate: (path: string) => void) => {
   return () => navigate('/documents');
 };
 
-// Re-export types using 'export type' syntax
+// Re-export types using explicit 'export type' syntax
 export type { StoredFile } from '../fileStorage/types';
