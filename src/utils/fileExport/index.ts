@@ -8,3 +8,6 @@ export { exportWorkbook };
 export const createRedirectToDocuments = (navigate: (path: string) => void) => {
   return () => navigate('/documents');
 };
+
+// Re-export types using 'export type' syntax
+export type { StoredFile } from '../fileStorage/types';

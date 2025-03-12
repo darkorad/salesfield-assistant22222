@@ -67,7 +67,7 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
       id: sale.id,
       customer_id: sale.customer_id,
       darko_customer_id: sale.darko_customer_id,
-      customer_name: sale.customer?.name || sale.darko_customer?.name || 'Nepoznat',
+      customer_name: sale.customer ? sale.customer.name : (sale.darko_customer ? sale.darko_customer.name : 'Nepoznat'),
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
@@ -76,8 +76,14 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer from the sales data directly
-      const customer = sale.customer || sale.darko_customer || {
+      // Get customer from the sales data with type guard
+      const customerObj = sale.customer || sale.darko_customer;
+      const customer = customerObj ? {
+        name: customerObj.name || 'Nepoznat kupac',
+        pib: customerObj.pib || '',
+        address: customerObj.address || '',
+        city: customerObj.city || ''
+      } : {
         name: 'Nepoznat kupac',
         pib: '',
         address: '',
@@ -92,10 +98,10 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
 
       return items.map(item => ({
         'Datum': new Date(sale.date).toLocaleString('sr-RS'),
-        'Kupac': customer.name || 'Nepoznat',
-        'PIB': customer.pib || '',
-        'Adresa': customer.address || '',
-        'Grad': customer.city || '',
+        'Kupac': customer.name,
+        'PIB': customer.pib,
+        'Adresa': customer.address,
+        'Grad': customer.city,
         'Proizvod': item.product.Naziv,
         'Proizvođač': item.product.Proizvođač,
         'Količina': item.quantity,
