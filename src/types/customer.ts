@@ -1,3 +1,4 @@
+
 export interface Customer {
   id: string;
   user_id: string;
