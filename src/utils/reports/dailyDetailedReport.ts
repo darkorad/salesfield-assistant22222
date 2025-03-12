@@ -44,8 +44,8 @@ export const exportDailyDetailedReport = async () => {
         manufacturer,
         customer_id,
         darko_customer_id,
-        customers:customer_id (id, name, pib, address, city),
-        kupci_darko:kupci_darko!fk_sales_kupci_darko (id, name, pib, address, city)
+        customers(id, name, pib, address, city),
+        kupci_darko(id, name, pib, address, city)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -65,7 +65,7 @@ export const exportDailyDetailedReport = async () => {
 
     console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
       id: sale.id,
-      customer: (sale.customers ? sale.customers.name : (sale.kupci_darko ? sale.kupci_darko.name : "Unknown")),
+      customer: sale.customers ? sale.customers.name : (sale.kupci_darko ? sale.kupci_darko.name : "Unknown"),
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
