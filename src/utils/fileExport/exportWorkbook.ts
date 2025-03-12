@@ -25,10 +25,29 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
     const isMobile = 'Capacitor' in window;
     console.log('Is running on mobile/Capacitor:', isMobile);
 
+    // Create a direct download URL immediately for fallback
+    const url = URL.createObjectURL(blob);
+    let directDownloadTriggered = false;
+
     // Try primary export method first
     try {
       if (isMobile) {
         console.log('Using mobile export path for Android');
+        // Show toast with direct download option immediately for mobile
+        toast.info(`Započeto preuzimanje fajla`, {
+          action: {
+            label: 'Preuzmi direktno',
+            onClick: () => {
+              if (!directDownloadTriggered) {
+                window.open(url, '_blank');
+                directDownloadTriggered = true;
+                toast.success('Fajl otvoren, sačuvajte ga na svoj uređaj');
+              }
+            }
+          },
+          duration: 15000
+        });
+        
         // On mobile devices, save to Downloads folder using Capacitor
         await exportFileMobile(blob, fileName);
         toast.success(`Fajl "${fileName}.xlsx" je uspešno sačuvan u Download folderu`, {
@@ -48,24 +67,25 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       
       return true;
     } catch (primaryError) {
-      console.error('Primary export method failed, trying fallback:', primaryError);
+      console.error('Primary export method failed, using browser fallback:', primaryError);
       
-      // Browser-based fallback method
-      const url = URL.createObjectURL(blob);
-      
-      // Direct browser download as fallback - will work on both web and mobile
+      // GUARANTEED FALLBACK: Browser-based download approach
+      // This is our most reliable fallback that works on both web and mobile
       const a = document.createElement('a');
       a.href = url;
       a.download = `${fileName}.xlsx`;
       a.style.display = 'none';
       document.body.appendChild(a);
       
-      toast.info('Korišćenje alternativnog metoda preuzimanja...', {
+      toast.info('Korišćenje sigurnog metoda preuzimanja...', {
         action: {
           label: 'Preuzmi direktno',
           onClick: () => {
-            window.open(url, '_blank');
-            toast.success('Fajl otvoren u novom tabu. Sačuvajte ga na svoj uređaj.');
+            if (!directDownloadTriggered) {
+              window.open(url, '_blank');
+              directDownloadTriggered = true;
+              toast.success('Fajl otvoren, sačuvajte ga na svoj uređaj');
+            }
           }
         },
         duration: 15000
@@ -75,13 +95,22 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       a.click();
       
       setTimeout(() => {
-        URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }, 5000);
       
-      // Notify user - this provides a manual fallback option if auto-download fails
-      toast.info(`Preuzimanje je u toku. Ako se ne pojavi, kliknite na "Preuzmi direktno" dugme iznad.`, {
-        duration: 10000
+      // Show permanent download option in case auto-download fails
+      toast.info(`Preuzimanje "${fileName}.xlsx"`, {
+        action: {
+          label: 'Preuzmi direktno',
+          onClick: () => {
+            if (!directDownloadTriggered) {
+              window.open(url, '_blank');
+              directDownloadTriggered = true;
+              toast.success('Fajl otvoren, sačuvajte ga na svoj uređaj');
+            }
+          }
+        },
+        duration: 30000
       });
       
       return true;
@@ -90,7 +119,7 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
     console.error('Error exporting workbook:', error);
     toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);
     
-    // Ultimate fallback - direct browser download with manual action
+    // Ultimate fallback - show persistent toast with download option
     try {
       console.log('Attempting ultimate fallback export method');
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
@@ -100,15 +129,16 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
       
       const url = URL.createObjectURL(blob);
       
-      toast.info('Problem sa preuzimanjem. Pokušajte direktno preuzimanje:', {
+      toast.info('Ovo je vaš poslednji pokušaj preuzimanja fajla:', {
         action: {
-          label: 'Preuzmi direktno',
+          label: 'Preuzmi OVDE',
           onClick: () => {
             window.open(url, '_blank');
             toast.success('Fajl otvoren u novom tabu. Sačuvajte ga na svoj uređaj.');
           }
         },
-        duration: 30000
+        duration: 60000,
+        dismissible: false
       });
     } catch (fallbackError) {
       console.error('All fallback methods failed:', fallbackError);

@@ -1,7 +1,7 @@
 
 /**
- * Exports a file on web platforms using download link
- * Forces file to download directly to user's Downloads folder
+ * Exports a file on web platforms using multiple approaches
+ * to ensure reliable file download
  */
 export function exportFileWeb(blob: Blob, fileName: string) {
   try {
@@ -12,7 +12,7 @@ export function exportFileWeb(blob: Blob, fileName: string) {
       fileName += '.xlsx';
     }
     
-    // Create a direct download link with specific MIME type
+    // METHOD 1: Create a download link and trigger click
     const url = window.URL.createObjectURL(
       new Blob([blob], { 
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
@@ -29,34 +29,53 @@ export function exportFileWeb(blob: Blob, fileName: string) {
     console.log('Triggering download for:', fileName);
     a.click();
     
-    // Small delay before cleanup to ensure download starts
+    // Open the file in a new tab as a backup method
     setTimeout(() => {
-      // Clean up
+      const backupLink = document.createElement('a');
+      backupLink.href = url;
+      backupLink.target = '_blank';
+      backupLink.style.display = 'none';
+      document.body.appendChild(backupLink);
+      backupLink.click();
+      document.body.removeChild(backupLink);
+    }, 1000);
+    
+    // Clean up
+    setTimeout(() => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       console.log('Web export completed for:', fileName);
-    }, 1500); // Extended timeout to ensure download starts
-    
-    // Create a more visible success notification
-    setTimeout(() => {
-      const notification = document.createElement('div');
-      notification.style.position = 'fixed';
-      notification.style.bottom = '20px';
-      notification.style.right = '20px';
-      notification.style.backgroundColor = 'rgba(0, 128, 0, 0.8)';
-      notification.style.color = 'white';
-      notification.style.padding = '15px 20px';
-      notification.style.borderRadius = '8px';
-      notification.style.zIndex = '9999';
-      notification.innerHTML = `<strong>Preuzimanje završeno:</strong> ${fileName}`;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.5s';
-        setTimeout(() => document.body.removeChild(notification), 500);
-      }, 5000);
     }, 2000);
+    
+    // METHOD 2: Use the File System Access API if available (modern browsers)
+    if ('showSaveFilePicker' in window) {
+      try {
+        setTimeout(async () => {
+          // @ts-ignore - TypeScript might not recognize this API yet
+          const fileHandle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [
+              {
+                description: 'Excel Files',
+                accept: {
+                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+                },
+              },
+            ],
+          });
+          
+          // @ts-ignore
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          
+          console.log('File saved successfully using File System Access API');
+        }, 500);
+      } catch (fsaError) {
+        console.log('File System Access API not available or user cancelled', fsaError);
+        // Continue with the normal download method
+      }
+    }
     
   } catch (error) {
     console.error('Error in web export:', error);

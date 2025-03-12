@@ -18,6 +18,7 @@ export const useCashSalesExport = () => {
       }
 
       setIsExporting(true);
+      setHasExportFailed(false);
       toast.info("Priprema izveštaja u toku...");
 
       if (!selectedDate) {
@@ -57,6 +58,7 @@ export const useCashSalesExport = () => {
         console.error("Error loading sales:", error);
         toast.error(`Greška pri učitavanju prodaje: ${error.message}`);
         setIsExporting(false);
+        setHasExportFailed(true);
         return;
       }
 
@@ -130,12 +132,43 @@ export const useCashSalesExport = () => {
       
       try {
         setHasExportFailed(false);
-        await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
+        
+        // Set sheet name explicitly for better identification in file managers
+        const worksheetName = `Gotovinska prodaja ${dateStr}`;
+        const firstSheet = wb.SheetNames[0];
+        const worksheet = wb.Sheets[firstSheet];
+        
+        // Create a new workbook with properly named sheet
+        const namedWb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(namedWb, worksheet, worksheetName);
+        
+        // Call export with both success and error callbacks
+        await exportWorkbook(namedWb, `gotovinska-prodaja-${dateStr}`);
+        
         toast.success(`Izveštaj gotovinske prodaje za ${format(selectedDate, 'dd.MM.yyyy')} je uspešno izvezen`);
       } catch (exportError) {
         console.error("Error during export:", exportError);
         setHasExportFailed(true);
         toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
+        
+        // Try alternative download method
+        try {
+          toast.info("Pokušaj direktnog preuzimanja kroz browser...");
+          
+          const blobData = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([blobData], { 
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+          });
+          
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          
+          toast.info("Fajl je otvoren u browseru. Sačuvajte ga koristeći opciju 'Sačuvaj kao'.", {
+            duration: 10000
+          });
+        } catch (altError) {
+          console.error("Alternative download method failed:", altError);
+        }
       }
     } catch (error) {
       console.error("Error exporting cash sales:", error);
