@@ -31,7 +31,7 @@ export const exportDailyDetailedReport = async () => {
     toast.info("Učitavanje podataka za današnji dan...");
 
     // Get all sales for today for the current user
-    // Fixing the query format for Supabase to properly return nested objects
+    // Using simpler foreign key query approach to avoid type issues
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -43,9 +43,7 @@ export const exportDailyDetailedReport = async () => {
         payment_status,
         manufacturer,
         customer_id,
-        darko_customer_id,
-        customers:customers(id, name, pib, address, city),
-        kupci_darko:kupci_darko(id, name, pib, address, city)
+        darko_customer_id
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -65,17 +63,38 @@ export const exportDailyDetailedReport = async () => {
 
     console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
       id: sale.id,
-      customer: sale.customers?.name || sale.kupci_darko?.name || "Unknown",
+      customer_id: sale.customer_id,
+      darko_customer_id: sale.darko_customer_id,
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
 
     toast.info("Obrađivanje podataka za izveštaj...");
 
+    // Fetch customer data separately for more reliable typing
+    const customerPromises = salesData.map(async (sale) => {
+      if (sale.customer_id) {
+        const { data } = await supabase
+          .from('customers')
+          .select('id, name, pib, address, city')
+          .eq('id', sale.customer_id)
+          .single();
+        return { sale, customer: data };
+      } else if (sale.darko_customer_id) {
+        const { data } = await supabase
+          .from('kupci_darko')
+          .select('id, name, pib, address, city')
+          .eq('id', sale.darko_customer_id)
+          .single();
+        return { sale, customer: data };
+      }
+      return { sale, customer: null };
+    });
+
+    const salesWithCustomers = await Promise.all(customerPromises);
+
     // Create flat array of all items from all sales
-    const reportData = salesData.flatMap(sale => {
-      // Get customer data from either table
-      const customer = sale.customers || sale.kupci_darko;
+    const reportData = salesWithCustomers.flatMap(({ sale, customer }) => {
       if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);
         return [];

@@ -29,7 +29,7 @@ export const exportMonthlyCustomerReport = async () => {
     toast.info("Učitavanje podataka za trenutni mesec...");
 
     // Get all sales for the current month for the current user
-    // Fix the query format for proper nested object handling
+    // Using simpler foreign key query approach to avoid type issues
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -41,9 +41,7 @@ export const exportMonthlyCustomerReport = async () => {
         payment_status,
         manufacturer,
         customer_id,
-        darko_customer_id,
-        customers:customers(id, name, pib, address, city),
-        kupci_darko:kupci_darko(id, name, pib, address, city)
+        darko_customer_id
       `)
       .eq('user_id', session.user.id)
       .gte('date', firstDayOfMonth.toISOString())
@@ -65,18 +63,47 @@ export const exportMonthlyCustomerReport = async () => {
 
     toast.info("Obrađivanje podataka za mesečni izveštaj...");
 
+    // Fetch customer data separately for more reliable typing
+    const customersMap = new Map();
+    
+    // Fetch all customers data upfront
+    for (const sale of salesData) {
+      if (sale.customer_id && !customersMap.has(sale.customer_id)) {
+        const { data } = await supabase
+          .from('customers')
+          .select('id, name, pib, address, city')
+          .eq('id', sale.customer_id)
+          .maybeSingle();
+        
+        if (data) {
+          customersMap.set(sale.customer_id, data);
+        }
+      } else if (sale.darko_customer_id && !customersMap.has(sale.darko_customer_id)) {
+        const { data } = await supabase
+          .from('kupci_darko')
+          .select('id, name, pib, address, city')
+          .eq('id', sale.darko_customer_id)
+          .maybeSingle();
+        
+        if (data) {
+          customersMap.set(sale.darko_customer_id, data);
+        }
+      }
+    }
+
     // Group sales by customer
     const customerSales = {};
     
     salesData.forEach(sale => {
-      // Get customer from either table
-      const customer = sale.customers || sale.kupci_darko;
-      if (!customer) {
+      // Get customer from map using either ID
+      const customerId = sale.customer_id || sale.darko_customer_id;
+      if (!customerId || !customersMap.has(customerId)) {
         console.warn(`No customer found for sale ${sale.id}`);
         return;
       }
       
-      const customerId = customer.id;
+      const customer = customersMap.get(customerId);
+      
       if (!customerSales[customerId]) {
         customerSales[customerId] = {
           customerInfo: {
