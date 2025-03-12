@@ -4,6 +4,8 @@ import * as XLSX from 'xlsx';
 import { toast } from "sonner";
 import { exportWorkbook } from "@/utils/fileExport";
 import { saveWorkbookToStorage } from "@/utils/fileStorage";
+import { createRedirectToDocuments } from "@/utils/fileExport";
+import { useNavigate } from "react-router-dom";
 
 export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void) => {
   try {
@@ -28,6 +30,7 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
 
     toast.info("Učitavanje podataka o prodaji za tekući mesec...");
 
+    // Fetch all sales for the current month
     const { data: sales, error } = await supabase
       .from('sales')
       .select(`
@@ -50,10 +53,13 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
       return;
     }
 
+    console.log(`Found ${sales.length} sales for current month`);
     toast.info("Obrada podataka...");
 
     // Group items from all sales
-    const itemsSummary = sales.reduce((acc, sale) => {
+    const itemsSummary = {};
+    
+    sales.forEach(sale => {
       // Get customer name
       const customerName = sale.customer?.name || sale.darko_customer?.name || 'Nepoznat kupac';
       
@@ -72,8 +78,8 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
         
         const key = `${productName}_${manufacturer}_${unit}`;
         
-        if (!acc[key]) {
-          acc[key] = {
+        if (!itemsSummary[key]) {
+          itemsSummary[key] = {
             name: productName,
             manufacturer: manufacturer,
             unit: unit,
@@ -86,18 +92,18 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
         const quantity = parseFloat(item.quantity) || 0;
         const value = quantity * price;
         
-        acc[key].totalQuantity += quantity;
-        acc[key].totalValue += value;
-        acc[key].customers.add(customerName);
+        itemsSummary[key].totalQuantity += quantity;
+        itemsSummary[key].totalValue += value;
+        itemsSummary[key].customers.add(customerName);
       });
-      
-      return acc;
-    }, {});
+    });
+
+    console.log(`Processed ${Object.keys(itemsSummary).length} unique products`);
 
     // Convert to array and sort by total value
     const reportData = Object.values(itemsSummary)
-      .sort((a: any, b: any) => b.totalValue - a.totalValue)
-      .map((item: any) => ({
+      .sort((a, b) => b.totalValue - a.totalValue)
+      .map((item) => ({
         'Naziv artikla': item.name,
         'Proizvođač': item.manufacturer,
         'Jedinica mere': item.unit,
@@ -171,9 +177,13 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
       });
     }
     
-    // Export the workbook with a more direct approach
+    // Export the workbook using proper options
     console.log(`Exporting monthly items report with filename: ${fileName}`);
-    await exportWorkbook(wb, fileName);
+    await exportWorkbook(wb, fileName, {
+      showToasts: true,
+      onSuccess: () => console.log("Monthly items report exported successfully"),
+      onError: (err) => console.error("Error exporting monthly items report:", err)
+    });
     
   } catch (error) {
     console.error('Error generating monthly items report:', error);

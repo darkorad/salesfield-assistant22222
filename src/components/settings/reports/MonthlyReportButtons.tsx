@@ -4,17 +4,23 @@ import { FileSpreadsheet } from "lucide-react";
 import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
 import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createRedirectToDocuments } from "@/utils/fileExport";
 
 export const MonthlyReportButtons = () => {
   const [isExportingCustomer, setIsExportingCustomer] = useState(false);
   const [isExportingItems, setIsExportingItems] = useState(false);
+  const navigate = useNavigate();
+  
+  // Create the redirect function
+  const redirectToDocuments = createRedirectToDocuments(navigate);
 
   const handleExportCustomer = async () => {
     if (isExportingCustomer) return;
     
     setIsExportingCustomer(true);
     try {
-      await exportMonthlyCustomerReport();
+      await exportMonthlyCustomerReport(redirectToDocuments);
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
@@ -27,7 +33,7 @@ export const MonthlyReportButtons = () => {
     
     setIsExportingItems(true);
     try {
-      await exportMonthlyItemsReport();
+      await exportMonthlyItemsReport(redirectToDocuments);
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
