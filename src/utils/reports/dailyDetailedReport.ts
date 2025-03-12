@@ -175,8 +175,8 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
     const year = today.getFullYear();
     
-    // Format: DnevniIzvestaj-DD-MM-YYYY
-    const filename = `DnevniIzvestaj-${day}-${month}-${year}`;
+    // Format: DanasnjIzvestaj-DD-MM-YYYY
+    const filename = `Današnji izveštaj-${day}-${month}-${year}`;
 
     // Save to app storage first, then try normal export as fallback
     console.log(`Saving workbook with filename: ${filename}`);
