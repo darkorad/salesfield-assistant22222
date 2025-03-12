@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { exportDailyDetailedReport } from "@/utils/reports/dailyDetailedReport";
+import { exportDailyDetailedReport } from "@/utils/reports/daily-detailed";
 import { FileSpreadsheet } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
