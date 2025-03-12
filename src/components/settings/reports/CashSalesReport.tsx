@@ -6,7 +6,7 @@ import { useCashSalesExport } from "./hooks/useCashSalesExport";
 
 export const CashSalesReport = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { isExporting, exportCashSales } = useCashSalesExport();
+  const { isExporting, exportCashSales, hasExportFailed } = useCashSalesExport();
 
   const handleExportTodayCashSales = () => {
     exportCashSales(selectedDate);
@@ -24,11 +24,18 @@ export const CashSalesReport = () => {
       <ExportButton 
         onClick={handleExportTodayCashSales}
         isExporting={isExporting}
+        showFallbackHelp={hasExportFailed}
       />
       
       <div className="mt-3 text-xs text-muted-foreground">
         Nakon izvoza, fajl se čuva u Download/Preuzimanja folderu.
         Proverite i u "Moji fajlovi"/"Files" aplikaciji.
+      </div>
+      
+      <div className="text-xs text-muted-foreground border-t pt-2 mt-1">
+        <strong>Napomena:</strong> Ako imate problema sa pronalaženjem fajla, 
+        pokušajte da koristite dugme "Preuzmi direktno" koje će se pojaviti 
+        ako standardno preuzimanje ne uspe.
       </div>
     </div>
   );

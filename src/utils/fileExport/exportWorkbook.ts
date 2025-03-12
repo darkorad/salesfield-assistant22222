@@ -25,61 +25,93 @@ export async function exportWorkbook(workbook: XLSX.WorkBook, fileName: string) 
     const isMobile = 'Capacitor' in window;
     console.log('Is running on mobile/Capacitor:', isMobile);
 
-    if (isMobile) {
-      console.log('Using mobile export path for Android');
-      // On mobile devices, save to Downloads folder using Capacitor
-      await exportFileMobile(blob, fileName);
-      toast.success(`Fajl "${fileName}.xlsx" je uspešno sačuvan u Download folderu`, {
-        description: "Proverite u Download ili 'Preuzimanja'/'Downloads' folderu, ili pogledajte u 'Moji fajlovi'/'Files' aplikaciji.",
-        duration: 8000
+    // Try primary export method first
+    try {
+      if (isMobile) {
+        console.log('Using mobile export path for Android');
+        // On mobile devices, save to Downloads folder using Capacitor
+        await exportFileMobile(blob, fileName);
+        toast.success(`Fajl "${fileName}.xlsx" je uspešno sačuvan u Download folderu`, {
+          description: "Proverite u Download ili 'Preuzimanja'/'Downloads' folderu, ili pogledajte u 'Moji fajlovi'/'Files' aplikaciji.",
+          duration: 8000
+        });
+        console.log('Mobile export completed successfully');
+      } else {
+        console.log('Using web export path');
+        // On web browsers, trigger immediate download
+        exportFileWeb(blob, fileName);
+        toast.success(`Fajl "${fileName}.xlsx" je preuzet i nalazi se u 'Downloads' ili 'Preuzimanja' folderu vašeg računara`, {
+          duration: 8000
+        });
+        console.log('Web export completed successfully');
+      }
+      
+      return true;
+    } catch (primaryError) {
+      console.error('Primary export method failed, trying fallback:', primaryError);
+      
+      // Browser-based fallback method
+      const url = URL.createObjectURL(blob);
+      
+      // Direct browser download as fallback - will work on both web and mobile
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.xlsx`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      
+      toast.info('Korišćenje alternativnog metoda preuzimanja...', {
+        action: {
+          label: 'Preuzmi direktno',
+          onClick: () => {
+            window.open(url, '_blank');
+            toast.success('Fajl otvoren u novom tabu. Sačuvajte ga na svoj uređaj.');
+          }
+        },
+        duration: 15000
       });
-      console.log('Mobile export completed successfully');
-    } else {
-      console.log('Using web export path');
-      // On web browsers, trigger immediate download
-      exportFileWeb(blob, fileName);
-      toast.success(`Fajl "${fileName}.xlsx" je preuzet i nalazi se u 'Downloads' ili 'Preuzimanja' folderu vašeg računara`, {
-        duration: 8000
+      
+      // Automatically trigger download
+      a.click();
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 5000);
+      
+      // Notify user - this provides a manual fallback option if auto-download fails
+      toast.info(`Preuzimanje je u toku. Ako se ne pojavi, kliknite na "Preuzmi direktno" dugme iznad.`, {
+        duration: 10000
       });
-      console.log('Web export completed successfully');
+      
+      return true;
     }
-    
-    return true;
   } catch (error) {
     console.error('Error exporting workbook:', error);
     toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);
     
-    // Provide fallback download option if primary method fails
+    // Ultimate fallback - direct browser download with manual action
     try {
-      console.log('Attempting fallback export method');
+      console.log('Attempting ultimate fallback export method');
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([excelBuffer], { 
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
       });
       
-      if ('Capacitor' in window) {
-        toast.info('Pokušaj alternativnog preuzimanja...', {
-          duration: 10000,
-          description: "Fajl će biti sačuvan u Download folderu ili pogledajte u 'Moji fajlovi'/'My Files' aplikaciji."
-        });
-        
-        // Try direct download as fallback on mobile
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      } else {
-        const url = URL.createObjectURL(blob);
-        toast.info('Pokušaj alternativnog preuzimanja...', {
-          action: {
-            label: 'Preuzmi',
-            onClick: () => {
-              window.open(url, '_blank');
-            }
-          },
-          duration: 10000
-        });
-      }
+      const url = URL.createObjectURL(blob);
+      
+      toast.info('Problem sa preuzimanjem. Pokušajte direktno preuzimanje:', {
+        action: {
+          label: 'Preuzmi direktno',
+          onClick: () => {
+            window.open(url, '_blank');
+            toast.success('Fajl otvoren u novom tabu. Sačuvajte ga na svoj uređaj.');
+          }
+        },
+        duration: 30000
+      });
     } catch (fallbackError) {
-      console.error('Fallback download failed:', fallbackError);
+      console.error('All fallback methods failed:', fallbackError);
     }
     
     throw error;

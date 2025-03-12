@@ -8,6 +8,7 @@ import { exportWorkbook } from "@/utils/fileExport";
 
 export const useCashSalesExport = () => {
   const [isExporting, setIsExporting] = useState(false);
+  const [hasExportFailed, setHasExportFailed] = useState(false);
 
   const exportCashSales = async (selectedDate: Date | undefined) => {
     try {
@@ -128,14 +129,17 @@ export const useCashSalesExport = () => {
       toast.info("Izvoz izveštaja u toku...");
       
       try {
+        setHasExportFailed(false);
         await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
         toast.success(`Izveštaj gotovinske prodaje za ${format(selectedDate, 'dd.MM.yyyy')} je uspešno izvezen`);
       } catch (exportError) {
         console.error("Error during export:", exportError);
+        setHasExportFailed(true);
         toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
       }
     } catch (error) {
       console.error("Error exporting cash sales:", error);
+      setHasExportFailed(true);
       toast.error(`Greška pri izvozu izveštaja: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsExporting(false);
@@ -144,6 +148,7 @@ export const useCashSalesExport = () => {
 
   return {
     isExporting,
+    hasExportFailed,
     exportCashSales
   };
 };
