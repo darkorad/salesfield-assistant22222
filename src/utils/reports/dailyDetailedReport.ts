@@ -31,7 +31,7 @@ export const exportDailyDetailedReport = async () => {
     toast.info("Učitavanje podataka za današnji dan...");
 
     // Get all sales for today for the current user
-    // Use explicit join to avoid relationship ambiguity
+    // Use specific relationship name to avoid ambiguity
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -45,7 +45,7 @@ export const exportDailyDetailedReport = async () => {
         customer_id,
         darko_customer_id,
         customers:customer_id (id, name, pib, address, city),
-        kupci_darko:darko_customer_id (id, name, pib, address, city)
+        kupci_darko:kupci_darko!fk_sales_kupci_darko (id, name, pib, address, city)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -65,7 +65,7 @@ export const exportDailyDetailedReport = async () => {
 
     console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
       id: sale.id,
-      customer: (sale.customers && sale.customers[0] ? sale.customers[0].name : (sale.kupci_darko && sale.kupci_darko[0] ? sale.kupci_darko[0].name : "Unknown")),
+      customer: (sale.customers ? sale.customers.name : (sale.kupci_darko ? sale.kupci_darko.name : "Unknown")),
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
@@ -74,15 +74,12 @@ export const exportDailyDetailedReport = async () => {
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer data from either table - handle as array elements now
-      const customerArray = sale.customers || sale.kupci_darko;
-      if (!customerArray || !Array.isArray(customerArray) || customerArray.length === 0) {
+      // Get customer data from either table
+      const customer = sale.customers || sale.kupci_darko;
+      if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);
         return [];
       }
-      
-      // Use the first customer in the array
-      const customer = customerArray[0];
       
       const items = sale.items as any[];
       if (!items || !Array.isArray(items)) {
