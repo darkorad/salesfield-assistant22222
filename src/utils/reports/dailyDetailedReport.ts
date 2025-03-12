@@ -31,7 +31,7 @@ export const exportDailyDetailedReport = async () => {
     toast.info("Učitavanje podataka za današnji dan...");
 
     // Get all sales for today for the current user
-    // Use specific relationship name to avoid ambiguity
+    // Specify relationship name explicitly to avoid ambiguity
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -44,8 +44,8 @@ export const exportDailyDetailedReport = async () => {
         manufacturer,
         customer_id,
         darko_customer_id,
-        customers(id, name, pib, address, city),
-        kupci_darko(id, name, pib, address, city)
+        customers:customers(id, name, pib, address, city),
+        kupci_darko:kupci_darko!sales_kupci_darko_fkey(id, name, pib, address, city)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
