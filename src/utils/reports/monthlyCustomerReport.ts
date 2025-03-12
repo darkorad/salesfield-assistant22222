@@ -29,7 +29,6 @@ export const exportMonthlyCustomerReport = async () => {
     toast.info("Učitavanje podataka za trenutni mesec...");
 
     // Get all sales for the current month for the current user
-    // Using simpler foreign key query approach to avoid type issues
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -63,7 +62,7 @@ export const exportMonthlyCustomerReport = async () => {
 
     toast.info("Obrađivanje podataka za mesečni izveštaj...");
 
-    // Fetch customer data separately for more reliable typing
+    // Create a map to store customer data
     const customersMap = new Map();
     
     // Fetch all customers data upfront
@@ -186,8 +185,12 @@ export const exportMonthlyCustomerReport = async () => {
 
     // Export the workbook
     console.log(`Exporting workbook with filename: ${filename}`);
+    toast.info("Izvoz mesečnog izveštaja u toku... Sačekajte poruku o uspešnom završetku.");
     await exportWorkbook(wb, filename);
-    toast.success(`Mesečni izveštaj po kupcima je uspešno izvezen i nalazi se u Download folderu`);
+    toast.success(`Mesečni izveštaj po kupcima je uspešno izvezen`, {
+      description: "Fajl se nalazi u Download/Preuzimanja folderu. Otvorite 'Files' ili 'My Files' aplikaciju da ga pronađete.",
+      duration: 10000
+    });
 
   } catch (error) {
     console.error("Error generating report:", error);

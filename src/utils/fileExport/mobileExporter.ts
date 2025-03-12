@@ -26,14 +26,15 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
 
     console.log('Attempting to save file on Android:', fileName);
     
-    // First, try the most compatible approach for modern Android
+    // APPROACH 1: Try Direct Download folder paths
+    // This is most reliable on newer Android versions
     try {
-      // Try all possible download directory names
       const downloadPaths = [
         'Download', 'Downloads', 'download', 'downloads'
       ];
       
       let savedResult = null;
+      let savedPath = '';
       
       // Try each download path until one works
       for (const downloadPath of downloadPaths) {
@@ -47,6 +48,7 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
           
           console.log(`File saved successfully to External/${downloadPath} directory:`, result);
           savedResult = result;
+          savedPath = downloadPath;
           break; // Exit loop on success
         } catch (err) {
           console.warn(`Could not save to External/${downloadPath}:`, err);
@@ -55,30 +57,30 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
       }
       
       if (savedResult) {
-        toast.success(`Fajl "${fileName}" sačuvan`, {
-          description: "Pogledajte u Download/Preuzimanja folderu ili 'Moji fajlovi'/'My Files' aplikaciji.",
+        toast.success(`Fajl "${fileName}" uspešno sačuvan`, {
+          description: `Lokacija: ${savedPath}/${fileName}. Otvorite 'Files' ili 'My Files' aplikaciju i proverite u Download folderu.`,
           duration: 8000
         });
         
-        // Try to share the file to make it immediately accessible
-        try {
-          await Share.share({
-            title: 'Izveštaj je spreman',
-            text: `Izveštaj "${fileName}" je dostupan za pregled`,
-            url: savedResult.uri,
-            dialogTitle: 'Otvori ili podeli izveštaj'
+        // Show additional help notification after a delay
+        setTimeout(() => {
+          toast.info("Kako pronaći izvezeni fajl", {
+            description: "Otvorite aplikaciju za fajlove na vašem telefonu i idite u Downloads/Download folder ili pogledajte u internoj memoriji uređaja.",
+            duration: 10000,
+            action: {
+              label: "Razumem",
+              onClick: () => {}
+            }
           });
-        } catch (shareError) {
-          console.error('Error sharing file, but file was saved:', shareError);
-        }
+        }, 2000);
         
         return;
       }
     } catch (externalError) {
-      console.error('Error with all External directory attempts:', externalError);
+      console.error('Error with External directory attempts:', externalError);
     }
     
-    // Second approach: Try Documents directory
+    // APPROACH 2: Try using Documents directory
     try {
       const result = await Filesystem.writeFile({
         path: fileName,
@@ -90,27 +92,22 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
       console.log('File saved successfully to Documents directory:', result);
       
       toast.success(`Fajl "${fileName}" sačuvan u Documents folderu`, {
-        description: "Pogledajte 'Documents' folder u 'Moji fajlovi'/'My Files' aplikaciji.",
+        description: "Otvorite 'Files' ili 'My Files' aplikaciju i pogledajte u Documents folderu.",
         duration: 8000
       });
       
-      try {
-        await Share.share({
-          title: 'Izveštaj je spreman',
-          text: `Izveštaj "${fileName}" je dostupan za pregled`,
-          url: result.uri,
-          dialogTitle: 'Otvori ili podeli izveštaj'
-        });
-      } catch (shareError) {
-        console.error('Error sharing file from Documents:', shareError);
-      }
+      // Show specific file location guidance
+      toast.info("Kako pronaći izvezeni fajl", {
+        description: "Otvorite aplikaciju za fajlove na telefonu, idite u 'Documents' folder.",
+        duration: 10000
+      });
       
       return;
     } catch (docsError) {
       console.error('Error saving to Documents directory:', docsError);
     }
     
-    // Last resort - save to Data directory
+    // APPROACH 3: Last resort - use Data directory and allow user to share file
     const result = await Filesystem.writeFile({
       path: fileName,
       data: base64Data,
@@ -120,18 +117,26 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
     console.log('File saved to app data directory:', result);
     
     toast.info(`Fajl "${fileName}" privremeno sačuvan`, {
-      description: "Za pristup fajlu, koristite dugme ispod za otvaranje",
+      description: "Za pristup fajlu, koristite dugme ispod:",
       duration: 10000,
       action: {
-        label: "Otvori fajl",
+        label: "Otvori/Podeli",
         onClick: async () => {
           try {
-            await Share.share({
-              title: 'Izveštaj je spreman',
-              text: `Izveštaj "${fileName}"`,
-              url: result.uri,
-              dialogTitle: 'Otvori izveštaj'
-            });
+            // Try to share the file
+            const uri = result.uri;
+            // Open the file directly if possible
+            window.open(uri, '_blank');
+            
+            // Fallback to copy to clipboard
+            const tempInput = document.createElement('input');
+            tempInput.value = uri;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            toast.success("Putanja do fajla je kopirana u clipboard");
           } catch (error) {
             console.error('Error opening file:', error);
             toast.error("Nije moguće otvoriti fajl");
@@ -143,6 +148,34 @@ export async function exportFileMobile(blob: Blob, fileName: string) {
   } catch (error) {
     console.error('Error in exportFileMobile:', error);
     toast.error(`Greška pri čuvanju fajla: ${error instanceof Error ? error.message : String(error)}`);
+    
+    // Ultimate fallback - try to download as regular browser download
+    try {
+      toast.info("Pokušaj direktnog preuzimanja...", {
+        duration: 6000
+      });
+      
+      // Create a URL for the blob
+      const url = URL.createObjectURL(blob);
+      
+      // Create a download link and click it
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
+    } catch (fallbackError) {
+      console.error('Fallback download failed:', fallbackError);
+    }
+    
     throw error;
   }
 }

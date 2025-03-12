@@ -31,7 +31,6 @@ export const exportDailyDetailedReport = async () => {
     toast.info("Učitavanje podataka za današnji dan...");
 
     // Get all sales for today for the current user
-    // Using simpler foreign key query approach to avoid type issues
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -71,34 +70,50 @@ export const exportDailyDetailedReport = async () => {
 
     toast.info("Obrađivanje podataka za izveštaj...");
 
-    // Fetch customer data separately for more reliable typing
-    const customerPromises = salesData.map(async (sale) => {
-      if (sale.customer_id) {
+    // Create a map to store customer data
+    const customerDataMap = new Map();
+    
+    // Fetch customer data for each sale
+    for (const sale of salesData) {
+      let customerData = null;
+      
+      // Try to get customer data from regular customers table
+      if (sale.customer_id && !customerDataMap.has(sale.customer_id)) {
         const { data } = await supabase
           .from('customers')
           .select('id, name, pib, address, city')
           .eq('id', sale.customer_id)
-          .single();
-        return { sale, customer: data };
-      } else if (sale.darko_customer_id) {
+          .maybeSingle();
+          
+        if (data) {
+          customerDataMap.set(sale.customer_id, data);
+        }
+      }
+      
+      // Try to get customer data from darko customers table
+      if (sale.darko_customer_id && !customerDataMap.has(sale.darko_customer_id)) {
         const { data } = await supabase
           .from('kupci_darko')
           .select('id, name, pib, address, city')
           .eq('id', sale.darko_customer_id)
-          .single();
-        return { sale, customer: data };
+          .maybeSingle();
+          
+        if (data) {
+          customerDataMap.set(sale.darko_customer_id, data);
+        }
       }
-      return { sale, customer: null };
-    });
-
-    const salesWithCustomers = await Promise.all(customerPromises);
+    }
 
     // Create flat array of all items from all sales
-    const reportData = salesWithCustomers.flatMap(({ sale, customer }) => {
-      if (!customer) {
+    const reportData = salesData.flatMap(sale => {
+      // Get customer from map
+      const customerId = sale.customer_id || sale.darko_customer_id;
+      if (!customerId || !customerDataMap.has(customerId)) {
         console.warn(`No customer found for sale ${sale.id}`);
         return [];
       }
+      
+      const customer = customerDataMap.get(customerId);
       
       const items = sale.items as any[];
       if (!items || !Array.isArray(items)) {
@@ -174,8 +189,12 @@ export const exportDailyDetailedReport = async () => {
 
     // Export the workbook
     console.log(`Exporting workbook with filename: ${filename}`);
+    toast.info("Izvoz fajla u toku... Sačekajte poruku o uspešnom završetku.");
     await exportWorkbook(wb, filename);
-    toast.success(`Dnevni izveštaj je uspešno izvezen i nalazi se u Download folderu`);
+    toast.success(`Dnevni izveštaj je uspešno izvezen`, {
+      description: "Fajl se nalazi u Download/Preuzimanja folderu. Otvorite 'Files' ili 'My Files' aplikaciju da ga pronađete.",
+      duration: 10000
+    });
 
   } catch (error) {
     console.error("Error generating report:", error);

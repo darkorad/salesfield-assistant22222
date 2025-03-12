@@ -4,6 +4,7 @@ import { DailyReportButton } from "./DailyReportButton";
 import { MonthlyReportButtons } from "./MonthlyReportButtons";
 import { CashSalesReport } from "./CashSalesReport";
 import { Info } from "lucide-react";
+import { FileLocationGuide } from "./FileLocationGuide";
 
 export const ReportsContainer = () => {
   return (
@@ -35,6 +36,8 @@ export const ReportsContainer = () => {
           <MonthlyReportButtons />
         </CardContent>
       </Card>
+      
+      <FileLocationGuide />
     </div>
   );
 };
