@@ -31,7 +31,7 @@ export const exportDailyDetailedReport = async () => {
     toast.info("Učitavanje podataka za današnji dan...");
 
     // Get all sales for today for the current user
-    // Use proper nesting for joined tables with explicit names and proper format
+    // Updated query format for nested selects
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -65,7 +65,7 @@ export const exportDailyDetailedReport = async () => {
 
     console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
       id: sale.id,
-      customer: sale.customers?.name || (sale.kupci_darko?.name) || "Unknown",
+      customer: sale.customers?.name || sale.kupci_darko?.name || "Unknown",
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
@@ -74,7 +74,7 @@ export const exportDailyDetailedReport = async () => {
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer data from either table
+      // Get customer data from either table - properly access as an object
       const customer = sale.customers || sale.kupci_darko;
       if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);

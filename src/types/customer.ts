@@ -16,4 +16,5 @@ export interface Customer {
   visit_day?: string;
   dan_obilaska?: string;
   dan_posete?: string;
+  created_at?: string;
 }
