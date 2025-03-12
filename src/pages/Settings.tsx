@@ -29,12 +29,17 @@ const Settings = () => {
     checkAuth();
   }, [navigate]);
 
+  const handleGoToDocuments = () => {
+    navigate("/documents");
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="settings">Podešavanja</TabsTrigger>
           <TabsTrigger value="reports">Izveštaji</TabsTrigger>
+          <TabsTrigger value="documents" onClick={handleGoToDocuments}>Dokumenti</TabsTrigger>
         </TabsList>
         
         <TabsContent value="settings">

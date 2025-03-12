@@ -1,10 +1,10 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
 import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
 
-export const exportDailyDetailedReport = async () => {
+export const exportDailyDetailedReport = async (redirectToDocuments?: () => void) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -187,14 +187,33 @@ export const exportDailyDetailedReport = async () => {
     // Format: DnevniIzvestaj-DD-MM-YYYY
     const filename = `DnevniIzvestaj-${day}-${month}-${year}`;
 
-    // Export the workbook
-    console.log(`Exporting workbook with filename: ${filename}`);
-    toast.info("Izvoz fajla u toku... Sačekajte poruku o uspešnom završetku.");
-    await exportWorkbook(wb, filename);
-    toast.success(`Dnevni izveštaj je uspešno izvezen`, {
-      description: "Fajl se nalazi u Download/Preuzimanja folderu. Otvorite 'Files' ili 'My Files' aplikaciju da ga pronađete.",
-      duration: 10000
-    });
+    // Save to app storage first, then try normal export as fallback
+    console.log(`Saving workbook with filename: ${filename}`);
+    toast.info("Čuvanje izveštaja u toku... Sačekajte poruku o uspešnom završetku.");
+    
+    const storedFile = await saveWorkbookToStorage(wb, filename);
+    
+    if (storedFile) {
+      toast.success(`Dnevni izveštaj je uspešno sačuvan`, {
+        description: `Možete ga pronaći u meniju Dokumenti`,
+        action: {
+          label: 'Otvori Dokumenti',
+          onClick: () => {
+            if (redirectToDocuments) {
+              redirectToDocuments();
+            }
+          }
+        },
+        duration: 10000
+      });
+    }
+    
+    // Also try regular export as fallback
+    try {
+      await exportWorkbook(wb, filename);
+    } catch (exportErr) {
+      console.log("Regular export failed, but file is saved to app storage:", exportErr);
+    }
 
   } catch (error) {
     console.error("Error generating report:", error);

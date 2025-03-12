@@ -1,15 +1,17 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import * as XLSX from 'xlsx'; // Add this import to fix the errors
+import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 import { generateCashSalesWorksheet } from "@/utils/reports/worksheet/cashSalesWorksheet";
 import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
+import { useNavigate } from "react-router-dom";
 
 export const useCashSalesExport = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [hasExportFailed, setHasExportFailed] = useState(false);
+  const navigate = useNavigate();
 
   const exportCashSales = async (selectedDate: Date | undefined) => {
     try {
@@ -129,7 +131,7 @@ export const useCashSalesExport = () => {
       const { wb } = generateCashSalesWorksheet(formattedSales);
       const dateStr = format(selectedDate, 'dd-MM-yyyy');
       
-      toast.info("Izvoz izveštaja u toku...");
+      toast.info("Čuvanje izveštaja u toku...");
       
       try {
         setHasExportFailed(false);
@@ -143,14 +145,33 @@ export const useCashSalesExport = () => {
         const namedWb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(namedWb, worksheet, worksheetName);
         
-        // Call export with both success and error callbacks
-        await exportWorkbook(namedWb, `gotovinska-prodaja-${dateStr}`);
+        // Save the workbook to app storage
+        const fileName = `gotovinska-prodaja-${dateStr}`;
+        const storedFile = await saveWorkbookToStorage(namedWb, fileName);
         
-        toast.success(`Izveštaj gotovinske prodaje za ${format(selectedDate, 'dd.MM.yyyy')} je uspešno izvezen`);
-      } catch (exportError) {
-        console.error("Error during export:", exportError);
+        if (storedFile) {
+          toast.success(`Izveštaj je uspešno sačuvan`, {
+            description: `Možete ga pronaći u meniju Dokumenti`,
+            action: {
+              label: 'Otvori Dokumenti',
+              onClick: () => navigate('/documents')
+            },
+            duration: 8000
+          });
+        } else {
+          throw new Error("Nije uspelo čuvanje fajla");
+        }
+        
+        // Also try regular export as fallback
+        try {
+          await exportWorkbook(namedWb, fileName);
+        } catch (exportErr) {
+          console.log("Regular export failed, but file is saved to app storage:", exportErr);
+        }
+      } catch (error) {
+        console.error("Error during storage:", error);
         setHasExportFailed(true);
-        toast.error(`Greška pri izvozu: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
+        toast.error(`Greška pri čuvanju: ${error instanceof Error ? error.message : String(error)}`);
         
         // Try alternative download method
         try {
