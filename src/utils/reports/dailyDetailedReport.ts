@@ -31,7 +31,7 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
 
     toast.info("Učitavanje podataka za današnji dan...");
 
-    // Get all sales for today for the current user
+    // Get all sales for today for the current user with customer data
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -43,7 +43,9 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
         payment_status,
         manufacturer,
         customer_id,
-        darko_customer_id
+        darko_customer_id,
+        customer:customers(*),
+        darko_customer:kupci_darko(*)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -65,56 +67,22 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
       id: sale.id,
       customer_id: sale.customer_id,
       darko_customer_id: sale.darko_customer_id,
+      customer_name: sale.customer?.name || sale.darko_customer?.name || 'Nepoznat',
       items: sale.items ? (sale.items as any[]).length : 0,
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
 
     toast.info("Obrađivanje podataka za izveštaj...");
 
-    // Create a map to store customer data
-    const customerDataMap = new Map();
-    
-    // Fetch customer data for each sale
-    for (const sale of salesData) {
-      let customerData = null;
-      
-      // Try to get customer data from regular customers table
-      if (sale.customer_id && !customerDataMap.has(sale.customer_id)) {
-        const { data } = await supabase
-          .from('customers')
-          .select('id, name, pib, address, city')
-          .eq('id', sale.customer_id)
-          .maybeSingle();
-          
-        if (data) {
-          customerDataMap.set(sale.customer_id, data);
-        }
-      }
-      
-      // Try to get customer data from darko customers table
-      if (sale.darko_customer_id && !customerDataMap.has(sale.darko_customer_id)) {
-        const { data } = await supabase
-          .from('kupci_darko')
-          .select('id, name, pib, address, city')
-          .eq('id', sale.darko_customer_id)
-          .maybeSingle();
-          
-        if (data) {
-          customerDataMap.set(sale.darko_customer_id, data);
-        }
-      }
-    }
-
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer from map
-      const customerId = sale.customer_id || sale.darko_customer_id;
-      if (!customerId || !customerDataMap.has(customerId)) {
-        console.warn(`No customer found for sale ${sale.id}`);
-        return [];
-      }
-      
-      const customer = customerDataMap.get(customerId);
+      // Get customer from the sales data directly
+      const customer = sale.customer || sale.darko_customer || {
+        name: 'Nepoznat kupac',
+        pib: '',
+        address: '',
+        city: ''
+      };
       
       const items = sale.items as any[];
       if (!items || !Array.isArray(items)) {

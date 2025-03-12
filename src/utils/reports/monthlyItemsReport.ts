@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
 import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
 
-export const exportMonthlyItemsReport = async () => {
+export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void) => {
   try {
     // Get current user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -29,7 +30,11 @@ export const exportMonthlyItemsReport = async () => {
 
     const { data: sales, error } = await supabase
       .from('sales')
-      .select('*')
+      .select(`
+        *,
+        customer:customers(*),
+        darko_customer:kupci_darko(*)
+      `)
       .eq('user_id', session.user.id)
       .gte('created_at', firstDayOfMonth.toISOString())
       .lt('created_at', firstDayOfNextMonth.toISOString());
@@ -49,6 +54,9 @@ export const exportMonthlyItemsReport = async () => {
 
     // Group items from all sales
     const itemsSummary = sales.reduce((acc, sale) => {
+      // Get customer name
+      const customerName = sale.customer?.name || sale.darko_customer?.name || 'Nepoznat kupac';
+      
       // Ensure items is an array
       const items = Array.isArray(sale.items) ? sale.items : [];
       
@@ -70,7 +78,8 @@ export const exportMonthlyItemsReport = async () => {
             manufacturer: manufacturer,
             unit: unit,
             totalQuantity: 0,
-            totalValue: 0
+            totalValue: 0,
+            customers: new Set()
           };
         }
         
@@ -79,6 +88,7 @@ export const exportMonthlyItemsReport = async () => {
         
         acc[key].totalQuantity += quantity;
         acc[key].totalValue += value;
+        acc[key].customers.add(customerName);
       });
       
       return acc;
@@ -91,6 +101,7 @@ export const exportMonthlyItemsReport = async () => {
         'Naziv artikla': item.name,
         'Proizvođač': item.manufacturer,
         'Jedinica mere': item.unit,
+        'Kupci': Array.from(item.customers).join(', '),
         'Ukupna količina': parseFloat(item.totalQuantity.toFixed(2)),
         'Ukupna vrednost': parseFloat(item.totalValue.toFixed(2))
       }));
@@ -109,6 +120,7 @@ export const exportMonthlyItemsReport = async () => {
       'Naziv artikla': 'UKUPNO:',
       'Proizvođač': '',
       'Jedinica mere': '',
+      'Kupci': '',
       'Ukupna količina': parseFloat(totalQuantity.toFixed(2)),
       'Ukupna vrednost': parseFloat(totalValue.toFixed(2))
     });
@@ -129,6 +141,7 @@ export const exportMonthlyItemsReport = async () => {
       { wch: 40 }, // Naziv artikla
       { wch: 20 }, // Proizvođač
       { wch: 15 }, // Jedinica mere
+      { wch: 40 }, // Kupci
       { wch: 15 }, // Ukupna količina
       { wch: 15 }  // Ukupna vrednost
     ];
@@ -139,6 +152,24 @@ export const exportMonthlyItemsReport = async () => {
     // Create more descriptive filename with month name and year 
     // Format: MesecnaArtikli-Mesec-Godina (e.g., MesecnaArtikli-Mart-2025)
     const fileName = `MesecnaArtikli-${monthName}-${year}`;
+    
+    // Save to storage
+    const storedFile = await saveWorkbookToStorage(wb, fileName);
+    
+    if (storedFile) {
+      toast.success(`Mesečni izveštaj je uspešno sačuvan`, {
+        description: `Možete ga pronaći u meniju Dokumenti`,
+        action: {
+          label: 'Otvori Dokumenti',
+          onClick: () => {
+            if (redirectToDocuments) {
+              redirectToDocuments();
+            }
+          }
+        },
+        duration: 10000
+      });
+    }
     
     // Export the workbook with a more direct approach
     console.log(`Exporting monthly items report with filename: ${fileName}`);

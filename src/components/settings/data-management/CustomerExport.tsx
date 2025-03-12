@@ -5,8 +5,14 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
+import { useNavigate } from "react-router-dom";
+import { createRedirectToDocuments } from "@/utils/fileExport";
 
 export const CustomerExport = () => {
+  const navigate = useNavigate();
+  const redirectToDocuments = createRedirectToDocuments(navigate);
+  
   const handleExportBuyers = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -87,8 +93,29 @@ export const CustomerExport = () => {
       ];
       ws['!cols'] = colWidths;
 
+      // Get current date for filename
+      const today = new Date();
+      const day = today.getDate().toString().padStart(2, '0');
+      const month = (today.getMonth() + 1).toString().padStart(2, '0');
+      const year = today.getFullYear();
+      const fileName = `Lista-kupaca-${day}-${month}-${year}`;
+      
+      // Save to storage
+      const storedFile = await saveWorkbookToStorage(wb, fileName);
+      
+      if (storedFile) {
+        toast.success(`Lista kupaca je uspešno sačuvana`, {
+          description: `Možete je pronaći u meniju Dokumenti`,
+          action: {
+            label: 'Otvori Dokumenti',
+            onClick: redirectToDocuments
+          },
+          duration: 8000
+        });
+      }
+
       // Use the exportWorkbook utility
-      await exportWorkbook(wb, `lista-kupaca`);
+      await exportWorkbook(wb, fileName);
     } catch (error) {
       console.error('Error exporting customers:', error);
       toast.error("Greška pri izvozu kupaca");
