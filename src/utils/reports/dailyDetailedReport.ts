@@ -132,13 +132,40 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
       { wch: 15 }   // Način plaćanja
     ];
 
-    // Add summary rows
-    XLSX.utils.sheet_add_aoa(ws, [
-      [],  // Empty row
-      ['UKUPNO GOTOVINA:', '', '', '', '', '', '', '', '', '', cashTotal, ''],
-      ['UKUPNO RAČUN:', '', '', '', '', '', '', '', '', '', invoiceTotal, ''],
-      ['UKUPNO:', '', '', '', '', '', '', '', '', '', grandTotal, '']
-    ], { origin: -1 });
+    // Group data by customer for customer totals
+    const customerTotals = {};
+    reportData.forEach(item => {
+      const customerKey = item['Kupac'];
+      if (!customerTotals[customerKey]) {
+        customerTotals[customerKey] = {
+          name: item['Kupac'],
+          address: item['Adresa'],
+          total: 0
+        };
+      }
+      customerTotals[customerKey].total += item['Ukupno'];
+    });
+
+    // Add summary rows with customer names
+    const summaryRows = [];
+    
+    // Add empty row first
+    summaryRows.push([]);
+    
+    // Add customer totals
+    Object.values(customerTotals).forEach((customer: any) => {
+      summaryRows.push(['KUPAC:', customer.name, '', 'Adresa:', customer.address]);
+      summaryRows.push(['UKUPNO ZA KUPCA:', '', '', '', '', '', '', '', '', '', customer.total]);
+      summaryRows.push([]); // Empty row for spacing
+    });
+    
+    // Add overall totals at the end
+    summaryRows.push(['UKUPNO GOTOVINA:', '', '', '', '', '', '', '', '', '', cashTotal, '']);
+    summaryRows.push(['UKUPNO RAČUN:', '', '', '', '', '', '', '', '', '', invoiceTotal, '']);
+    summaryRows.push(['UKUPNO:', '', '', '', '', '', '', '', '', '', grandTotal, '']);
+
+    // Add all summary rows to worksheet
+    XLSX.utils.sheet_add_aoa(ws, summaryRows, { origin: -1 });
 
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Dnevni izveštaj");
