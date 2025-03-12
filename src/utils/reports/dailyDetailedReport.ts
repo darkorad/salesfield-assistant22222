@@ -31,7 +31,7 @@ export const exportDailyDetailedReport = async () => {
     toast.info("Učitavanje podataka za današnji dan...");
 
     // Get all sales for today for the current user
-    // Updated query format for nested selects
+    // Fixing the query format for Supabase to properly return nested objects
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -44,8 +44,8 @@ export const exportDailyDetailedReport = async () => {
         manufacturer,
         customer_id,
         darko_customer_id,
-        customers (id, name, pib, address, city),
-        kupci_darko (id, name, pib, address, city)
+        customers:customers(id, name, pib, address, city),
+        kupci_darko:kupci_darko(id, name, pib, address, city)
       `)
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
@@ -74,7 +74,7 @@ export const exportDailyDetailedReport = async () => {
 
     // Create flat array of all items from all sales
     const reportData = salesData.flatMap(sale => {
-      // Get customer data from either table - properly access as an object
+      // Get customer data from either table
       const customer = sale.customers || sale.kupci_darko;
       if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);

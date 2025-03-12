@@ -29,7 +29,7 @@ export const exportMonthlyCustomerReport = async () => {
     toast.info("Učitavanje podataka za trenutni mesec...");
 
     // Get all sales for the current month for the current user
-    // Updated query format for nested tables
+    // Fix the query format for proper nested object handling
     const { data: salesData, error } = await supabase
       .from('sales')
       .select(`
@@ -42,8 +42,8 @@ export const exportMonthlyCustomerReport = async () => {
         manufacturer,
         customer_id,
         darko_customer_id,
-        customers (id, name, pib, address, city),
-        kupci_darko (id, name, pib, address, city)
+        customers:customers(id, name, pib, address, city),
+        kupci_darko:kupci_darko(id, name, pib, address, city)
       `)
       .eq('user_id', session.user.id)
       .gte('date', firstDayOfMonth.toISOString())
@@ -69,7 +69,7 @@ export const exportMonthlyCustomerReport = async () => {
     const customerSales = {};
     
     salesData.forEach(sale => {
-      // Get customer from either table - properly access as an object
+      // Get customer from either table
       const customer = sale.customers || sale.kupci_darko;
       if (!customer) {
         console.warn(`No customer found for sale ${sale.id}`);
