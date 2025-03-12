@@ -1,155 +1,101 @@
 
 import * as XLSX from 'xlsx';
+import { toast } from "sonner";
+import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
+import { CustomerSalesData, ReportItem } from "./types";
 
-export const createDetailedReportData = (customerSalesDetails: Record<string, any>) => {
-  const reportData = [];
-  let customerIndex = 1;
-
-  // Add each customer's data with index and a header row
-  Object.values(customerSalesDetails).forEach((customer: any) => {
-    // Add customer header with index
-    reportData.push({
-      'Rbr': customerIndex,
-      'Kupac': customer.name,
-      'PIB': customer.pib,
-      'Adresa': customer.address,
-      'Grad': customer.city,
-      'Datum': '',
-      'Proizvod': '',
-      'Proizvođač': '',
-      'Količina': '',
-      'Jedinica mere': '',
-      'Cena': '',
-      'Ukupno': '',
-      'Način plaćanja': ''
-    });
-    
-    // Add customer's items
-    customer.items.forEach(item => {
-      reportData.push({
-        'Rbr': '',
-        'Kupac': '',
-        'PIB': '',
-        'Adresa': '',
-        'Grad': '',
-        'Datum': item.date,
-        'Proizvod': item.product,
-        'Proizvođač': item.manufacturer,
-        'Količina': item.quantity,
-        'Jedinica mere': item.unit,
-        'Cena': item.price,
-        'Ukupno': item.total,
-        'Način plaćanja': item.payment_type
-      });
-    });
-    
-    // Add empty row after customer
-    reportData.push({
-      'Rbr': '',
-      'Kupac': '',
-      'PIB': '',
-      'Adresa': '',
-      'Grad': '',
-      'Datum': '',
-      'Proizvod': '',
-      'Proizvođač': '',
-      'Količina': '',
-      'Jedinica mere': '',
-      'Cena': '',
-      'Ukupno': '',
-      'Način plaćanja': ''
-    });
-
-    customerIndex++;
+/**
+ * Create report data from processed customer sales
+ */
+export function createReportData(customerSales: Record<string, CustomerSalesData>): ReportItem[] {
+  const reportData = Object.values(customerSales).map((customerData: CustomerSalesData) => {
+    const { customerInfo, cashTotal, invoiceTotal } = customerData;
+    return {
+      'Kupac': customerInfo.name,
+      'PIB': customerInfo.pib,
+      'Adresa': customerInfo.address,
+      'Grad': customerInfo.city,
+      'Ukupno gotovina': cashTotal,
+      'Ukupno račun': invoiceTotal,
+      'Ukupno': cashTotal + invoiceTotal
+    };
   });
 
-  return reportData;
-};
+  // Sort by total amount
+  return reportData.sort((a, b) => b['Ukupno'] - a['Ukupno']);
+}
 
-export const createSummaryReportData = (customerSalesSummary: Record<string, any>) => {
-  // Create an interface for the summary row to ensure type safety
-  interface SummaryRow {
-    'Rbr': number | string;
-    'Kupac': string;
-    'PIB': string;
-    'Adresa': string;
-    'Grad': string;
-    'Ukupno gotovina': number;
-    'Ukupno račun': number;
-    'Ukupan iznos': number;
-  }
-  
-  // Create customer summary data for second sheet, sorted by total amount
-  const summaryData: SummaryRow[] = Object.values(customerSalesSummary)
-    .sort((a: any, b: any) => Number(b.totalAmount || 0) - Number(a.totalAmount || 0))
-    .map((customer: any, index: number) => ({
-      'Rbr': index + 1,
-      'Kupac': customer.name,
-      'PIB': customer.pib,
-      'Adresa': customer.address,
-      'Grad': customer.city,
-      'Ukupno gotovina': Number(customer.totalCash || 0),
-      'Ukupno račun': Number(customer.totalInvoice || 0),
-      'Ukupan iznos': Number(customer.totalAmount || 0)
-    }));
+/**
+ * Generate workbook with report data
+ */
+export function generateWorkbook(reportData: ReportItem[]): XLSX.WorkBook {
+  // Calculate grand totals
+  const cashGrandTotal = reportData.reduce((sum, item) => sum + item['Ukupno gotovina'], 0);
+  const invoiceGrandTotal = reportData.reduce((sum, item) => sum + item['Ukupno račun'], 0);
+  const grandTotal = cashGrandTotal + invoiceGrandTotal;
 
-  // Calculate monthly totals ensuring numeric values
-  const totalCash = summaryData.reduce((sum, item) => sum + item['Ukupno gotovina'], 0);
-  const totalInvoice = summaryData.reduce((sum, item) => sum + item['Ukupno račun'], 0);
-  const totalAmount = summaryData.reduce((sum, item) => sum + item['Ukupan iznos'], 0);
-
-  // Add totals row with explicit number conversion
-  summaryData.push({
-    'Rbr': '',
-    'Kupac': 'UKUPNO:',
-    'PIB': '',
-    'Adresa': '',
-    'Grad': '',
-    'Ukupno gotovina': totalCash,
-    'Ukupno račun': totalInvoice,
-    'Ukupan iznos': totalAmount
-  });
-
-  return summaryData;
-};
-
-export const createWorkbook = (reportData: any[], summaryData: any[]) => {
+  // Create workbook and worksheet
   const wb = XLSX.utils.book_new();
-  
-  // Create detailed worksheet
-  const wsDetails = XLSX.utils.json_to_sheet(reportData);
-  wsDetails['!cols'] = [
-    { wch: 5 },  // Rbr
-    { wch: 30 }, // Kupac
-    { wch: 15 }, // PIB
-    { wch: 30 }, // Adresa
-    { wch: 20 }, // Grad
-    { wch: 15 }, // Datum
-    { wch: 30 }, // Proizvod
-    { wch: 20 }, // Proizvođač
-    { wch: 10 }, // Količina
-    { wch: 15 }, // Jedinica mere
-    { wch: 12 }, // Cena
-    { wch: 12 }, // Ukupno
-    { wch: 15 }  // Način plaćanja
+  const ws = XLSX.utils.json_to_sheet(reportData);
+
+  // Set column widths
+  ws['!cols'] = [
+    { wch: 30 },  // Kupac
+    { wch: 15 },  // PIB
+    { wch: 30 },  // Adresa
+    { wch: 20 },  // Grad
+    { wch: 15 },  // Ukupno gotovina
+    { wch: 15 },  // Ukupno račun
+    { wch: 15 }   // Ukupno
   ];
-  
-  // Create summary worksheet
-  const wsSummary = XLSX.utils.json_to_sheet(summaryData);
-  wsSummary['!cols'] = [
-    { wch: 5 },  // Rbr
-    { wch: 30 }, // Kupac
-    { wch: 15 }, // PIB
-    { wch: 30 }, // Adresa
-    { wch: 20 }, // Grad
-    { wch: 15 }, // Ukupno gotovina
-    { wch: 15 }, // Ukupno račun
-    { wch: 15 }  // Ukupan iznos
-  ];
-  
-  // Add worksheets to workbook
-  XLSX.utils.book_append_sheet(wb, wsDetails, "Detaljna prodaja");
-  XLSX.utils.book_append_sheet(wb, wsSummary, "Zbirna prodaja");
-  
+
+  // Add summary rows
+  XLSX.utils.sheet_add_aoa(ws, [
+    [],  // Empty row
+    ['UKUPNO GOTOVINA:', '', '', '', cashGrandTotal, '', ''],
+    ['UKUPNO RAČUN:', '', '', '', '', invoiceGrandTotal, ''],
+    ['UKUPNO:', '', '', '', '', '', grandTotal]
+  ], { origin: -1 });
+
+  // Add worksheet to workbook
+  XLSX.utils.book_append_sheet(wb, ws, "Mesečni izveštaj po kupcima");
+
   return wb;
-};
+}
+
+/**
+ * Export workbook to file and storage
+ */
+export async function exportWorkbookToFileAndStorage(
+  wb: XLSX.WorkBook, 
+  filename: string, 
+  redirectToDocuments?: () => void
+): Promise<void> {
+  // Save to storage
+  const storedFile = await saveWorkbookToStorage(wb, filename);
+  
+  if (storedFile) {
+    toast.success(`Mesečni izveštaj je uspešno sačuvan`, {
+      description: `Možete ga pronaći u meniju Dokumenti`,
+      action: {
+        label: 'Otvori Dokumenti',
+        onClick: () => {
+          if (redirectToDocuments) {
+            redirectToDocuments();
+          }
+        }
+      },
+      duration: 10000
+    });
+  }
+
+  // Export the workbook
+  console.log(`Exporting workbook with filename: ${filename}`);
+  toast.info("Izvoz mesečnog izveštaja u toku... Sačekajte poruku o uspešnom završetku.");
+  await exportWorkbook(wb, filename);
+  toast.success(`Mesečni izveštaj po kupcima je uspešno izvezen`, {
+    description: "Fajl se nalazi u Download/Preuzimanja folderu. Otvorite 'Files' ili 'My Files' aplikaciju da ga pronađete.",
+    duration: 10000
+  });
+}
