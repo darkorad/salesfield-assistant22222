@@ -27,7 +27,9 @@ export const getStoredFiles = async (): Promise<StoredFile[]> => {
       });
       
       if (result && result.data) {
-        const files = JSON.parse(result.data);
+        // Ensure that data is a string before parsing
+        const data = typeof result.data === 'string' ? result.data : '';
+        const files = JSON.parse(data);
         // Sort files by date (newest first)
         return Array.isArray(files) ? files.sort((a, b) => 
           new Date(b.date).getTime() - new Date(a.date).getTime()
