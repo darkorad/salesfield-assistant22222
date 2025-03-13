@@ -38,7 +38,7 @@ export function formatFilename() {
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka za trenutni mesec...");
 
-  // Using a simpler query without relationships to avoid ambiguity
+  // Using a simple query without any joins or relationships to avoid ambiguity
   const { data: salesData, error } = await supabase
     .from('sales')
     .select('*')
@@ -66,13 +66,13 @@ export async function fetchMonthlySalesData(userId: string, startDate: Date, end
 export async function processCustomerSalesData(salesData: any[]): Promise<Record<string, CustomerSalesData>> {
   toast.info("Obrađivanje podataka za mesečni izveštaj...");
 
-  // Create a map to store customer data
-  const customersMap = new Map();
+  // Create a map to store customer data to avoid duplicate fetches
+  const customersMap: Map<string, any> = new Map();
   
   // Customer sales summary by customer ID
   const customerSales: Record<string, CustomerSalesData> = {};
   
-  // Fetch all customers data upfront
+  // Fetch all unique customer data upfront
   for (const sale of salesData) {
     if (sale.customer_id && !customersMap.has(sale.customer_id)) {
       const { data } = await supabase
@@ -84,7 +84,9 @@ export async function processCustomerSalesData(salesData: any[]): Promise<Record
       if (data) {
         customersMap.set(sale.customer_id, data);
       }
-    } else if (sale.darko_customer_id && !customersMap.has(sale.darko_customer_id)) {
+    } 
+    
+    if (sale.darko_customer_id && !customersMap.has(sale.darko_customer_id)) {
       const { data } = await supabase
         .from('kupci_darko')
         .select('id, name, pib, address, city')
