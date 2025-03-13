@@ -38,20 +38,10 @@ export function formatFilename() {
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka za trenutni mesec...");
 
-  // Modified query to avoid relationship ambiguity
+  // Using a simpler query without relationships to avoid ambiguity
   const { data: salesData, error } = await supabase
     .from('sales')
-    .select(`
-      id,
-      date,
-      total,
-      items,
-      payment_type,
-      payment_status,
-      manufacturer,
-      customer_id,
-      darko_customer_id
-    `)
+    .select('*')
     .eq('user_id', userId)
     .gte('date', startDate.toISOString())
     .lt('date', endDate.toISOString())
