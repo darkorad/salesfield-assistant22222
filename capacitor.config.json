@@ -31,7 +31,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21"
       ]
     },
-    "useLegacyStorage": false
+    "useLegacyStorage": false,
+    "path": "salesfield-assistant22222"
   },
   "plugins": {
     "SplashScreen": {

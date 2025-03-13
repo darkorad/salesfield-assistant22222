@@ -35,4 +35,3 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         kotlin-version: '1.8.22'
-
