@@ -33,13 +33,13 @@ export function formatFilename() {
 }
 
 /**
- * Fetch sales data for the current month
- * Using a completely flat query structure to avoid relationship ambiguity
+ * Fetch sales data for the current month - using a completely separate approach
+ * to avoid relationship ambiguity problems
  */
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka za trenutni mesec...");
 
-  // Simple flat query with no joins or relationships
+  // Use a simple query with no joins at all - just get the raw sales data
   const { data: salesData, error } = await supabase
     .from('sales')
     .select('id, date, total, items, customer_id, darko_customer_id, payment_type, created_at')
@@ -63,65 +63,80 @@ export async function fetchMonthlySalesData(userId: string, startDate: Date, end
 
 /**
  * Process sales data into customer sales summary
+ * This approach avoids relationship queries by fetching customer data separately
  */
 export async function processCustomerSalesData(salesData: any[]): Promise<Record<string, CustomerSalesData>> {
   toast.info("Obrađivanje podataka za mesečni izveštaj...");
 
-  // Create a map to store fetched customer data to avoid duplicate requests
+  // Create a map to store customer data
   const customersMap: Map<string, any> = new Map();
   
   // Customer sales summary by customer ID
   const customerSales: Record<string, CustomerSalesData> = {};
 
-  // First pass: fetch all unique customer data
-  const uniqueCustomerIds = new Set<string>();
-  const uniqueDarkoCustomerIds = new Set<string>();
+  // First collect all unique customer IDs
+  const regularCustomerIds: string[] = [];
+  const darkoCustomerIds: string[] = [];
   
-  // Collect unique IDs
   salesData.forEach(sale => {
-    if (sale.customer_id) uniqueCustomerIds.add(sale.customer_id);
-    if (sale.darko_customer_id) uniqueDarkoCustomerIds.add(sale.darko_customer_id);
+    if (sale.customer_id && !regularCustomerIds.includes(sale.customer_id)) {
+      regularCustomerIds.push(sale.customer_id);
+    }
+    if (sale.darko_customer_id && !darkoCustomerIds.includes(sale.darko_customer_id)) {
+      darkoCustomerIds.push(sale.darko_customer_id);
+    }
   });
-  
-  // Batch fetch regular customers
-  if (uniqueCustomerIds.size > 0) {
-    const { data: customers } = await supabase
+
+  // Fetch regular customers in a single batch query if any exist
+  if (regularCustomerIds.length > 0) {
+    const { data: customers, error } = await supabase
       .from('customers')
       .select('id, name, pib, address, city')
-      .in('id', Array.from(uniqueCustomerIds));
+      .in('id', regularCustomerIds);
       
-    if (customers) {
+    if (error) {
+      console.error("Error fetching regular customers:", error);
+      toast.error("Greška pri učitavanju kupaca");
+    } else if (customers) {
       customers.forEach(customer => {
         customersMap.set(customer.id, customer);
       });
     }
   }
   
-  // Batch fetch Darko customers
-  if (uniqueDarkoCustomerIds.size > 0) {
-    const { data: darkoCustomers } = await supabase
+  // Fetch Darko customers in a single batch query if any exist
+  if (darkoCustomerIds.length > 0) {
+    const { data: darkoCustomers, error } = await supabase
       .from('kupci_darko')
       .select('id, name, pib, address, city')
-      .in('id', Array.from(uniqueDarkoCustomerIds));
+      .in('id', darkoCustomerIds);
       
-    if (darkoCustomers) {
+    if (error) {
+      console.error("Error fetching Darko customers:", error);
+      toast.error("Greška pri učitavanju Darko kupaca");
+    } else if (darkoCustomers) {
       darkoCustomers.forEach(customer => {
         customersMap.set(customer.id, customer);
       });
     }
   }
 
-  // Second pass: group sales by customer
+  // Now process all sales with the customer data
   salesData.forEach(sale => {
     // Determine which customer ID to use
     const customerId = sale.customer_id || sale.darko_customer_id;
-    if (!customerId || !customersMap.has(customerId)) {
-      console.warn(`No customer found for sale ${sale.id}`);
+    if (!customerId) {
+      console.warn(`No customer ID found for sale ${sale.id}`);
       return;
     }
     
     const customer = customersMap.get(customerId);
+    if (!customer) {
+      console.warn(`No customer data found for ID ${customerId}`);
+      return;
+    }
     
+    // Initialize customer data if this is the first sale for this customer
     if (!customerSales[customerId]) {
       customerSales[customerId] = {
         customerInfo: {
@@ -139,7 +154,7 @@ export async function processCustomerSalesData(salesData: any[]): Promise<Record
     // Add the sale
     customerSales[customerId].sales.push(sale);
     
-    // Update totals
+    // Update totals based on payment type
     if (sale.payment_type === 'cash') {
       customerSales[customerId].cashTotal += sale.total;
     } else {
