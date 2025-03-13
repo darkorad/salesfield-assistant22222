@@ -23,7 +23,13 @@
       "kotlin": {
         "version": "1.8.22",
         "excludeOldVersions": true
-      }
+      },
+      "strict": true,
+      "alwaysUseLatestVersions": false,
+      "exclusions": [
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21"
+      ]
     },
     "useLegacyStorage": false
   },

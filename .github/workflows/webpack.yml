@@ -27,3 +27,12 @@ jobs:
       run: |
         npm install
         npm run build
+    
+    - name: Set up JDK and Kotlin for Android builds
+      if: false  # Only enable this step when building Android
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        kotlin-version: '1.8.22'
+
