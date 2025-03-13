@@ -34,14 +34,15 @@ export function formatFilename() {
 
 /**
  * Fetch sales data for the current month
+ * Using a completely flat query structure to avoid relationship ambiguity
  */
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka za trenutni mesec...");
 
-  // Using a simple query without any joins or relationships to avoid ambiguity
+  // Simple flat query with no joins or relationships
   const { data: salesData, error } = await supabase
     .from('sales')
-    .select('*')
+    .select('id, date, total, items, customer_id, darko_customer_id, payment_type, created_at')
     .eq('user_id', userId)
     .gte('date', startDate.toISOString())
     .lt('date', endDate.toISOString())
@@ -66,42 +67,53 @@ export async function fetchMonthlySalesData(userId: string, startDate: Date, end
 export async function processCustomerSalesData(salesData: any[]): Promise<Record<string, CustomerSalesData>> {
   toast.info("Obrađivanje podataka za mesečni izveštaj...");
 
-  // Create a map to store customer data to avoid duplicate fetches
+  // Create a map to store fetched customer data to avoid duplicate requests
   const customersMap: Map<string, any> = new Map();
   
   // Customer sales summary by customer ID
   const customerSales: Record<string, CustomerSalesData> = {};
+
+  // First pass: fetch all unique customer data
+  const uniqueCustomerIds = new Set<string>();
+  const uniqueDarkoCustomerIds = new Set<string>();
   
-  // Fetch all unique customer data upfront
-  for (const sale of salesData) {
-    if (sale.customer_id && !customersMap.has(sale.customer_id)) {
-      const { data } = await supabase
-        .from('customers')
-        .select('id, name, pib, address, city')
-        .eq('id', sale.customer_id)
-        .maybeSingle();
+  // Collect unique IDs
+  salesData.forEach(sale => {
+    if (sale.customer_id) uniqueCustomerIds.add(sale.customer_id);
+    if (sale.darko_customer_id) uniqueDarkoCustomerIds.add(sale.darko_customer_id);
+  });
+  
+  // Batch fetch regular customers
+  if (uniqueCustomerIds.size > 0) {
+    const { data: customers } = await supabase
+      .from('customers')
+      .select('id, name, pib, address, city')
+      .in('id', Array.from(uniqueCustomerIds));
       
-      if (data) {
-        customersMap.set(sale.customer_id, data);
-      }
-    } 
-    
-    if (sale.darko_customer_id && !customersMap.has(sale.darko_customer_id)) {
-      const { data } = await supabase
-        .from('kupci_darko')
-        .select('id, name, pib, address, city')
-        .eq('id', sale.darko_customer_id)
-        .maybeSingle();
+    if (customers) {
+      customers.forEach(customer => {
+        customersMap.set(customer.id, customer);
+      });
+    }
+  }
+  
+  // Batch fetch Darko customers
+  if (uniqueDarkoCustomerIds.size > 0) {
+    const { data: darkoCustomers } = await supabase
+      .from('kupci_darko')
+      .select('id, name, pib, address, city')
+      .in('id', Array.from(uniqueDarkoCustomerIds));
       
-      if (data) {
-        customersMap.set(sale.darko_customer_id, data);
-      }
+    if (darkoCustomers) {
+      darkoCustomers.forEach(customer => {
+        customersMap.set(customer.id, customer);
+      });
     }
   }
 
-  // Group sales by customer
+  // Second pass: group sales by customer
   salesData.forEach(sale => {
-    // Get customer from map using either ID
+    // Determine which customer ID to use
     const customerId = sale.customer_id || sale.darko_customer_id;
     if (!customerId || !customersMap.has(customerId)) {
       console.warn(`No customer found for sale ${sale.id}`);
