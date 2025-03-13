@@ -5,7 +5,7 @@ import { CustomerSalesData } from "./types";
 
 /**
  * Process sales data into customer sales summary
- * Gets customer data with separate queries to avoid relationship issues
+ * Uses the data already fetched with relationships
  */
 export async function processCustomerSalesData(salesData: any[]): Promise<Record<string, CustomerSalesData>> {
   toast.info("Obrađivanje podataka za mesečni izveštaj...");
@@ -14,64 +14,18 @@ export async function processCustomerSalesData(salesData: any[]): Promise<Record
     // Create object to store customer sales data
     const customerSales: Record<string, CustomerSalesData> = {};
     
-    // Extract unique customer IDs (both regular and Darko)
-    const customerIds = new Set<string>();
-    const darkoCustomerIds = new Set<string>();
-    
-    // Process each sale to collect unique customer IDs
-    salesData.forEach(sale => {
-      if (sale.customer_id) customerIds.add(sale.customer_id);
-      if (sale.darko_customer_id) darkoCustomerIds.add(sale.darko_customer_id);
-    });
-    
-    console.log(`Found ${customerIds.size} unique regular customers and ${darkoCustomerIds.size} unique Darko customers`);
-    
-    // Fetch regular customer data
-    const regularCustomers: Record<string, any> = {};
-    if (customerIds.size > 0) {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('id, name, pib, address, city')
-        .in('id', Array.from(customerIds));
-      
-      if (error) {
-        console.error("Error fetching regular customers:", error);
-      } else if (data) {
-        data.forEach(customer => {
-          regularCustomers[customer.id] = customer;
-        });
-      }
-    }
-    
-    // Fetch Darko customer data
-    const darkoCustomers: Record<string, any> = {};
-    if (darkoCustomerIds.size > 0) {
-      const { data, error } = await supabase
-        .from('kupci_darko')
-        .select('id, name, pib, address, city')
-        .in('id', Array.from(darkoCustomerIds));
-      
-      if (error) {
-        console.error("Error fetching Darko customers:", error);
-      } else if (data) {
-        data.forEach(customer => {
-          darkoCustomers[customer.id] = customer;
-        });
-      }
-    }
-    
-    // Process sales data with customer information
+    // Process each sale with its already fetched customer data
     salesData.forEach(sale => {
       let customerId = null;
       let customer = null;
       
       // Determine customer source (regular or Darko)
-      if (sale.customer_id) {
+      if (sale.customer_id && sale.customer) {
         customerId = sale.customer_id;
-        customer = regularCustomers[customerId];
-      } else if (sale.darko_customer_id) {
+        customer = sale.customer;
+      } else if (sale.darko_customer_id && sale.darko_customer) {
         customerId = sale.darko_customer_id;
-        customer = darkoCustomers[customerId];
+        customer = sale.darko_customer;
       }
       
       if (!customerId || !customer) {

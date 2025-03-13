@@ -420,21 +420,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_sales_customers"
+            foreignKeyName: "sales_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_sales_kupci_darko"
-            columns: ["darko_customer_id"]
-            isOneToOne: false
-            referencedRelation: "kupci_darko"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_kupci_darko_fkey"
+            foreignKeyName: "sales_darko_customer_id_fkey"
             columns: ["darko_customer_id"]
             isOneToOne: false
             referencedRelation: "kupci_darko"
