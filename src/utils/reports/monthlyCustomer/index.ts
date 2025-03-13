@@ -12,7 +12,6 @@ import {
   generateWorkbook, 
   exportWorkbookToFileAndStorage 
 } from "./reportGenerator";
-import { ExportOptions } from "./types";
 
 /**
  * Main function to export monthly customer report
