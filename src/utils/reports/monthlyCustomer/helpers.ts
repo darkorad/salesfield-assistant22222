@@ -33,19 +33,22 @@ export function formatFilename() {
 }
 
 /**
- * Fetch sales data for the current month without using any joins or relationships
+ * Fetch sales data for the current month without using relationships
+ * This avoids the "Could not embed" error by using a flat query
  */
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka za trenutni mesec...");
 
   try {
-    // Basic query with no relationships at all
+    console.log(`Fetching sales data between ${startDate.toISOString()} and ${endDate.toISOString()}`);
+    
+    // Use a basic query without any joins or relationships
     const { data, error } = await supabase
       .from('sales')
       .select('*')
       .eq('user_id', userId)
-      .gte('date', startDate.toISOString())
-      .lt('date', endDate.toISOString());
+      .gte('created_at', startDate.toISOString())
+      .lt('created_at', endDate.toISOString());
 
     if (error) {
       console.error("Error fetching sales data:", error);
@@ -65,94 +68,79 @@ export async function fetchMonthlySalesData(userId: string, startDate: Date, end
 }
 
 /**
- * Process sales data into customer sales summary using separate queries 
- * for customer data to avoid relationship issues
+ * Process sales data into customer sales summary
+ * Gets customer data with separate queries to avoid relationship issues
  */
 export async function processCustomerSalesData(salesData: any[]): Promise<Record<string, CustomerSalesData>> {
   toast.info("Obrađivanje podataka za mesečni izveštaj...");
   
   try {
-    // Create map to store customer data
-    const customerMap: Record<string, any> = {};
-    
-    // Extract unique customer IDs and darko customer IDs
-    const customerIds: string[] = [];
-    const darkoCustomerIds: string[] = [];
-    
-    salesData.forEach(sale => {
-      if (sale.customer_id && !customerIds.includes(sale.customer_id)) {
-        customerIds.push(sale.customer_id);
-      }
-      if (sale.darko_customer_id && !darkoCustomerIds.includes(sale.darko_customer_id)) {
-        darkoCustomerIds.push(sale.darko_customer_id);
-      }
-    });
-    
-    console.log(`Found ${customerIds.length} regular customers and ${darkoCustomerIds.length} Darko customers`);
-    
-    // Fetch all regular customers in a single query
-    if (customerIds.length > 0) {
-      try {
-        const { data: customers, error } = await supabase
-          .from('customers')
-          .select('id, name, pib, address, city')
-          .in('id', customerIds);
-        
-        if (error) {
-          console.error("Error fetching customers:", error);
-        } else if (customers) {
-          customers.forEach(customer => {
-            customerMap[customer.id] = {
-              type: 'regular',
-              ...customer
-            };
-          });
-        }
-      } catch (err) {
-        console.error("Error in customer fetch:", err);
-      }
-    }
-    
-    // Fetch all Darko customers in a single query
-    if (darkoCustomerIds.length > 0) {
-      try {
-        const { data: darkoCustomers, error } = await supabase
-          .from('kupci_darko')
-          .select('id, name, pib, address, city')
-          .in('id', darkoCustomerIds);
-        
-        if (error) {
-          console.error("Error fetching Darko customers:", error);
-        } else if (darkoCustomers) {
-          darkoCustomers.forEach(customer => {
-            customerMap[customer.id] = {
-              type: 'darko',
-              ...customer
-            };
-          });
-        }
-      } catch (err) {
-        console.error("Error in Darko customer fetch:", err);
-      }
-    }
-    
-    // Create customer sales summary
+    // Create object to store customer sales data
     const customerSales: Record<string, CustomerSalesData> = {};
     
-    // Process each sale
+    // Extract unique customer IDs (both regular and Darko)
+    const customerIds = new Set<string>();
+    const darkoCustomerIds = new Set<string>();
+    
+    // Process each sale to collect unique customer IDs
     salesData.forEach(sale => {
-      const customerId = sale.customer_id || sale.darko_customer_id;
+      if (sale.customer_id) customerIds.add(sale.customer_id);
+      if (sale.darko_customer_id) darkoCustomerIds.add(sale.darko_customer_id);
+    });
+    
+    console.log(`Found ${customerIds.size} unique regular customers and ${darkoCustomerIds.size} unique Darko customers`);
+    
+    // Fetch regular customer data
+    const regularCustomers: Record<string, any> = {};
+    if (customerIds.size > 0) {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id, name, pib, address, city')
+        .in('id', Array.from(customerIds));
       
-      if (!customerId) {
-        console.warn(`Sale ${sale.id} has no customer ID`);
-        return;
+      if (error) {
+        console.error("Error fetching regular customers:", error);
+      } else if (data) {
+        data.forEach(customer => {
+          regularCustomers[customer.id] = customer;
+        });
+      }
+    }
+    
+    // Fetch Darko customer data
+    const darkoCustomers: Record<string, any> = {};
+    if (darkoCustomerIds.size > 0) {
+      const { data, error } = await supabase
+        .from('kupci_darko')
+        .select('id, name, pib, address, city')
+        .in('id', Array.from(darkoCustomerIds));
+      
+      if (error) {
+        console.error("Error fetching Darko customers:", error);
+      } else if (data) {
+        data.forEach(customer => {
+          darkoCustomers[customer.id] = customer;
+        });
+      }
+    }
+    
+    // Process sales data with customer information
+    salesData.forEach(sale => {
+      let customerId = null;
+      let customer = null;
+      
+      // Determine customer source (regular or Darko)
+      if (sale.customer_id) {
+        customerId = sale.customer_id;
+        customer = regularCustomers[customerId];
+      } else if (sale.darko_customer_id) {
+        customerId = sale.darko_customer_id;
+        customer = darkoCustomers[customerId];
       }
       
-      const customer = customerMap[customerId];
-      
-      if (!customer) {
-        console.warn(`No customer data found for ID: ${customerId}`);
-        return;
+      if (!customerId || !customer) {
+        console.warn(`No valid customer found for sale ${sale.id}`);
+        return; // Skip this sale
       }
       
       // Initialize customer data if not already done
@@ -170,20 +158,137 @@ export async function processCustomerSalesData(salesData: any[]): Promise<Record
         };
       }
       
-      // Add the sale
+      // Add sale to customer's records
       customerSales[customerId].sales.push(sale);
       
       // Update totals based on payment type
+      const saleTotal = parseFloat(sale.total) || 0;
       if (sale.payment_type === 'cash') {
-        customerSales[customerId].cashTotal += parseFloat(sale.total) || 0;
+        customerSales[customerId].cashTotal += saleTotal;
       } else {
-        customerSales[customerId].invoiceTotal += parseFloat(sale.total) || 0;
+        customerSales[customerId].invoiceTotal += saleTotal;
       }
     });
     
+    console.log(`Processed data for ${Object.keys(customerSales).length} customers`);
     return customerSales;
   } catch (error) {
-    console.error("Error in processCustomerSalesData:", error);
+    console.error("Error processing customer sales data:", error);
+    throw error;
+  }
+}
+
+/**
+ * Process sales data to summarize article sales
+ * Groups articles and sorts them by total value
+ */
+export async function processMonthlySalesByArticle(salesData: any[]) {
+  toast.info("Obrađivanje podataka po artiklima...");
+  
+  try {
+    // Create object to store article sales data
+    const articleSales: Record<string, {
+      name: string,
+      manufacturer: string,
+      unit: string,
+      totalQuantity: number,
+      totalValue: number,
+      customers: Set<string>
+    }> = {};
+    
+    // Cache for customer names to avoid multiple lookups
+    const customerNames: Record<string, string> = {};
+    
+    // Process each sale
+    for (const sale of salesData) {
+      // Get customer name
+      let customerId = sale.customer_id || sale.darko_customer_id;
+      let customerName = 'Nepoznat kupac';
+      
+      if (customerId) {
+        // Check if we already have this customer's name cached
+        if (customerNames[customerId]) {
+          customerName = customerNames[customerId];
+        } else {
+          // Try to fetch from customers table
+          if (sale.customer_id) {
+            const { data } = await supabase
+              .from('customers')
+              .select('name')
+              .eq('id', customerId)
+              .single();
+            
+            if (data) {
+              customerName = data.name;
+              customerNames[customerId] = customerName;
+            }
+          } 
+          // Try to fetch from kupci_darko table
+          else if (sale.darko_customer_id) {
+            const { data } = await supabase
+              .from('kupci_darko')
+              .select('name')
+              .eq('id', customerId)
+              .single();
+            
+            if (data) {
+              customerName = data.name;
+              customerNames[customerId] = customerName;
+            }
+          }
+        }
+      }
+      
+      // Process items in the sale
+      const items = sale.items || [];
+      for (const item of items) {
+        if (!item.product) continue;
+        
+        const product = item.product;
+        const productName = product.Naziv || '';
+        const manufacturer = product.Proizvođač || '';
+        const unit = product["Jedinica mere"] || '';
+        const price = parseFloat(product.Cena) || 0;
+        const quantity = parseFloat(item.quantity) || 0;
+        
+        // Create unique key for the article
+        const key = `${productName}_${manufacturer}_${unit}`;
+        
+        // Initialize article data if needed
+        if (!articleSales[key]) {
+          articleSales[key] = {
+            name: productName,
+            manufacturer: manufacturer,
+            unit: unit,
+            totalQuantity: 0,
+            totalValue: 0,
+            customers: new Set()
+          };
+        }
+        
+        // Update article data
+        articleSales[key].totalQuantity += quantity;
+        articleSales[key].totalValue += quantity * price;
+        articleSales[key].customers.add(customerName);
+      }
+    }
+    
+    // Convert to array and sort by total value (descending)
+    const result = Object.values(articleSales)
+      .sort((a, b) => b.totalValue - a.totalValue)
+      .map(article => ({
+        'Naziv artikla': article.name,
+        'Proizvođač': article.manufacturer,
+        'Jedinica mere': article.unit,
+        'Kupci': Array.from(article.customers).join(', '),
+        'Ukupna količina': parseFloat(article.totalQuantity.toFixed(2)),
+        'Ukupna vrednost': parseFloat(article.totalValue.toFixed(2))
+      }));
+    
+    console.log(`Processed ${result.length} unique articles`);
+    return result;
+  } catch (error) {
+    console.error("Error processing sales by article:", error);
     throw error;
   }
 }
