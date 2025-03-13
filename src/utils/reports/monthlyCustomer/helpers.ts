@@ -38,6 +38,7 @@ export function formatFilename() {
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka za trenutni mesec...");
 
+  // Modified query to avoid relationship ambiguity
   const { data: salesData, error } = await supabase
     .from('sales')
     .select(`
