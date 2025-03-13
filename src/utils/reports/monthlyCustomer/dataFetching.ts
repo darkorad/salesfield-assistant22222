@@ -17,8 +17,8 @@ export async function fetchMonthlySalesData(userId: string, startDate: Date, end
       .from('sales')
       .select('*')
       .eq('user_id', userId)
-      .gte('created_at', startDate.toISOString())
-      .lt('created_at', endDate.toISOString());
+      .gte('date', startDate.toISOString())
+      .lt('date', endDate.toISOString());
 
     if (error) {
       console.error("Error fetching sales data:", error);
