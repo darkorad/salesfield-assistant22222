@@ -10,7 +10,7 @@ interface SalesTableSectionProps {
 export const SalesTableSection = ({ sales }: SalesTableSectionProps) => {
   return (
     <div className="overflow-x-auto -mx-4 md:mx-0">
-      <div className="min-w-full inline-block align-middle text-right">
+      <div className="min-w-full inline-block align-middle text-left">
         <SalesTable sales={sales} sentOrderIds={[]} />
       </div>
     </div>
