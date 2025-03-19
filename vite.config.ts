@@ -53,6 +53,7 @@ export default defineConfig(({ mode }) => ({
       }
     },
     chunkSizeWarningLimit: 1000,
-    reportCompressedSize: false
+    reportCompressedSize: false,
+    outDir: 'dist'  // Explicitly set the output directory to 'dist'
   }
 }));
