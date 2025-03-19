@@ -15,12 +15,17 @@ export const useCustomersByDay = (customers: Customer[], day: string) => {
     
     // Create a Map to store unique customers by ID
     const uniqueCustomersMap = new Map<string, Customer>();
+    // Also track unique customer names to avoid duplicates with different IDs
+    const uniqueCustomerNames = new Set<string>();
     const normalizedSelectedDay = normalizeDay(day);
     
-    // First pass: Process customers with exact day matches
+    // Process customers with day matches
     customers.forEach(customer => {
       // Skip if this customer ID is already processed
       if (uniqueCustomersMap.has(customer.id)) return;
+      
+      // Skip if this customer name is already processed (case insensitive)
+      if (uniqueCustomerNames.has(customer.name.toLowerCase())) return;
       
       // Check all possible day fields with proper null checking
       const dayFields = [
@@ -40,6 +45,7 @@ export const useCustomersByDay = (customers: Customer[], day: string) => {
       
       if (dayMatches) {
         uniqueCustomersMap.set(customer.id, customer);
+        uniqueCustomerNames.add(customer.name.toLowerCase());
       }
     });
     

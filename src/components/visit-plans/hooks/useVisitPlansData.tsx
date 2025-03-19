@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,12 +113,24 @@ export const useVisitPlansData = () => {
 
       console.log("Fetched customers:", customersData?.length || 0);
 
-      // Deduplicate customers by ID
+      // Deduplicate customers by ID and name to prevent duplicates showing up
+      // First deduplicate by ID
       const uniqueCustomers = new Map<string, Customer>();
+      
+      // Then check for duplicate names and use only the first one we find
+      const uniqueCustomerNames = new Set<string>();
       
       customersData?.forEach(customer => {
         if (!uniqueCustomers.has(customer.id)) {
+          // If this customer name is already in our set, skip it
+          if (uniqueCustomerNames.has(customer.name.toLowerCase())) {
+            console.log(`Skipping duplicate customer by name: ${customer.name}`);
+            return;
+          }
+          
+          // Otherwise, add it to both maps
           uniqueCustomers.set(customer.id, customer as Customer);
+          uniqueCustomerNames.add(customer.name.toLowerCase());
         }
       });
       
