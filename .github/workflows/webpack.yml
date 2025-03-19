@@ -14,7 +14,6 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-      # Add fail-fast: false to prevent immediate cancellation when one matrix job fails
       fail-fast: false
 
     steps:
@@ -47,6 +46,10 @@ jobs:
       run: |
         echo "Build directory contents:"
         ls -la dist || echo "dist directory not found"
+        if [ ! -d "dist" ]; then
+          echo "Error: dist directory was not created during build"
+          exit 1
+        fi
       
     - name: Upload build artifacts
       if: success()
@@ -63,3 +66,4 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         kotlin-version: '1.8.22'
+
