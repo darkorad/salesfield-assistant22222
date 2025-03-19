@@ -19,6 +19,9 @@ export const useCustomersByDay = (customers: Customer[], day: string) => {
     
     // First pass: Process customers with exact day matches
     customers.forEach(customer => {
+      // Skip if this customer ID is already processed
+      if (uniqueCustomersMap.has(customer.id)) return;
+      
       // Check all possible day fields with proper null checking
       const dayFields = [
         customer.dan_posete,
@@ -40,7 +43,7 @@ export const useCustomersByDay = (customers: Customer[], day: string) => {
       }
     });
     
-    console.log(`First pass - Customers matching day ${day}:`, uniqueCustomersMap.size);
+    console.log(`Filtered - Unique customers matching day ${day}:`, uniqueCustomersMap.size);
     
     // Sort by name and convert back to array
     return Array.from(uniqueCustomersMap.values())
