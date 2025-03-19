@@ -25,14 +25,14 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<Layout />}>
-            <Route path="/" element={<Navigate to="/sales" replace />} />
+            <Route path="/" element={<Navigate to="/visit-plans" replace />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/prodaja2" element={<Prodaja2 />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/daily-orders" element={<DailyOrders />} />
             <Route path="/visit-plans" element={<VisitPlans />} />
-            <Route path="*" element={<Navigate to="/sales" replace />} />
+            <Route path="*" element={<Navigate to="/visit-plans" replace />} />
           </Route>
         </Routes>
         <Toaster />

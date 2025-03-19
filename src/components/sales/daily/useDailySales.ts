@@ -3,11 +3,13 @@ import { useState, useEffect } from "react";
 import { Order, OrderItem } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { checkOnlineStatus, getPendingSales } from "@/utils/offlineStorage";
 
 export const useDailySales = () => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
 
   const splitOrderByPaymentType = (order: any): Order[] => {
     // Group items by payment type
@@ -53,6 +55,39 @@ export const useDailySales = () => {
 
   const loadTodaySales = async () => {
     try {
+      // Check if we're online
+      const online = await checkOnlineStatus();
+      setIsOffline(!online);
+
+      if (!online) {
+        // Load sales from local storage when offline
+        const pendingSales = await getPendingSales();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Filter only today's pending sales
+        const todayPendingSales = pendingSales.filter(sale => {
+          const saleDate = new Date(sale.date);
+          return saleDate >= today;
+        });
+        
+        if (todayPendingSales.length > 0) {
+          // Transform and split orders with mixed payment types
+          const transformedSales = todayPendingSales.flatMap(sale => {
+            if (!sale) return [];
+            return splitOrderByPaymentType(sale);
+          }) || [];
+
+          setTodaySales(transformedSales);
+          toast.info("Prikazuju se offline porudžbine");
+        } else {
+          setTodaySales([]);
+        }
+        
+        setIsLoading(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Niste prijavljeni");
@@ -170,6 +205,7 @@ export const useDailySales = () => {
     todaySales,
     isLoading,
     loadTodaySales,
-    userEmail
+    userEmail,
+    isOffline
   };
 };

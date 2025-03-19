@@ -1,12 +1,16 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { checkOnlineStatus, getPendingSales } from "@/utils/offlineStorage";
 
 /**
  * Fetches sales data for the current day from Supabase
  */
 export const fetchDailySalesData = async () => {
   try {
+    // Check if we're online
+    const isOnline = await checkOnlineStatus();
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -14,6 +18,28 @@ export const fetchDailySalesData = async () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     
     console.log(`Generating report for date range: ${today.toISOString()} to ${tomorrow.toISOString()}`);
+
+    // If offline, use local pending sales
+    if (!isOnline) {
+      toast.info("Učitavanje lokalnih podataka (offline režim)...");
+      
+      // Get pending sales from local storage
+      const pendingSales = await getPendingSales();
+      
+      // Filter only today's sales
+      const todaySales = pendingSales.filter(sale => {
+        const saleDate = new Date(sale.date);
+        return saleDate >= today && saleDate < tomorrow;
+      });
+      
+      if (!todaySales || todaySales.length === 0) {
+        toast.error("Nema prodaje za današnji dan u offline režimu");
+        return null;
+      }
+      
+      // Most pending sales should already have customer data attached
+      return todaySales;
+    }
 
     // Get current user session
     const { data: { session } } = await supabase.auth.getSession();

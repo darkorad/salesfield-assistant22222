@@ -4,16 +4,51 @@ import { Customer, Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { 
+  checkOnlineStatus,
+  getLocalCustomers,
+  getLocalProducts,
+  storeCustomersLocally,
+  storeProductsLocally,
+  updateLastSyncTimestamp
+} from "@/utils/offlineStorage";
 
 export const useSalesData = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
   const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
+      // First check if we're online
+      const online = await checkOnlineStatus();
+      setIsOffline(!online);
+
+      setIsLoading(true);
+      setError(null);
+
+      if (!online) {
+        console.log("Device is offline, loading data from local storage");
+        // Load from local storage when offline
+        const localCustomers = await getLocalCustomers();
+        const localProducts = await getLocalProducts();
+        
+        if (localCustomers.length === 0 && localProducts.length === 0) {
+          toast.error("Nema sačuvanih podataka u offline režimu");
+        } else {
+          toast.info("Koriste se lokalno sačuvani podaci (offline režim)");
+        }
+        
+        setCustomers(localCustomers);
+        setProducts(localProducts);
+        setIsLoading(false);
+        return;
+      }
+
+      // If we're online, continue with normal data fetching
       // Check if user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -22,8 +57,6 @@ export const useSalesData = () => {
         return;
       }
 
-      setIsLoading(true);
-      setError(null);
       console.log("Fetching data for user:", session.user.id);
 
       // Get user email
@@ -137,6 +170,11 @@ export const useSalesData = () => {
       console.log("Fetched customers:", customersData?.length || 0);
       console.log("Fetched products:", productsData?.length || 0);
 
+      // Store data locally for offline use
+      await storeCustomersLocally(customersData || []);
+      await storeProductsLocally(productsData || []);
+      await updateLastSyncTimestamp();
+
       setCustomers(customersData || []);
       setProducts(productsData || []);
     } catch (error) {
@@ -230,7 +268,8 @@ export const useSalesData = () => {
   return { 
     customers, 
     products, 
-    isLoading, 
+    isLoading,
+    isOffline, 
     error,
     refetch: fetchData 
   };
