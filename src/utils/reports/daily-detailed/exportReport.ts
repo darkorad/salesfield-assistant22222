@@ -29,8 +29,10 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
     // Create workbook
     const wb = createDailyReportWorkbook(reportData, totalsData);
     
-    // Generate filename
-    const filename = generateReportFilename();
+    // Generate a more descriptive filename with the current date
+    const today = new Date();
+    const dateStr = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`;
+    const filename = `Dnevni-Detaljan-Izvestaj-${dateStr}`;
 
     // Save to app storage first, then try normal export as fallback
     console.log(`Saving workbook with filename: ${filename}`);

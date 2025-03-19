@@ -130,7 +130,11 @@ export const useCashSalesExport = () => {
       });
 
       const { wb } = generateCashSalesWorksheet(formattedSales);
-      const dateStr = format(selectedDate, 'dd-MM-yyyy');
+      
+      // Format a more descriptive date string: DD.MM.YYYY
+      const dateStr = selectedDate 
+        ? `${selectedDate.getDate()}.${selectedDate.getMonth() + 1}.${selectedDate.getFullYear()}`
+        : `${new Date().getDate()}.${new Date().getMonth() + 1}.${new Date().getFullYear()}`;
       
       toast.info("Čuvanje izveštaja u toku...");
       
@@ -147,7 +151,7 @@ export const useCashSalesExport = () => {
         XLSX.utils.book_append_sheet(namedWb, worksheet, worksheetName);
         
         // Save the workbook to app storage with explicit date in filename
-        const fileName = `Gotovinska-prodaja-${dateStr}`;
+        const fileName = `Gotovinska-Prodaja-${dateStr}`;
         const storedFile = await saveWorkbookToStorage(namedWb, fileName);
         
         if (storedFile) {

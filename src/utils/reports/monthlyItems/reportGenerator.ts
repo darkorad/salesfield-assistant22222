@@ -69,8 +69,12 @@ export function generateWorkbook(reportData: ReportItem[]): XLSX.WorkBook {
     { wch: 15 }  // Ukupna vrednost
   ];
 
-  // Add worksheet to workbook
-  XLSX.utils.book_append_sheet(wb, ws, "Mesečna prodaja po artiklima");
+  // Generate a descriptive sheet name with current date
+  const today = new Date();
+  const sheetName = `Artikli ${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`;
+
+  // Add worksheet to workbook with descriptive name
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
   
   return wb;
 }
@@ -83,6 +87,13 @@ export async function exportWorkbookToFileAndStorage(
   fileName: string,
   redirectToDocuments?: () => void
 ): Promise<void> {
+  // Include date in the filename if not already present
+  if (!fileName.includes('-')) {
+    const today = new Date();
+    const dateStr = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`;
+    fileName = `${fileName}-${dateStr}`;
+  }
+
   // Save to storage
   const storedFile = await saveWorkbookToStorage(wb, fileName);
   

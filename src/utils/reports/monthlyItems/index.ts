@@ -59,8 +59,8 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
     const wb = generateWorkbook(reportData);
     
     // Create more descriptive filename with month name and year 
-    // Format: MesecnaArtikli-Mesec-Godina (e.g., MesecnaArtikli-Mart-2025)
-    const fileName = `MesecnaArtikli-${monthName}-${year}`;
+    // Format: Mesecni-Izvestaj-Artikli-Mart-2025
+    const fileName = `Mesecni-Izvestaj-Artikli-${monthName}-${year}`;
     
     // Export and save workbook
     await exportWorkbookToFileAndStorage(wb, fileName, redirectToDocuments);

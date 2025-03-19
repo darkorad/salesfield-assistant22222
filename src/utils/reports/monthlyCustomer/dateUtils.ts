@@ -19,13 +19,24 @@ export function getMonthDateRange() {
 }
 
 /**
+ * Get the month name in Serbian
+ */
+export function getMonthNameInSerbian(date: Date = new Date()): string {
+  const monthNames = [
+    'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Jun',
+    'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
+  ];
+  return monthNames[date.getMonth()];
+}
+
+/**
  * Format filename with current month and year
  */
 export function formatFilename() {
   const today = new Date();
-  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const monthName = getMonthNameInSerbian(today);
   const year = today.getFullYear();
   
-  // Format: MesecniIzvestajKupci-MM-YYYY
-  return `MesecniIzvestajKupci-${month}-${year}`;
+  // Format: Mesecni-Izvestaj-Kupci-Mart-2025
+  return `Mesecni-Izvestaj-Kupci-${monthName}-${year}`;
 }
