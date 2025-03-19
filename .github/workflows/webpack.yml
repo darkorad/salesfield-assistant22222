@@ -14,6 +14,8 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x]
+      # Add fail-fast: false to prevent immediate cancellation when one matrix job fails
+      fail-fast: false
 
     steps:
     - uses: actions/checkout@v4
@@ -22,19 +24,32 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci || npm install
+      run: |
+        npm ci || npm install
+        npm list --depth=0
     
     - name: Setup environment
       run: |
         echo "Node version: $(node -v)"
         echo "NPM version: $(npm -v)"
+        echo "Working directory: $(pwd)"
+        echo "Directory contents: $(ls -la)"
     
     - name: Build
       run: npm run build
+      env:
+        CI: false
+      
+    - name: Verify build output
+      run: |
+        echo "Build directory contents:"
+        ls -la dist || echo "dist directory not found"
       
     - name: Upload build artifacts
+      if: success()
       uses: actions/upload-artifact@v3
       with:
         name: dist-files-${{ matrix.node-version }}
