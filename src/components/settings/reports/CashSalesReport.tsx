@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DateSelector } from "./components/DateSelector";
 import { ExportButton } from "./components/ExportButton";
@@ -8,33 +7,11 @@ import { Info, HelpCircle, Download } from "lucide-react";
 
 export const CashSalesReport = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { isExporting, exportCashSales, hasExportFailed } = useCashSalesExport();
+  const { isExporting, exportCashSales, hasExportFailed, handleOpenInBrowser } = useCashSalesExport();
   const [showHelp, setShowHelp] = useState(false);
 
   const handleExportTodayCashSales = () => {
     exportCashSales(selectedDate);
-  };
-
-  const handleOpenInBrowser = () => {
-    // This will open a download dialog directly in the browser
-    const event = new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: true
-    });
-    
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = '#';
-    a.download = `gotovinska-prodaja-${selectedDate ? new Date(selectedDate).toLocaleDateString('sr') : 'izvestaj'}.xlsx`;
-    document.body.appendChild(a);
-    a.dispatchEvent(event);
-    document.body.removeChild(a);
-    
-    // Trigger the main export a moment later
-    setTimeout(() => {
-      exportCashSales(selectedDate);
-    }, 100);
   };
 
   return (
@@ -57,7 +34,7 @@ export const CashSalesReport = () => {
           <Button 
             variant="outline" 
             className="w-full border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900"
-            onClick={handleOpenInBrowser}
+            onClick={() => handleOpenInBrowser(selectedDate)}
           >
             <Download className="mr-2 h-4 w-4 md:h-5 md:w-5" />
             Otvori preuzimanje direktno

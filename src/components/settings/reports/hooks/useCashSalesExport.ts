@@ -1,13 +1,17 @@
 
 import { useState } from "react";
-import { format } from "date-fns";
 import { toast } from "sonner";
-import * as XLSX from 'xlsx';
-import { supabase } from "@/integrations/supabase/client";
-import { generateCashSalesWorksheet } from "@/utils/reports/worksheet/cashSalesWorksheet";
-import { exportWorkbook } from "@/utils/fileExport";
-import { saveWorkbookToStorage } from "@/utils/fileStorage";
 import { useNavigate } from "react-router-dom";
+import { 
+  fetchCashSalesForDate,
+  filterCashSales,
+  formatCashSalesForReport
+} from "@/services/cashSalesService";
+import { generateCashSalesReport } from "@/utils/reports/cashSales/reportGenerator";
+import { 
+  handleAlternativeDownload,
+  createDirectBrowserDownload
+} from "@/utils/reports/cashSales/fallbackUtils";
 
 export const useCashSalesExport = () => {
   const [isExporting, setIsExporting] = useState(false);
@@ -23,179 +27,45 @@ export const useCashSalesExport = () => {
 
       setIsExporting(true);
       setHasExportFailed(false);
-      toast.info("Priprema izveštaja u toku...");
-
+      
       if (!selectedDate) {
         toast.error("Izaberite datum");
         setIsExporting(false);
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Niste prijavljeni");
+      // Fetch sales data for the selected date
+      const salesData = await fetchCashSalesForDate(selectedDate);
+      if (!salesData) {
         setIsExporting(false);
         return;
       }
 
-      const startDate = new Date(selectedDate);
-      startDate.setHours(0, 0, 0, 0);
-
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 1);
-
-      toast.info(`Učitavanje prodaje za ${format(selectedDate, 'dd.MM.yyyy')}...`);
-
-      const { data: salesData, error } = await supabase
-        .from('sales')
-        .select(`
-          *,
-          customer:customers(*),
-          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
-        `)
-        .eq('user_id', session.user.id)
-        .gte('date', startDate.toISOString())
-        .lt('date', endDate.toISOString())
-        .order('date', { ascending: false });
-
-      if (error) {
-        console.error("Error loading sales:", error);
-        toast.error(`Greška pri učitavanju prodaje: ${error.message}`);
-        setIsExporting(false);
-        setHasExportFailed(true);
-        return;
-      }
-
-      if (!salesData || salesData.length === 0) {
-        toast.error(`Nema prodaje za dan ${format(selectedDate, 'dd.MM.yyyy')}`);
-        setIsExporting(false);
-        return;
-      }
-
-      console.log("All sales for selected date:", salesData?.length, salesData?.map(s => ({
-        id: s.id,
-        customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
-        items: s.items.length,
-        itemsPaymentTypes: s.items.map((i: any) => i.paymentType || 'unknown')
-      })));
-
-      const cashSales = salesData?.filter(sale => {
-        return Array.isArray(sale.items) && sale.items.some((item: any) => item.paymentType === 'cash');
-      }) || [];
-
+      // Filter only cash sales
+      const cashSales = filterCashSales(salesData);
       if (cashSales.length === 0) {
-        toast.error(`Nema prodaje za gotovinu na dan ${format(selectedDate, 'dd.MM.yyyy')}`);
         setIsExporting(false);
         return;
       }
 
-      console.log("Found cash sales:", cashSales.length, cashSales.map(s => ({
-        customer: s.customer?.name || s.darko_customer?.name || 'Unknown',
-        itemsCount: s.items.length,
-        cashItemsCount: s.items.filter((i: any) => i.paymentType === 'cash').length
-      })));
+      // Format sales data for report
+      const formattedSales = formatCashSalesForReport(cashSales);
 
-      toast.info("Generisanje izveštaja...");
-
-      const formattedSales = cashSales.map(sale => {
-        const cashItems = Array.isArray(sale.items) 
-          ? sale.items.filter((item: any) => item.paymentType === 'cash')
-          : [];
-          
-        const cashTotal = cashItems.reduce((sum: number, item: any) => {
-          if (!item.product) return sum;
-          const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
-          return sum + ((item.product.Cena || 0) * item.quantity * unitSize);
-        }, 0);
-
-        return {
-          customer: sale.customer || sale.darko_customer || { 
-            name: 'Nepoznat',
-            address: 'N/A',
-            city: 'N/A',
-            phone: 'N/A'
-          },
-          items: cashItems.map((item: any) => ({
-            product: {
-              Naziv: item.product?.Naziv || 'Nepoznat proizvod',
-              "Jedinica mere": item.product?.["Jedinica mere"] || '1',
-              Cena: item.product?.Cena || 0
-            },
-            quantity: item.quantity || 0,
-            total: (item.quantity || 0) * (item.product?.Cena || 0) * (parseFloat(item.product?.["Jedinica mere"]) || 1)
-          })),
-          total: cashTotal,
-          previousDebt: 0
-        };
-      });
-
-      const { wb } = generateCashSalesWorksheet(formattedSales);
-      
-      // Format a more descriptive date string: DD.MM.YYYY
-      const dateStr = selectedDate 
-        ? `${selectedDate.getDate()}.${selectedDate.getMonth() + 1}.${selectedDate.getFullYear()}`
-        : `${new Date().getDate()}.${new Date().getMonth() + 1}.${new Date().getFullYear()}`;
-      
-      toast.info("Čuvanje izveštaja u toku...");
-      
+      // Generate and save the report
       try {
         setHasExportFailed(false);
-        
-        // Set sheet name explicitly for better identification in file managers
-        const worksheetName = `Gotovinska prodaja ${dateStr}`;
-        const firstSheet = wb.SheetNames[0];
-        const worksheet = wb.Sheets[firstSheet];
-        
-        // Create a new workbook with properly named sheet
-        const namedWb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(namedWb, worksheet, worksheetName);
-        
-        // Save the workbook to app storage with explicit date in filename
-        const fileName = `Gotovinska-Prodaja-${dateStr}`;
-        const storedFile = await saveWorkbookToStorage(namedWb, fileName);
-        
-        if (storedFile) {
-          toast.success(`Izveštaj je uspešno sačuvan`, {
-            description: `Možete ga pronaći u meniju Dokumenti`,
-            action: {
-              label: 'Otvori Dokumenti',
-              onClick: () => navigate('/documents')
-            },
-            duration: 8000
-          });
-        } else {
-          throw new Error("Nije uspelo čuvanje fajla");
-        }
-        
-        // Also try regular export as fallback
-        try {
-          await exportWorkbook(namedWb, fileName);
-        } catch (exportErr) {
-          console.log("Regular export failed, but file is saved to app storage:", exportErr);
-        }
+        await generateCashSalesReport(
+          formattedSales, 
+          selectedDate, 
+          () => navigate('/documents')
+        );
       } catch (error) {
-        console.error("Error during storage:", error);
+        console.error("Error during report generation:", error);
         setHasExportFailed(true);
         toast.error(`Greška pri čuvanju: ${error instanceof Error ? error.message : String(error)}`);
         
         // Try alternative download method
-        try {
-          toast.info("Pokušaj direktnog preuzimanja kroz browser...");
-          
-          const blobData = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-          const blob = new Blob([blobData], { 
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-          });
-          
-          const url = URL.createObjectURL(blob);
-          window.open(url, '_blank');
-          
-          toast.info("Fajl je otvoren u browseru. Sačuvajte ga koristeći opciju 'Sačuvaj kao'.", {
-            duration: 10000
-          });
-        } catch (altError) {
-          console.error("Alternative download method failed:", altError);
-        }
+        await handleAlternativeDownload(formattedSales, selectedDate);
       }
     } catch (error) {
       console.error("Error exporting cash sales:", error);
@@ -206,9 +76,21 @@ export const useCashSalesExport = () => {
     }
   };
 
+  const handleOpenInBrowser = (selectedDate?: Date) => {
+    createDirectBrowserDownload(selectedDate);
+    
+    // Trigger the main export a moment later
+    if (selectedDate) {
+      setTimeout(() => {
+        exportCashSales(selectedDate);
+      }, 100);
+    }
+  };
+
   return {
     isExporting,
     hasExportFailed,
-    exportCashSales
+    exportCashSales,
+    handleOpenInBrowser
   };
 };
