@@ -38,10 +38,11 @@ export const useSalesData = () => {
       let customersError;
 
       if (userEmail === 'zirmd.darko@gmail.com') {
-        console.log("Fetching customers from kupci_darko table");
+        console.log("Fetching customers from kupci_darko table for Darko");
         const response = await supabase
           .from('kupci_darko')
-          .select('*');
+          .select('*')
+          .eq('user_id', session.user.id);
         
         if (response.error) {
           throw new Error(`Error fetching customers: ${response.error.message}`);
@@ -65,7 +66,17 @@ export const useSalesData = () => {
           email: customer.email || null,
           dan_posete: customer.dan_posete || null
         }));
+      } else if (userEmail === 'zirmd.veljko@gmail.com') {
+        console.log("Fetching customers from regular customers table for Veljko");
+        const response = await supabase
+          .from('customers')
+          .select('*')
+          .eq('user_id', session.user.id);
+        
+        customersData = response.data;
+        customersError = response.error;
       } else {
+        // For any other user, use standard customer table
         console.log("Fetching customers from regular customers table");
         const response = await supabase
           .from('customers')
@@ -88,7 +99,16 @@ export const useSalesData = () => {
       let productsError;
 
       if (userEmail === 'zirmd.darko@gmail.com') {
-        console.log("Fetching products from products_darko table");
+        console.log("Fetching products from products_darko table for Darko");
+        const response = await supabase
+          .from('products_darko')
+          .select('*')
+          .not('Naziv', 'eq', '');
+        
+        productsData = response.data;
+        productsError = response.error;
+      } else if (userEmail === 'zirmd.veljko@gmail.com') {
+        console.log("Fetching products from products_darko table for Veljko");
         const response = await supabase
           .from('products_darko')
           .select('*')
@@ -97,11 +117,10 @@ export const useSalesData = () => {
         productsData = response.data;
         productsError = response.error;
       } else {
-        console.log("Fetching products from regular products table");
+        console.log("Fetching products from products_darko table");
         const response = await supabase
-          .from('products_darko')  // Changed from 'products' to 'products_darko'
+          .from('products_darko')
           .select('*')
-          .eq('user_id', session.user.id)
           .not('Naziv', 'eq', '');
         
         productsData = response.data;
@@ -151,6 +170,25 @@ export const useSalesData = () => {
         console.log('Customers subscription status:', status);
       });
 
+    // Set up real-time subscription for kupci_darko table
+    const kupciDarkoChannel = supabase
+      .channel('kupci-darko-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kupci_darko'
+        },
+        (payload) => {
+          console.log('Real-time kupci_darko update received:', payload);
+          fetchData();
+        }
+      )
+      .subscribe((status) => {
+        console.log('kupci_darko subscription status:', status);
+      });
+
     // Set up real-time subscription for products table
     const productsChannel = supabase
       .channel('products-changes')
@@ -159,7 +197,7 @@ export const useSalesData = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'products_darko'  // Changed from 'products' to 'products_darko'
+          table: 'products_darko'
         },
         (payload) => {
           console.log('Real-time product update received:', payload);
@@ -184,6 +222,7 @@ export const useSalesData = () => {
     return () => {
       subscription.unsubscribe();
       supabase.removeChannel(customersChannel);
+      supabase.removeChannel(kupciDarkoChannel);
       supabase.removeChannel(productsChannel);
     };
   }, [navigate]);

@@ -53,7 +53,9 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
       const normalizedDanObilaska = normalizeDay(customerData.danObilaska);
 
       // Check which table to update based on user email
-      if (user.email === 'zirmd.darko@gmail.com') {
+      const userEmail = user.email;
+      
+      if (userEmail === 'zirmd.darko@gmail.com') {
         const { error } = await supabase
           .from('kupci_darko')
           .update({
@@ -66,14 +68,14 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
             is_vat_registered: customerData.isVatRegistered,
             gps_coordinates: customerData.gpsCoordinates,
             naselje: customerData.naselje,
-            dan_posete: normalizedVisitDay, // Use as dan_posete in kupci_darko
+            dan_posete: normalizedVisitDay,
             dan_obilaska: normalizedDanObilaska,
-            visit_day: normalizedVisitDay // Also set visit_day for consistency
+            visit_day: normalizedVisitDay
           })
           .eq('id', customer.id);
 
         if (error) throw error;
-      } else {
+      } else if (userEmail === 'zirmd.veljko@gmail.com') {
         const { error } = await supabase
           .from('customers')
           .update({
@@ -88,7 +90,28 @@ export const EditCustomerDialog = ({ customer, onCustomerUpdate }: EditCustomerD
             naselje: customerData.naselje,
             visit_day: normalizedVisitDay,
             dan_obilaska: normalizedDanObilaska,
-            dan_posete: normalizedVisitDay // Also set dan_posete for consistency
+            dan_posete: normalizedVisitDay
+          })
+          .eq('id', customer.id);
+
+        if (error) throw error;
+      } else {
+        // For any other user, try the customers table
+        const { error } = await supabase
+          .from('customers')
+          .update({
+            name: customerData.name,
+            address: customerData.address,
+            city: customerData.city,
+            phone: customerData.phone,
+            email: customerData.email,
+            pib: customerData.pib,
+            is_vat_registered: customerData.isVatRegistered,
+            gps_coordinates: customerData.gpsCoordinates,
+            naselje: customerData.naselje,
+            visit_day: normalizedVisitDay,
+            dan_obilaska: normalizedDanObilaska,
+            dan_posete: normalizedVisitDay
           })
           .eq('id', customer.id);
 

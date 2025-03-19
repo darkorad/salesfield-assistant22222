@@ -7,6 +7,7 @@ import { toast } from "sonner";
 export const useDailySales = () => {
   const [todaySales, setTodaySales] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const splitOrderByPaymentType = (order: any): Order[] => {
     // Group items by payment type
@@ -58,6 +59,9 @@ export const useDailySales = () => {
         return;
       }
 
+      // Store user email for conditional rendering
+      setUserEmail(session.user.email);
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -65,12 +69,28 @@ export const useDailySales = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
 
       console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
+      console.log("User email:", session.user.email);
+
+      let customerRelation;
+      
+      // Use the appropriate customer relation based on user
+      if (session.user.email === 'zirmd.darko@gmail.com') {
+        customerRelation = 'darko_customer:kupci_darko!fk_sales_kupci_darko';
+      } else if (session.user.email === 'zirmd.veljko@gmail.com') {
+        customerRelation = 'customer:customers!sales_customer_id_fkey';
+      } else {
+        // For other users, include both relations
+        customerRelation = `
+          customer:customers!sales_customer_id_fkey(*),
+          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
+        `;
+      }
 
       const { data: salesData, error } = await supabase
         .from('sales')
         .select(`
           *,
-          darko_customer:kupci_darko!fk_sales_kupci_darko(
+          ${customerRelation}(
             id,
             name,
             address,
@@ -122,6 +142,7 @@ export const useDailySales = () => {
   return {
     todaySales,
     isLoading,
-    loadTodaySales
+    loadTodaySales,
+    userEmail
   };
 };

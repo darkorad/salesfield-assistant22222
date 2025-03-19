@@ -36,9 +36,11 @@ export const AddCustomerDialog = () => {
       const normalizedVisitDay = normalizeDay(customer.visitDay);
       const normalizedDanObilaska = normalizeDay(customer.danObilaska);
 
-      // Check if it's Darko's account (zirmd.darko@gmail.com)
-      if (user.email === 'zirmd.darko@gmail.com') {
-        // Insert into kupci_darko table
+      // Check which table to use based on user email
+      const userEmail = user.email;
+      
+      if (userEmail === 'zirmd.darko@gmail.com') {
+        // Insert into kupci_darko table for Darko
         const { data, error } = await supabase
           .from('kupci_darko')
           .insert([{
@@ -54,7 +56,8 @@ export const AddCustomerDialog = () => {
             gps_coordinates: customer.gpsCoordinates,
             naselje: customer.naselje,
             dan_posete: normalizedVisitDay,
-            dan_obilaska: normalizedDanObilaska
+            dan_obilaska: normalizedDanObilaska,
+            visit_day: normalizedVisitDay
           }])
           .select()
           .single();
@@ -62,8 +65,8 @@ export const AddCustomerDialog = () => {
         if (error) throw error;
         
         toast.success("Kupac je uspešno dodat");
-      } else {
-        // Insert into customers table
+      } else if (userEmail === 'zirmd.veljko@gmail.com') {
+        // Insert into customers table for Veljko
         const { data, error } = await supabase
           .from('customers')
           .insert([{
@@ -79,7 +82,34 @@ export const AddCustomerDialog = () => {
             gps_coordinates: customer.gpsCoordinates,
             naselje: customer.naselje,
             visit_day: normalizedVisitDay,
-            dan_obilaska: normalizedDanObilaska
+            dan_obilaska: normalizedDanObilaska,
+            dan_posete: normalizedVisitDay
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        toast.success("Kupac je uspešno dodat");
+      } else {
+        // For any other user, use standard customers table
+        const { data, error } = await supabase
+          .from('customers')
+          .insert([{
+            user_id: user.id,
+            code: code,
+            name: customer.name,
+            address: customer.address,
+            city: customer.city,
+            phone: customer.phone,
+            email: customer.email,
+            pib: customer.pib,
+            is_vat_registered: customer.isVatRegistered,
+            gps_coordinates: customer.gpsCoordinates,
+            naselje: customer.naselje,
+            visit_day: normalizedVisitDay,
+            dan_obilaska: normalizedDanObilaska,
+            dan_posete: normalizedVisitDay
           }])
           .select()
           .single();

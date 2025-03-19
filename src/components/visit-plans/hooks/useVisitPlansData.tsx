@@ -55,13 +55,55 @@ export const useVisitPlansData = () => {
 
       console.log("Fetching customers for visit plans");
       console.log("User ID:", session.session?.user.id);
+      console.log("User Email:", session.session?.user.email);
 
-      // Fetch customers with a valid visit day
-      const { data: customersData, error: customersError } = await supabase
-        .from("kupci_darko")
-        .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
-        .not('name', 'is', null)
-        .order("name");
+      // Determine which table to fetch customers from based on the user's email
+      const userEmail = session.session?.user.email;
+      let customersData;
+      let customersError;
+
+      if (userEmail === 'zirmd.darko@gmail.com') {
+        // Fetch from kupci_darko for Darko
+        const response = await supabase
+          .from("kupci_darko")
+          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+          .not('name', 'is', null)
+          .eq('user_id', session.session.user.id)
+          .order("name");
+          
+        customersData = response.data;
+        customersError = response.error;
+      } else if (userEmail === 'zirmd.veljko@gmail.com') {
+        // Fetch from customers table for Veljko
+        const response = await supabase
+          .from("customers")
+          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+          .not('name', 'is', null)
+          .eq('user_id', session.session.user.id)
+          .order("name");
+          
+        customersData = response.data;
+        customersError = response.error;
+      } else {
+        // For any other user, try both tables
+        const kupciDarkoResponse = await supabase
+          .from("kupci_darko")
+          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+          .not('name', 'is', null)
+          .eq('user_id', session.session.user.id)
+          .order("name");
+          
+        const customersResponse = await supabase
+          .from("customers")
+          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+          .not('name', 'is', null)
+          .eq('user_id', session.session.user.id)
+          .order("name");
+          
+        // Combine results
+        customersData = [...(kupciDarkoResponse.data || []), ...(customersResponse.data || [])];
+        customersError = kupciDarkoResponse.error || customersResponse.error;
+      }
 
       if (customersError) {
         console.error("Error fetching customers:", customersError);
@@ -101,7 +143,7 @@ export const useVisitPlansData = () => {
 
     // Set up real-time subscription for customer updates
     const channel = supabase
-      .channel('kupci_darko-changes')
+      .channel('customer-changes')
       .on(
         'postgres_changes',
         {
