@@ -1,12 +1,61 @@
+
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 const Login = () => {
   const navigate = useNavigate();
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [remainingTime, setRemainingTime] = useState<number>(0);
+
+  // Load stored login attempts and lockout time on component mount
+  useEffect(() => {
+    const storedAttempts = localStorage.getItem('loginAttempts');
+    const storedLockout = localStorage.getItem('lockedUntil');
+    
+    if (storedAttempts) {
+      setLoginAttempts(parseInt(storedAttempts, 10));
+    }
+    
+    if (storedLockout) {
+      const lockoutTime = parseInt(storedLockout, 10);
+      if (lockoutTime > Date.now()) {
+        setLockedUntil(lockoutTime);
+      } else {
+        // Reset if lockout has expired
+        localStorage.removeItem('lockedUntil');
+        localStorage.removeItem('loginAttempts');
+      }
+    }
+  }, []);
+
+  // Update remaining lockout time
+  useEffect(() => {
+    if (!lockedUntil) return;
+    
+    const interval = setInterval(() => {
+      const remaining = lockedUntil - Date.now();
+      if (remaining <= 0) {
+        clearInterval(interval);
+        setLockedUntil(null);
+        setLoginAttempts(0);
+        localStorage.removeItem('lockedUntil');
+        localStorage.removeItem('loginAttempts');
+      } else {
+        setRemainingTime(remaining);
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [lockedUntil]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -20,14 +69,45 @@ const Login = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
+        // Reset login attempts on successful login
+        setLoginAttempts(0);
+        localStorage.removeItem('loginAttempts');
+        localStorage.removeItem('lockedUntil');
         navigate("/sales");
+      } else if (event === "SIGNED_OUT") {
+        navigate("/login");
+      } else if (event === "USER_UPDATED") {
+        // Handle user update
+      } else if (event === "PASSWORD_RECOVERY") {
+        // Handle password recovery
+      } else if (event === "SIGN_IN_ERROR") {
+        // Track failed login attempts
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+        localStorage.setItem('loginAttempts', newAttempts.toString());
+        
+        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+          const lockoutTime = Date.now() + LOCKOUT_DURATION;
+          setLockedUntil(lockoutTime);
+          localStorage.setItem('lockedUntil', lockoutTime.toString());
+          toast.error(`Previše pokušaja prijave. Pokušajte ponovo za 5 minuta.`);
+        }
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, loginAttempts]);
+
+  // Format remaining time as mm:ss
+  const formatRemainingTime = () => {
+    const minutes = Math.floor(remainingTime / 60000);
+    const seconds = Math.floor((remainingTime % 60000) / 1000);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  const isLocked = lockedUntil !== null && lockedUntil > Date.now();
 
   return (
     <div 
@@ -55,44 +135,63 @@ const Login = () => {
             <p className="text-sm text-gray-600">
               Prijavite se da biste pristupili aplikaciji
             </p>
+            {isLocked && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                <p className="font-medium">Pristup privremeno blokiran</p>
+                <p className="text-sm">Previše neuspešnih pokušaja. Pokušajte ponovo za {formatRemainingTime()}.</p>
+              </div>
+            )}
+            {!isLocked && loginAttempts > 0 && (
+              <p className="text-xs text-amber-600">
+                Preostali pokušaji: {MAX_LOGIN_ATTEMPTS - loginAttempts}
+              </p>
+            )}
           </div>
         </div>
-        <Auth
-          supabaseClient={supabase}
-          providers={[]}
-          view="sign_in"
-          showLinks={false}
-          appearance={{
-            theme: ThemeSupa,
-            style: {
-              button: {
-                background: '#1A1F2C',
-                color: 'white',
-                borderRadius: '8px',
+        {isLocked ? (
+          <div className="p-4 text-center text-gray-500">
+            Prijava je privremeno onemogućena zbog previše neuspešnih pokušaja.
+            <br />
+            Pokušajte ponovo za {formatRemainingTime()}.
+          </div>
+        ) : (
+          <Auth
+            supabaseClient={supabase}
+            providers={[]}
+            view="sign_in"
+            showLinks={false}
+            appearance={{
+              theme: ThemeSupa,
+              style: {
+                button: {
+                  background: '#1A1F2C',
+                  color: 'white',
+                  borderRadius: '8px',
+                },
+                input: {
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0',
+                },
               },
-              input: {
-                borderRadius: '8px',
-                border: '1px solid #E2E8F0',
-              },
-            },
-            className: {
-              container: 'space-y-4',
-              button: 'w-full px-4 py-2 hover:bg-primary/90 transition-colors duration-200',
-              input: 'w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200',
-              label: 'block text-sm font-medium text-gray-700 mb-1'
-            }
-          }}
-          localization={{
-            variables: {
-              sign_in: {
-                email_label: 'Email adresa',
-                password_label: 'Lozinka',
-                button_label: 'Prijava',
-                loading_button_label: 'Prijavljivanje...',
+              className: {
+                container: 'space-y-4',
+                button: 'w-full px-4 py-2 hover:bg-primary/90 transition-colors duration-200',
+                input: 'w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200',
+                label: 'block text-sm font-medium text-gray-700 mb-1'
               }
-            }
-          }}
-        />
+            }}
+            localization={{
+              variables: {
+                sign_in: {
+                  email_label: 'Email adresa',
+                  password_label: 'Lozinka',
+                  button_label: 'Prijava',
+                  loading_button_label: 'Prijavljivanje...',
+                }
+              }
+            }}
+          />
+        )}
       </Card>
     </div>
   );

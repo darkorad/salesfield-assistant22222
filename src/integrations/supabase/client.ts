@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://olkyepnvfwchgkmxyqku.supabase.co'
@@ -9,6 +10,24 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     storage: window.localStorage,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    // Improved security settings
+    storageKey: 'zirmd-auth-token',
+    // Short-lived tokens for better security
+    // Default is 3600 seconds (1 hour)
+    autoRefreshTime: 10 * 60, // Refresh token 10 minutes before expiry
+  },
+  global: {
+    // Add request timeout to prevent hanging requests
+    fetch: (url, options) => {
+      const timeout = 30000 // 30 seconds timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeout)
+      
+      return fetch(url, {
+        ...options,
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeoutId))
+    }
   }
 })
