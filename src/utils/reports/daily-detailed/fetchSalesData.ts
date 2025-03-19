@@ -24,22 +24,10 @@ export const fetchDailySalesData = async () => {
 
     toast.info("Učitavanje podataka za današnji dan...");
 
-    // Get all sales for today for the current user with customer data
+    // First get sales data without trying to join with customers
     const { data: salesData, error } = await supabase
       .from('sales')
-      .select(`
-        id,
-        date,
-        total,
-        items,
-        payment_type,
-        payment_status,
-        manufacturer,
-        customer_id,
-        darko_customer_id,
-        customer:customers(*),
-        darko_customer:kupci_darko(*)
-      `)
+      .select('*')
       .eq('user_id', session.user.id)
       .gte('date', today.toISOString())
       .lt('date', tomorrow.toISOString())
@@ -56,7 +44,53 @@ export const fetchDailySalesData = async () => {
       return null;
     }
 
-    console.log("All sales for selected date:", salesData.length, salesData.map(sale => ({
+    // Now fetch customer data separately based on user email
+    let customerData = [];
+    
+    // Get customers data based on user
+    if (session.user.email === 'zirmd.darko@gmail.com') {
+      const { data: darkoCustomers } = await supabase
+        .from('kupci_darko')
+        .select('*')
+        .eq('user_id', session.user.id);
+      
+      customerData = darkoCustomers || [];
+    } else {
+      const { data: customers } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('user_id', session.user.id);
+      
+      customerData = customers || [];
+    }
+    
+    // Create a map for quick customer lookup
+    const customerMap = new Map();
+    customerData.forEach(customer => {
+      customerMap.set(customer.id, customer);
+    });
+    
+    // Merge customer data with sales data
+    const salesWithCustomers = salesData.map(sale => {
+      let customer = null;
+      let darkoCustomer = null;
+      
+      if (sale.customer_id) {
+        customer = customerMap.get(sale.customer_id);
+      }
+      
+      if (sale.darko_customer_id) {
+        darkoCustomer = customerMap.get(sale.darko_customer_id);
+      }
+      
+      return {
+        ...sale,
+        customer,
+        darko_customer: darkoCustomer
+      };
+    });
+
+    console.log("All sales for selected date:", salesWithCustomers.length, salesWithCustomers.map(sale => ({
       id: sale.id,
       customer_id: sale.customer_id,
       darko_customer_id: sale.darko_customer_id,
@@ -65,7 +99,7 @@ export const fetchDailySalesData = async () => {
       itemsPaymentTypes: sale.items ? (sale.items as any[]).map(item => item.paymentType) : []
     })));
 
-    return salesData;
+    return salesWithCustomers;
   } catch (error) {
     console.error("Error fetching sales data:", error);
     toast.error(`Greška pri učitavanju podataka: ${error instanceof Error ? error.message : String(error)}`);

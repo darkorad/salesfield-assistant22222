@@ -28,7 +28,7 @@ export const useDailySales = () => {
         total: cashTotal,
         payment_status: 'gotovina',
         payment_type: 'cash',
-        customer: order.darko_customer // Use darko_customer directly instead of circular reference
+        customer: order.customer || order.darko_customer
       });
     }
 
@@ -44,7 +44,7 @@ export const useDailySales = () => {
         total: invoiceTotal,
         payment_status: 'racun',
         payment_type: 'invoice',
-        customer: order.darko_customer // Use darko_customer directly instead of circular reference
+        customer: order.customer || order.darko_customer
       });
     }
 
@@ -71,41 +71,11 @@ export const useDailySales = () => {
       console.log("Fetching sales between:", today.toISOString(), "and", tomorrow.toISOString());
       console.log("User email:", session.user.email);
 
-      let customerRelation;
-      
-      // Use the appropriate customer relation based on user
-      if (session.user.email === 'zirmd.darko@gmail.com') {
-        customerRelation = 'darko_customer:kupci_darko!fk_sales_kupci_darko';
-      } else if (session.user.email === 'zirmd.veljko@gmail.com') {
-        customerRelation = 'customer:customers!sales_customer_id_fkey';
-      } else {
-        // For other users, include both relations
-        customerRelation = `
-          customer:customers!sales_customer_id_fkey(*),
-          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
-        `;
-      }
-
+      // Fix: Don't use the explicit foreign key reference that doesn't exist
+      // Instead, fetch the customer data separately based on user
       const { data: salesData, error } = await supabase
         .from('sales')
-        .select(`
-          *,
-          ${customerRelation}(
-            id,
-            name,
-            address,
-            city,
-            phone,
-            pib,
-            is_vat_registered,
-            email,
-            code,
-            dan_posete,
-            group_name,
-            naselje,
-            gps_coordinates
-          )
-        `)
+        .select('*')
         .eq('user_id', session.user.id)
         .gte('date', today.toISOString())
         .lt('date', tomorrow.toISOString())
@@ -117,8 +87,65 @@ export const useDailySales = () => {
         return;
       }
 
+      if (!salesData || salesData.length === 0) {
+        setTodaySales([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Now fetch customer data separately based on the user email
+      let customerData = [];
+      
+      if (session.user.email === 'zirmd.darko@gmail.com') {
+        // Fetch Darko's customers
+        const { data: darkoCustomers, error: darkoError } = await supabase
+          .from('kupci_darko')
+          .select('*')
+          .eq('user_id', session.user.id);
+          
+        if (darkoError) {
+          console.error("Error loading Darko's customers:", darkoError);
+        } else {
+          customerData = darkoCustomers || [];
+        }
+      } else {
+        // Fetch regular customers
+        const { data: customers, error: customerError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('user_id', session.user.id);
+          
+        if (customerError) {
+          console.error("Error loading customers:", customerError);
+        } else {
+          customerData = customers || [];
+        }
+      }
+      
+      // Create a customer lookup map
+      const customerMap = new Map();
+      customerData.forEach(customer => {
+        customerMap.set(customer.id, customer);
+      });
+      
+      // Attach customer data to sales
+      const salesWithCustomers = salesData.map(sale => {
+        let customer = null;
+        
+        if (sale.customer_id) {
+          customer = customerMap.get(sale.customer_id);
+        } else if (sale.darko_customer_id) {
+          customer = customerMap.get(sale.darko_customer_id);
+        }
+        
+        return {
+          ...sale,
+          customer: customer || { name: 'Nepoznat kupac' }
+        };
+      });
+
       // Transform and split orders with mixed payment types
-      const transformedSales = salesData?.flatMap(sale => {
+      const transformedSales = salesWithCustomers.flatMap(sale => {
         if (!sale) return [];
         return splitOrderByPaymentType(sale);
       }) || [];
