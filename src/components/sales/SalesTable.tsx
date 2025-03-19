@@ -51,7 +51,7 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
                 } hover:bg-accent/5 transition-colors`}
               >
                 <TableCell className="whitespace-nowrap text-sm font-medium text-right">
-                  <div>{sale.customer?.name || 'Nepoznat kupac'}</div>
+                  <div className="text-right">{sale.customer?.name || 'Nepoznat kupac'}</div>
                   <div className="text-xs text-gray-500 md:hidden text-right">
                     {sale.customer?.address || 'N/A'}
                   </div>
