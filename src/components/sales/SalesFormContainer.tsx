@@ -4,6 +4,7 @@ import { OrderForm } from "./OrderForm";
 import { Customer, Product } from "@/types";
 import { useSplitOrders } from "./hooks/useSplitOrders";
 import { useOrderState } from "@/hooks/useOrderState";
+import { OrderSummary } from './OrderSummary';
 
 interface SalesFormContainerProps {
   customers: Customer[];

@@ -10,10 +10,6 @@ import { OrderItem, Customer, Product } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkOnlineStatus, storePendingSale } from '@/utils/offlineStorage';
-
-// Add UUID dependency
-<lov-add-dependency>uuid@^9.0.1</lov-add-dependency>
-// After adding the dependency, import it
 import { v4 as uuidv4 } from 'uuid';
 
 interface OrderFormProps {
