@@ -16,7 +16,6 @@ export function createReportData(itemsSummary: Record<string, ItemSummary>): Rep
       'Naziv artikla': item.name,
       'Proizvođač': item.manufacturer,
       'Jedinica mere': item.unit,
-      'Kupci': Array.from(item.customers).join(', '),
       'Ukupna količina': parseFloat(item.totalQuantity.toFixed(2)),
       'Ukupna vrednost': parseFloat(item.totalValue.toFixed(2))
     }));
@@ -39,7 +38,6 @@ export function addTotalsRow(reportData: ReportItem[]): ReportItem[] {
     'Naziv artikla': 'UKUPNO:',
     'Proizvođač': '',
     'Jedinica mere': '',
-    'Kupci': '',
     'Ukupna količina': parseFloat(totalQuantity.toFixed(2)),
     'Ukupna vrednost': parseFloat(totalValue.toFixed(2))
   });
@@ -67,7 +65,6 @@ export function generateWorkbook(reportData: ReportItem[]): XLSX.WorkBook {
     { wch: 40 }, // Naziv artikla
     { wch: 20 }, // Proizvođač
     { wch: 15 }, // Jedinica mere
-    { wch: 40 }, // Kupci
     { wch: 15 }, // Ukupna količina
     { wch: 15 }  // Ukupna vrednost
   ];

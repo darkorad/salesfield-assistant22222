@@ -84,6 +84,7 @@ export function processSalesData(sales: any[]): Record<string, ItemSummary> {
       }
       
       const quantity = parseFloat(item.quantity) || 0;
+      // Make sure to always calculate value properly as quantity * price
       const value = quantity * price;
       
       itemsSummary[key].totalQuantity += quantity;

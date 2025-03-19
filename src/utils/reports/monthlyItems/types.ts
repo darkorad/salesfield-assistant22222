@@ -9,14 +9,13 @@ export interface ItemSummary {
   unit: string;
   totalQuantity: number;
   totalValue: number;
-  customers: Set<string>;
+  customers: Set<string>; // We keep this in the summary for internal processing, but won't show in report
 }
 
 export interface ReportItem {
   'Naziv artikla': string;
   'Proizvođač': string;
   'Jedinica mere': string;
-  'Kupci': string;
   'Ukupna količina': number;
   'Ukupna vrednost': number;
 }
