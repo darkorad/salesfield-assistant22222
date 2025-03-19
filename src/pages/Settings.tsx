@@ -82,7 +82,7 @@ const Settings = () => {
         
         <TabsContent value="settings">
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Podešavanja</h2>
+            <h2 className="text-2xl font-bold">ŽIR-MD Podešavanja</h2>
             
             <div className="w-full">
               <DataManagement />
@@ -108,7 +108,7 @@ const Settings = () => {
 
         <TabsContent value="reports">
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Izveštaji</h2>
+            <h2 className="text-2xl font-bold">ŽIR-MD Izveštaji</h2>
             <Reports />
             <div>
               <h3 className="text-xl font-semibold mb-4">Mesečna prodaja u RSD</h3>
