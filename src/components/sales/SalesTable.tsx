@@ -16,7 +16,7 @@ interface SalesTableProps {
 
 export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
   if (sales.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nema porudžbina za danas</p>;
+    return <p className="text-sm text-muted-foreground text-right">Nema porudžbina za danas</p>;
   }
 
   // Calculate correct total for each sale including quantity and unit measurements
@@ -28,15 +28,15 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
   };
 
   return (
-    <div className="overflow-x-auto -mx-2 md:mx-0 rounded-md">
+    <div className="overflow-x-auto -mx-2 md:mx-0 rounded-md text-right">
       <Table>
         <TableHeader>
           <TableRow className="bg-accent/5">
-            <TableHead className="whitespace-nowrap text-sm min-w-[150px] font-medium">Kupac</TableHead>
-            <TableHead className="whitespace-nowrap text-sm hidden md:table-cell min-w-[200px] font-medium">Adresa</TableHead>
-            <TableHead className="whitespace-nowrap text-sm min-w-[100px] font-medium">Plaćanje</TableHead>
+            <TableHead className="whitespace-nowrap text-sm min-w-[150px] font-medium text-right">Kupac</TableHead>
+            <TableHead className="whitespace-nowrap text-sm hidden md:table-cell min-w-[200px] font-medium text-right">Adresa</TableHead>
+            <TableHead className="whitespace-nowrap text-sm min-w-[100px] font-medium text-right">Plaćanje</TableHead>
             <TableHead className="text-right whitespace-nowrap text-sm min-w-[100px] font-medium">Iznos</TableHead>
-            <TableHead className="text-center whitespace-nowrap text-sm min-w-[80px] font-medium">Stavke</TableHead>
+            <TableHead className="text-right whitespace-nowrap text-sm min-w-[80px] font-medium">Stavke</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -50,24 +50,24 @@ export const SalesTable = ({ sales, sentOrderIds }: SalesTableProps) => {
                   sale.payment_status === 'gotovina' ? "bg-blue-50" : ""
                 } hover:bg-accent/5 transition-colors`}
               >
-                <TableCell className="whitespace-nowrap text-sm font-medium">
+                <TableCell className="whitespace-nowrap text-sm font-medium text-right">
                   <div>{sale.customer?.name || 'Nepoznat kupac'}</div>
-                  <div className="text-xs text-gray-500 md:hidden">
+                  <div className="text-xs text-gray-500 md:hidden text-right">
                     {sale.customer?.address || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-sm hidden md:table-cell">
+                <TableCell className="whitespace-nowrap text-sm hidden md:table-cell text-right">
                   {sale.customer ? 
                     `${sale.customer.address}${sale.customer.city ? `, ${sale.customer.city}` : ''}` 
                     : 'N/A'}
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-sm font-medium">
+                <TableCell className="whitespace-nowrap text-sm font-medium text-right">
                   {sale.payment_status === 'gotovina' ? 'Gotovina' : 'Račun'}
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap text-sm">
                   {correctTotal.toFixed(2)} RSD
                 </TableCell>
-                <TableCell className="text-center whitespace-nowrap text-sm">
+                <TableCell className="text-right whitespace-nowrap text-sm">
                   {sale.items.length}
                 </TableCell>
               </TableRow>
