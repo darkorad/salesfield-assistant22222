@@ -1,8 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet } from "lucide-react";
-import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
-import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
+import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomer";
+import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItems";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createRedirectToDocuments } from "@/utils/fileExport";

@@ -20,12 +20,13 @@ export function getMonthNameInSerbian(date: Date): string {
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka o prodaji za tekući mesec...");
 
+  // Fix the relationship query by using the specific foreign key constraint
   const { data: sales, error } = await supabase
     .from('sales')
     .select(`
       *,
       customer:customers(*),
-      darko_customer:kupci_darko(*)
+      darko_customer:kupci_darko!fk_sales_kupci_darko(*)
     `)
     .eq('user_id', userId)
     .gte('created_at', startDate.toISOString())

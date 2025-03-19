@@ -12,13 +12,13 @@ export async function fetchMonthlySalesData(userId: string, startDate: Date, end
   try {
     console.log(`Fetching sales data between ${startDate.toISOString()} and ${endDate.toISOString()}`);
     
-    // Use the properly defined relationships to fetch data
+    // Fix the relationship by specifying the exact foreign key constraint
     const { data, error } = await supabase
       .from('sales')
       .select(`
         *,
         customer:customers(*),
-        darko_customer:kupci_darko(*)
+        darko_customer:kupci_darko!fk_sales_kupci_darko(*)
       `)
       .eq('user_id', userId)
       .gte('date', startDate.toISOString())
