@@ -2,6 +2,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import NavLogo from "./navigation/NavLogo";
 import { NavActions } from "./navigation/NavActions";
+import { MainSidebar } from "./navigation/MainSidebar";
 
 export const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
@@ -25,9 +26,12 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
           </div>
         </div>
       </nav>
-      <main className="container mx-auto py-6 md:py-8 px-4 md:px-6 animate-fade-in">
-        {children || <Outlet />}
-      </main>
+      <div className="flex">
+        <MainSidebar />
+        <main className="container mx-auto py-6 md:py-8 px-4 md:px-6 animate-fade-in flex-1">
+          {children || <Outlet />}
+        </main>
+      </div>
     </div>
   );
 };

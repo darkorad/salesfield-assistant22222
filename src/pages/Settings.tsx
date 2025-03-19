@@ -11,6 +11,16 @@ import MonthlySales from "./MonthlySales";
 import { AddCustomerCard } from "@/components/settings/AddCustomerCard";
 import { DuplicateCustomersChecker } from "@/components/settings/DuplicateCustomersChecker";
 import { DataManagement } from "@/components/settings/data-management/DataManagement";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -33,8 +43,36 @@ const Settings = () => {
     navigate("/documents");
   };
 
+  const handleGoToPlans = () => {
+    navigate("/visit-plans");
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-8">
+      <div className="flex items-center justify-between">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink onClick={handleGoToPlans}>Plan poseta</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Podešavanja</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleGoToPlans}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Nazad na plan poseta
+        </Button>
+      </div>
+      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="settings">Podešavanja</TabsTrigger>
