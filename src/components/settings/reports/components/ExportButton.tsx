@@ -1,48 +1,30 @@
 
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, Download, AlertCircle } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
 
 interface ExportButtonProps {
   onClick: () => void;
-  isExporting: boolean;
-  label?: string;
-  showFallbackHelp?: boolean;
+  label: string;
+  isLoading?: boolean;
+  disabled?: boolean;
+  className?: string;
 }
 
 export const ExportButton = ({ 
   onClick, 
-  isExporting, 
-  label = "Export keš kupovina",
-  showFallbackHelp = false
+  label, 
+  isLoading = false, 
+  disabled = false,
+  className = "w-full py-6 text-lg font-medium"
 }: ExportButtonProps) => {
   return (
-    <div className="space-y-2">
-      <Button
-        className="w-full py-4 text-sm md:text-base font-medium"
-        onClick={onClick}
-        disabled={isExporting}
-      >
-        {isExporting ? (
-          <>
-            <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5 animate-pulse" />
-            Izvoz u toku...
-          </>
-        ) : (
-          <>
-            <Download className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-            {label}
-          </>
-        )}
-      </Button>
-      
-      {showFallbackHelp && (
-        <div className="text-xs flex items-start gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-md">
-          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-          <span>
-            Problem sa preuzimanjem? Kliknite na dugme "Preuzmi direktno" koje će se pojaviti ako standardno preuzimanje ne uspe.
-          </span>
-        </div>
-      )}
-    </div>
+    <Button 
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      className={className}
+    >
+      <FileSpreadsheet className="mr-2 h-5 w-5" />
+      {isLoading ? "Izvoz u toku..." : label}
+    </Button>
   );
 };

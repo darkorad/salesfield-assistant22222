@@ -1,95 +1,159 @@
-import { useState } from "react";
-import { DateSelector } from "./components/DateSelector";
-import { ExportButton } from "./components/ExportButton";
-import { useCashSalesExport } from "./hooks/useCashSalesExport";
+
 import { Button } from "@/components/ui/button";
-import { Info, HelpCircle, Download } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { generateCashSalesWorksheet } from "@/utils/reports/worksheetGenerator";
+import { format } from "date-fns";
+import { CalendarIcon, FileSpreadsheet } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
+import { supabase } from "@/integrations/supabase/client";
 
 export const CashSalesReport = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { isExporting, exportCashSales, hasExportFailed, handleOpenInBrowser } = useCashSalesExport();
-  const [showHelp, setShowHelp] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const handleExportTodayCashSales = () => {
-    exportCashSales(selectedDate);
+  const handleExportTodayCashSales = async () => {
+    try {
+      setIsExporting(true);
+      
+      if (!selectedDate) {
+        toast.error("Izaberite datum");
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Niste prijavljeni");
+        return;
+      }
+
+      // Get the start of the selected date in local timezone
+      const startDate = new Date(selectedDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      // Get the end of the selected date (next day at 00:00)
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+
+      // Get all sales for the selected date - don't filter by payment_type
+      const { data: salesData, error } = await supabase
+        .from('sales')
+        .select(`
+          *,
+          customer:customers(*),
+          darko_customer:kupci_darko!fk_sales_kupci_darko(*)
+        `)
+        .eq('user_id', session.user.id)
+        .gte('date', startDate.toISOString())
+        .lt('date', endDate.toISOString())
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error("Error loading sales:", error);
+        toast.error("Greška pri učitavanju prodaje");
+        return;
+      }
+
+      // Filter for cash sales by checking items
+      const cashSales = salesData?.filter(sale => {
+        // Check if any items have paymentType 'cash'
+        return sale.items.some((item: any) => item.paymentType === 'cash');
+      }) || [];
+
+      if (cashSales.length === 0) {
+        toast.error(`Nema prodaje za gotovinu na dan ${format(selectedDate, 'dd.MM.yyyy')}`);
+        return;
+      }
+
+      // Transform data for worksheet generator
+      const formattedSales = cashSales.map(sale => {
+        // Get only cash items from the sale
+        const cashItems = sale.items.filter((item: any) => item.paymentType === 'cash');
+        
+        // Calculate the total only for cash items
+        const cashTotal = cashItems.reduce((sum: number, item: any) => {
+          const unitSize = parseFloat(item.product["Jedinica mere"]) || 1;
+          return sum + (item.product.Cena * item.quantity * unitSize);
+        }, 0);
+
+        return {
+          customer: sale.customer || sale.darko_customer || { 
+            name: 'Nepoznat',
+            address: 'N/A',
+            city: 'N/A',
+            phone: 'N/A'
+          },
+          items: cashItems.map((item: any) => ({
+            product: {
+              Naziv: item.product.Naziv,
+              "Jedinica mere": item.product["Jedinica mere"],
+              Cena: item.product.Cena
+            },
+            quantity: item.quantity,
+            total: item.quantity * item.product.Cena * (parseFloat(item.product["Jedinica mere"]) || 1)
+          })),
+          total: cashTotal,
+          previousDebt: 0 // You might want to fetch this from somewhere
+        };
+      });
+
+      const { wb, ws } = generateCashSalesWorksheet(formattedSales);
+
+      // Generate filename with selected date
+      const dateStr = format(selectedDate, 'dd-MM-yyyy');
+      XLSX.writeFile(wb, `gotovinska-prodaja-${dateStr}.xlsx`);
+      toast.success("Izveštaj je uspešno izvezen");
+
+    } catch (error) {
+      console.error("Error exporting cash sales:", error);
+      toast.error("Greška pri izvozu izveštaja");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
-    <div className="flex flex-col gap-3 mt-1">
-      <div className="text-sm font-medium text-start">Izaberi datum</div>
-      
-      <DateSelector 
-        selectedDate={selectedDate} 
-        onDateChange={setSelectedDate} 
-      />
-
-      <ExportButton 
-        onClick={handleExportTodayCashSales}
-        isExporting={isExporting}
-        showFallbackHelp={hasExportFailed}
-      />
-      
-      {(hasExportFailed || showHelp) && (
-        <div className="flex flex-col gap-2 mt-1">
+    <div className="flex items-center gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
           <Button 
-            variant="outline" 
-            className="w-full border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900"
-            onClick={() => handleOpenInBrowser(selectedDate)}
+            variant="outline"
+            className={cn(
+              "justify-start text-left font-normal",
+              "border-dashed border-input",
+              !selectedDate && "text-muted-foreground"
+            )}
           >
-            <Download className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-            Otvori preuzimanje direktno
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {selectedDate ? (
+              format(selectedDate, "dd.MM.yyyy")
+            ) : (
+              <span>Izaberite datum</span>
+            )}
           </Button>
-        </div>
-      )}
-      
-      <div className="mt-3 text-xs text-muted-foreground">
-        Nakon izvoza, fajl se čuva u Download/Preuzimanja folderu.
-        Proverite i u "Moji fajlovi"/"Files" aplikaciji.
-      </div>
-      
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="text-xs text-muted-foreground flex items-center mt-1 h-auto py-1"
-        onClick={() => setShowHelp(!showHelp)}
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            initialFocus
+            className={cn("p-3 pointer-events-auto")}
+          />
+        </PopoverContent>
+      </Popover>
+
+      <Button
+        className="flex-1 py-6 text-lg font-medium"
+        onClick={handleExportTodayCashSales}
+        disabled={isExporting}
       >
-        <HelpCircle className="h-3 w-3 mr-1" />
-        {showHelp ? "Sakrij pomoć" : "Prikaži pomoć oko preuzimanja"}
+        <FileSpreadsheet className="mr-2 h-5 w-5" />
+        {isExporting ? "Izvoz u toku..." : "Export keš kupovina"}
       </Button>
-      
-      {showHelp && (
-        <div className="text-xs bg-muted/30 p-3 rounded-md space-y-2">
-          <div className="flex gap-2">
-            <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p>
-              <strong>Na Android telefonu:</strong> Fajlovi se čuvaju u Download folderu.
-              Otvorite "Files" ili "My Files" aplikaciju i potražite fajl u Download sekciji.
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p>
-              <strong>Na računaru:</strong> Fajlovi se preuzimaju u vaš Downloads/Preuzimanja folder
-              koji možete naći u File Explorer-u/My Computer.
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p>
-              <strong>Alternativni metod:</strong> Ako ne možete da pronađete fajl, koristite
-              "Otvori preuzimanje direktno" dugme koje će otvoriti fajl u browseru za direktno preuzimanje.
-            </p>
-          </div>
-        </div>
-      )}
-      
-      <div className="text-xs text-muted-foreground border-t pt-2 mt-1">
-        <strong>Napomena:</strong> Ako imate problema sa pronalaženjem fajla, 
-        pokušajte da koristite dugme "Otvori preuzimanje direktno" ili 
-        proverite u Downloads/Preuzimanja folderu vašeg uređaja.
-      </div>
     </div>
   );
 };

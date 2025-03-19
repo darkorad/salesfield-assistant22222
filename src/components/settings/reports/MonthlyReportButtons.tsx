@@ -1,41 +1,27 @@
 
 import { Button } from "@/components/ui/button";
+import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
+import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
 import { FileSpreadsheet } from "lucide-react";
-import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomer";
-import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItems";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createRedirectToDocuments } from "@/utils/fileExport";
 
 export const MonthlyReportButtons = () => {
   const [isExportingCustomer, setIsExportingCustomer] = useState(false);
   const [isExportingItems, setIsExportingItems] = useState(false);
-  const navigate = useNavigate();
-  
-  // Create the redirect function
-  const redirectToDocuments = createRedirectToDocuments(navigate);
 
-  const handleExportCustomer = async () => {
-    if (isExportingCustomer) return;
-    
-    setIsExportingCustomer(true);
+  const handleExportCustomerReport = async () => {
     try {
-      await exportMonthlyCustomerReport(redirectToDocuments);
-    } catch (error) {
-      console.error("Export failed:", error);
+      setIsExportingCustomer(true);
+      await exportMonthlyCustomerReport();
     } finally {
       setIsExportingCustomer(false);
     }
   };
 
-  const handleExportItems = async () => {
-    if (isExportingItems) return;
-    
-    setIsExportingItems(true);
+  const handleExportItemsReport = async () => {
     try {
-      await exportMonthlyItemsReport(redirectToDocuments);
-    } catch (error) {
-      console.error("Export failed:", error);
+      setIsExportingItems(true);
+      await exportMonthlyItemsReport();
     } finally {
       setIsExportingItems(false);
     }
@@ -44,22 +30,20 @@ export const MonthlyReportButtons = () => {
   return (
     <>
       <Button
-        variant="outline"
-        className="w-full py-4 text-sm md:text-base font-medium border border-gray-200 hover:bg-accent/10 hover:text-accent hover:border-accent/20 transition-colors shadow-sm"
-        onClick={handleExportCustomer}
+        className="w-full py-6 text-lg font-medium"
+        onClick={handleExportCustomerReport}
         disabled={isExportingCustomer}
       >
-        <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5 text-accent" />
+        <FileSpreadsheet className="mr-2 h-5 w-5" />
         {isExportingCustomer ? "Izvoz u toku..." : "Mesečna prodaja po kupcima"}
       </Button>
       
       <Button
-        variant="outline"
-        className="w-full py-4 text-sm md:text-base font-medium border border-gray-200 hover:bg-accent/10 hover:text-accent hover:border-accent/20 transition-colors shadow-sm"
-        onClick={handleExportItems}
+        className="w-full py-6 text-lg font-medium"
+        onClick={handleExportItemsReport}
         disabled={isExportingItems}
       >
-        <FileSpreadsheet className="mr-2 h-4 w-4 md:h-5 md:w-5 text-accent" />
+        <FileSpreadsheet className="mr-2 h-5 w-5" />
         {isExportingItems ? "Izvoz u toku..." : "Mesečna prodaja po artiklima"}
       </Button>
     </>

@@ -1,34 +1,31 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 
 interface DateSelectorProps {
-  selectedDate: Date | undefined;
+  date: Date | undefined;
   onDateChange: (date: Date | undefined) => void;
 }
 
-export const DateSelector = ({ selectedDate, onDateChange }: DateSelectorProps) => {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
+export const DateSelector = ({ date, onDateChange }: DateSelectorProps) => {
   return (
-    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button 
           variant="outline"
           className={cn(
-            "w-full justify-start text-left text-sm md:text-base font-normal",
+            "justify-start text-left font-normal",
             "border-dashed border-input",
-            !selectedDate && "text-muted-foreground"
+            !date && "text-muted-foreground"
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {selectedDate ? (
-            format(selectedDate, "dd.MM.yyyy")
+          {date ? (
+            format(date, "dd.MM.yyyy")
           ) : (
             <span>Izaberite datum</span>
           )}
@@ -37,11 +34,8 @@ export const DateSelector = ({ selectedDate, onDateChange }: DateSelectorProps) 
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={selectedDate}
-          onSelect={(date) => {
-            onDateChange(date);
-            setIsCalendarOpen(false);
-          }}
+          selected={date}
+          onSelect={onDateChange}
           initialFocus
           className={cn("p-3 pointer-events-auto")}
         />
