@@ -56,7 +56,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ customers, products }) => 
         [customerIdField]: selectedCustomer.id,
         items: orderItems,
         total,
-        payment_status: paymentType === 'cash' ? 'gotovina' : 'racun',
+        payment_status: paymentType === 'cash' ? 'gotovina' : 'racun' as 'gotovina' | 'racun',
         payment_type: paymentType,
         date: new Date().toISOString(),
         customer: selectedCustomer,
