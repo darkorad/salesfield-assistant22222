@@ -80,20 +80,40 @@ const Login = () => {
         // Handle user update
       } else if (event === "PASSWORD_RECOVERY") {
         // Handle password recovery
-      } else if (event === "SIGN_IN_ERROR") {
-        // Track failed login attempts
-        const newAttempts = loginAttempts + 1;
-        setLoginAttempts(newAttempts);
-        localStorage.setItem('loginAttempts', newAttempts.toString());
-        
-        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-          const lockoutTime = Date.now() + LOCKOUT_DURATION;
-          setLockedUntil(lockoutTime);
-          localStorage.setItem('lockedUntil', lockoutTime.toString());
-          toast.error(`Previše pokušaja prijave. Pokušajte ponovo za 5 minuta.`);
-        }
       }
     });
+
+    // Set up a separate listener for login failures
+    const handleLoginFailure = () => {
+      // Track failed login attempts
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      localStorage.setItem('loginAttempts', newAttempts.toString());
+      
+      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+        const lockoutTime = Date.now() + LOCKOUT_DURATION;
+        setLockedUntil(lockoutTime);
+        localStorage.setItem('lockedUntil', lockoutTime.toString());
+        toast.error(`Previše pokušaja prijave. Pokušajte ponovo za 5 minuta.`);
+      }
+    };
+
+    // Handle form submission errors by attaching an event listener to the Auth UI form
+    setTimeout(() => {
+      const form = document.querySelector('form');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          // Wait a brief moment to see if login succeeds
+          setTimeout(async () => {
+            const { data } = await supabase.auth.getSession();
+            if (!data.session) {
+              // If still no session after submit, consider it a failure
+              handleLoginFailure();
+            }
+          }, 1000);
+        });
+      }
+    }, 500);
 
     return () => {
       subscription.unsubscribe();

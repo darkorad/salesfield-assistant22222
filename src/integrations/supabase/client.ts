@@ -13,9 +13,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     // Improved security settings
     storageKey: 'zirmd-auth-token',
-    // Short-lived tokens for better security
-    // Default is 3600 seconds (1 hour)
-    autoRefreshTime: 10 * 60, // Refresh token 10 minutes before expiry
+    // Note: autoRefreshTime is not a valid property in the current API
+    // Using the standard configuration for token refresh
   },
   global: {
     // Add request timeout to prevent hanging requests
