@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ItemSummary } from "./types";
@@ -67,16 +66,19 @@ export function processSalesData(sales: any[]): Record<string, ItemSummary> {
       // Use consistent property access - note that property names may vary
       const productName = product.Naziv || product.naziv || product.name || 'Nepoznat';
       const manufacturer = product.Proizvođač || product.proizvođač || product.manufacturer || 'Nepoznat';
-      const unit = product["Jedinica mere"] || product.jedinicaMere || product.unit || '1';
+      const unitStr = product["Jedinica mere"] || product.jedinicaMere || product.unit || '1';
       const price = parseFloat(product.Cena || product.cena || product.price || 0);
       
-      const key = `${productName}_${manufacturer}_${unit}`;
+      // Parse unit value - ensure it's a number for calculation
+      const unitValue = parseFloat(unitStr) || 1; 
+      
+      const key = `${productName}_${manufacturer}_${unitStr}`;
       
       if (!itemsSummary[key]) {
         itemsSummary[key] = {
           name: productName,
           manufacturer: manufacturer,
-          unit: unit,
+          unit: unitStr,
           totalQuantity: 0,
           totalValue: 0,
           customers: new Set()
@@ -84,8 +86,8 @@ export function processSalesData(sales: any[]): Record<string, ItemSummary> {
       }
       
       const quantity = parseFloat(item.quantity) || 0;
-      // Make sure to always calculate value properly as quantity * price
-      const value = quantity * price;
+      // Calculate value correctly: quantity * unitValue * price
+      const value = quantity * unitValue * price;
       
       itemsSummary[key].totalQuantity += quantity;
       itemsSummary[key].totalValue += value;
