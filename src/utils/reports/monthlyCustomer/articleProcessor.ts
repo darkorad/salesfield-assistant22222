@@ -34,8 +34,17 @@ export async function processMonthlySalesByArticle(salesData: any[]) {
         if (customerNames[customerId]) {
           customerName = customerNames[customerId];
         } else {
-          // Try to fetch from customers table
-          if (sale.customer_id) {
+          // Try to get from already fetched relationships
+          if (sale.customers && sale.customer_id) {
+            customerName = sale.customers.name;
+            customerNames[customerId] = customerName;
+          } 
+          else if (sale.kupci_darko && sale.darko_customer_id) {
+            customerName = sale.kupci_darko.name;
+            customerNames[customerId] = customerName;
+          }
+          // If not in relationships, try to fetch separately
+          else if (sale.customer_id) {
             const { data } = await supabase
               .from('customers')
               .select('name')
@@ -47,7 +56,6 @@ export async function processMonthlySalesByArticle(salesData: any[]) {
               customerNames[customerId] = customerName;
             }
           } 
-          // Try to fetch from kupci_darko table
           else if (sale.darko_customer_id) {
             const { data } = await supabase
               .from('kupci_darko')

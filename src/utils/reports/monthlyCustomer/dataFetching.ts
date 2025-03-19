@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 /**
  * Fetch sales data for the current month with relationships
- * This uses the fixed foreign key constraints to fetch related data
+ * This uses the correct foreign key names based on Supabase relationship
  */
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka za trenutni mesec...");
@@ -12,13 +12,13 @@ export async function fetchMonthlySalesData(userId: string, startDate: Date, end
   try {
     console.log(`Fetching sales data between ${startDate.toISOString()} and ${endDate.toISOString()}`);
     
-    // Fix the relationship by specifying the exact foreign key constraint
+    // Use the default foreign key names in the Supabase schema
     const { data, error } = await supabase
       .from('sales')
       .select(`
         *,
-        customer:customers(*),
-        darko_customer:kupci_darko!fk_sales_kupci_darko(*)
+        customers!sales_customer_id_fkey(*),
+        kupci_darko!sales_darko_customer_id_fkey(*)
       `)
       .eq('user_id', userId)
       .gte('date', startDate.toISOString())

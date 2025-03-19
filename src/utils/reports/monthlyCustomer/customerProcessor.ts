@@ -20,12 +20,12 @@ export async function processCustomerSalesData(salesData: any[]): Promise<Record
       let customer = null;
       
       // Determine customer source (regular or Darko)
-      if (sale.customer_id && sale.customer) {
+      if (sale.customer_id && sale.customers) {
         customerId = sale.customer_id;
-        customer = sale.customer;
-      } else if (sale.darko_customer_id && sale.darko_customer) {
+        customer = sale.customers;
+      } else if (sale.darko_customer_id && sale.kupci_darko) {
         customerId = sale.darko_customer_id;
-        customer = sale.darko_customer;
+        customer = sale.kupci_darko;
       }
       
       if (!customerId || !customer) {

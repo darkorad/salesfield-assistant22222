@@ -20,13 +20,13 @@ export function getMonthNameInSerbian(date: Date): string {
 export async function fetchMonthlySalesData(userId: string, startDate: Date, endDate: Date) {
   toast.info("Učitavanje podataka o prodaji za tekući mesec...");
 
-  // Fix the relationship query by using the specific foreign key constraint
+  // Use a simpler approach without specifying the foreign key constraint
   const { data: sales, error } = await supabase
     .from('sales')
     .select(`
       *,
-      customer:customers(*),
-      darko_customer:kupci_darko!fk_sales_kupci_darko(*)
+      customers!sales_customer_id_fkey(*),
+      kupci_darko!sales_darko_customer_id_fkey(*)
     `)
     .eq('user_id', userId)
     .gte('created_at', startDate.toISOString())
@@ -55,7 +55,7 @@ export function processSalesData(sales: any[]): Record<string, ItemSummary> {
   
   sales.forEach(sale => {
     // Get customer name
-    const customerName = sale.customer?.name || sale.darko_customer?.name || 'Nepoznat kupac';
+    const customerName = sale.customers?.name || sale.kupci_darko?.name || 'Nepoznat kupac';
     
     // Ensure items is an array
     const items = Array.isArray(sale.items) ? sale.items : [];
