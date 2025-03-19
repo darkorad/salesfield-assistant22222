@@ -4,7 +4,6 @@ import { OrderForm } from "./OrderForm";
 import { Customer, Product } from "@/types";
 import { useSplitOrders } from "./hooks/useSplitOrders";
 import { useOrderState } from "@/hooks/useOrderState";
-import { OrderSummary } from "./OrderSummary";
 
 interface SalesFormContainerProps {
   customers: Customer[];
@@ -24,13 +23,6 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
 
   const { handleSubmitOrder, isSubmitting } = useSplitOrders(selectedCustomer);
 
-  const handleSubmit = async (note?: string) => {
-    const success = await handleSubmitOrder(orderItems, note);
-    if (success) {
-      resetOrder();
-    }
-  };
-
   return (
     <Card className="w-full max-w-5xl mx-auto border-0 shadow-lg bg-white/50 backdrop-blur-sm">
       <CardHeader className="space-y-1">
@@ -40,14 +32,6 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
         <OrderForm
           customers={customers}
           products={products}
-          selectedCustomer={selectedCustomer}
-          customerSearch={customerSearch}
-          orderItems={orderItems}
-          onCustomerSearchChange={setCustomerSearch}
-          onCustomerSelect={handleCustomerSelect}
-          onOrderItemsChange={setOrderItems}
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
         />
         {orderItems.length > 0 && (
           <div className="mt-6">

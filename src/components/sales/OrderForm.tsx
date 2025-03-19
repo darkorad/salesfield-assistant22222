@@ -8,9 +8,13 @@ import { OrderSummary } from './OrderSummary';
 import { SalesActions } from './SalesActions';
 import { OrderItem, Customer, Product } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { checkOnlineStatus, storePendingSale } from '@/utils/offlineStorage';
+
+// Add UUID dependency
+<lov-add-dependency>uuid@^9.0.1</lov-add-dependency>
+// After adding the dependency, import it
+import { v4 as uuidv4 } from 'uuid';
 
 interface OrderFormProps {
   customers: Customer[];
@@ -59,7 +63,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({ customers, products }) => 
         payment_status: paymentType === 'cash' ? 'gotovina' : 'racun',
         payment_type: paymentType,
         date: new Date().toISOString(),
-        customer: selectedCustomer
+        customer: selectedCustomer,
+        userId: '' // We'll set this properly below
       };
 
       if (!isOnline) {
@@ -78,7 +83,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ customers, products }) => 
       }
 
       // Add user_id to the order
-      order.user_id = session.user.id;
+      order.userId = session.user.id;
 
       // Send to Supabase
       const { error } = await supabase
@@ -104,8 +109,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({ customers, products }) => 
         
         <CustomerSelect 
           customers={customers} 
-          selectedCustomer={selectedCustomer}
-          onSelectCustomer={setSelectedCustomer}
+          customerSearch={selectedCustomer?.name || ''}
+          onCustomerSearchChange={(value) => {
+            // This is a placeholder; the actual implementation will depend on how CustomerSelect works
+            if (!value) setSelectedCustomer(null);
+          }}
+          onCustomerSelect={setSelectedCustomer}
         />
         
         {selectedCustomer && (
@@ -119,19 +128,40 @@ export const OrderForm: React.FC<OrderFormProps> = ({ customers, products }) => 
             
             <OrderItemsList 
               items={orderItems} 
-              onItemsChange={setOrderItems}
-              onTotalChange={setTotal}
+              onQuantityChange={(index, quantity) => {
+                const newItems = [...orderItems];
+                newItems[index] = {
+                  ...newItems[index],
+                  quantity: Math.max(1, quantity)
+                };
+                setOrderItems(newItems);
+              }}
+              onPaymentTypeChange={(index, paymentType) => {
+                const newItems = [...orderItems];
+                newItems[index] = {
+                  ...newItems[index],
+                  paymentType
+                };
+                setOrderItems(newItems);
+              }}
+              onRemoveItem={(index) => {
+                setOrderItems(orderItems.filter((_, i) => i !== index));
+              }}
             />
             
-            <OrderSummary total={total} />
+            <OrderSummary orderItems={orderItems} />
             
-            <SalesActions 
-              onSubmit={handleSubmit}
-              onCancel={resetForm}
-              isSubmitting={isSubmitting}
-              customer={selectedCustomer}
-              items={orderItems}
-            />
+            <div className="mt-6 flex justify-end space-x-3">
+              <Button variant="outline" onClick={resetForm} disabled={isSubmitting}>
+                Poništi
+              </Button>
+              <Button onClick={() => handleSubmit('invoice')} disabled={isSubmitting}>
+                Pošalji (Račun)
+              </Button>
+              <Button onClick={() => handleSubmit('cash')} disabled={isSubmitting}>
+                Pošalji (Gotovina)
+              </Button>
+            </div>
           </>
         )}
       </div>

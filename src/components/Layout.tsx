@@ -1,7 +1,7 @@
 
 import { Outlet, useLocation } from "react-router-dom";
 import NavLogo from "./navigation/NavLogo";
-import NavActions from "./navigation/NavActions";
+import { NavActions } from "./navigation/NavActions";
 
 export const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
