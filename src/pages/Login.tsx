@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkSupabaseConnectivity } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { performFullSync, storeUserSession } from "@/utils/offlineStorage";
 
@@ -10,14 +10,28 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Check for existing session
+  // Check for existing session and connectivity
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/visit-plans");
+      try {
+        // First check connectivity to Supabase
+        const connectivity = await checkSupabaseConnectivity();
+        if (!connectivity.connected) {
+          setConnectionError(connectivity.error || "Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.");
+          return;
+        }
+
+        // If connected, check for session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          navigate("/visit-plans", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setConnectionError("Greška prilikom provere sesije. Molimo pokušajte ponovo kasnije.");
       }
     };
     checkSession();
@@ -26,8 +40,17 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setConnectionError(null);
 
     try {
+      // Check connectivity first
+      const connectivity = await checkSupabaseConnectivity();
+      if (!connectivity.connected) {
+        setConnectionError(connectivity.error || "Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.");
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -43,6 +66,9 @@ const Login = () => {
         
         // Store the session for offline use
         await storeUserSession(data.session);
+
+        // Refresh the session to ensure it's properly stored
+        await supabase.auth.refreshSession();
 
         // Start data sync
         setSyncing(true);
@@ -62,8 +88,8 @@ const Login = () => {
           setSyncing(false);
         }
 
-        // Navigate to the app
-        navigate("/visit-plans");
+        // Navigate to the app using replace to prevent back navigation to login
+        navigate("/visit-plans", { replace: true });
       }
     } catch (error) {
       console.error(error);
@@ -83,6 +109,18 @@ const Login = () => {
           <p className="mt-2 text-center text-sm text-gray-600">
             Prijava na sistem za komercijaliste
           </p>
+          
+          {/* Display connection error if any */}
+          {connectionError && (
+            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">
+                <strong>Greška povezivanja:</strong> {connectionError}
+              </p>
+              <p className="text-xs text-red-500 mt-1">
+                Potrebno je da imate pravilno podešene DNS zapise i pristup internetu.
+              </p>
+            </div>
+          )}
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
@@ -152,6 +190,19 @@ const Login = () => {
               ) : null}
               {loading ? "Prijavljivanje..." : syncing ? "Sinhronizacija..." : "Prijavi se"}
             </button>
+          </div>
+          
+          {/* DNS troubleshooting info */}
+          <div className="mt-4 text-xs text-gray-500">
+            <p className="font-semibold mb-1">Ako imate problem sa povezivanjem:</p>
+            <ol className="list-decimal pl-4 space-y-1">
+              <li>Proverite da li imate internet konekciju</li>
+              <li>Uverite se da su DNS podešavanja ispravna</li>
+              <li>Dodajte sledeće DNS zapise u vaš DNS sistem:</li>
+            </ol>
+            <div className="mt-2 p-2 bg-gray-100 rounded font-mono text-xs">
+              <p>olkyepnvfwchgkmxyqku.supabase.co → CNAME → olkyepnvfwchgkmxyqku.supabase.co</p>
+            </div>
           </div>
         </form>
       </div>
