@@ -14,7 +14,7 @@ import VisitPlans from './pages/VisitPlans'
 import Documents from './pages/Documents'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
-import { supabase, checkSupabaseConnection } from '@/integrations/supabase/client'
+import { supabase, checkSupabaseConnection, isBrowserOnline } from '@/integrations/supabase/client'
 
 // Create a client with better error handling
 const queryClient = new QueryClient({
@@ -31,18 +31,35 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [connectionError, setConnectionError] = useState(false)
+  const [connectionAttempt, setConnectionAttempt] = useState(0)
 
   useEffect(() => {
+    let mounted = true;
+    
     // Check if user is authenticated
     const checkAuth = async () => {
+      if (!mounted) return;
+      
       try {
-        // First check if we can connect to Supabase
+        // First check if browser reports we're online
+        if (!isBrowserOnline()) {
+          console.log("Browser reports device is offline");
+          if (mounted) {
+            setConnectionError(true);
+            setIsLoading(false);
+          }
+          return;
+        }
+        
+        // Check if we can connect to Supabase
         const isConnected = await checkSupabaseConnection();
         
         if (!isConnected) {
           console.log("Cannot connect to Supabase");
-          setConnectionError(true);
-          setIsLoading(false);
+          if (mounted) {
+            setConnectionError(true);
+            setIsLoading(false);
+          }
           return;
         }
         
@@ -50,15 +67,16 @@ function App() {
         
         if (error) {
           console.error('Auth check error:', error)
-          setConnectionError(true);
-        } else {
+          if (mounted) setConnectionError(true);
+        } else if (mounted) {
           setIsAuthenticated(!!session)
+          setConnectionError(false);
         }
       } catch (error) {
         console.error('Unexpected error during auth check:', error)
-        setConnectionError(true);
+        if (mounted) setConnectionError(true);
       } finally {
-        setIsLoading(false)
+        if (mounted) setIsLoading(false)
       }
     }
 
@@ -68,20 +86,37 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state changed:', event);
-        setIsAuthenticated(!!session)
-        setIsLoading(false)
-        
-        // Reset connection error if we get a valid event
-        if (event) {
-          setConnectionError(false);
+        if (mounted) {
+          setIsAuthenticated(!!session)
+          setIsLoading(false)
+          
+          // Reset connection error if we get a valid event
+          if (event) {
+            setConnectionError(false);
+          }
         }
       }
     )
+    
+    // Set up a network status listener
+    const handleOnlineStatus = () => {
+      if (navigator.onLine && mounted) {
+        setConnectionAttempt(prev => prev + 1);
+      } else if (mounted) {
+        setConnectionError(true);
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
 
     return () => {
-      subscription.unsubscribe()
+      mounted = false;
+      subscription.unsubscribe();
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
     }
-  }, [])
+  }, [connectionAttempt])
 
   if (isLoading) {
     return (
@@ -100,7 +135,7 @@ function App() {
           <p>Nije moguće povezati se sa serverom. Molimo proverite internet konekciju i pokušajte ponovo.</p>
         </div>
         <button 
-          onClick={() => window.location.reload()} 
+          onClick={() => setConnectionAttempt(prev => prev + 1)} 
           className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors"
         >
           Pokušaj ponovo

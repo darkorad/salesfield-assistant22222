@@ -16,40 +16,35 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     fetch: (url, options) => {
       // Enhanced retry logic for network errors including Cloudflare issues
-      const MAX_RETRIES = 7; // Increased max retries
-      const INITIAL_RETRY_DELAY = 1000; // 1 second initial delay
-      const BACKOFF_FACTOR = 1.5; // Exponential backoff
-      const MAX_DELAY = 10000; // Maximum delay between retries (10 seconds)
+      const MAX_RETRIES = 12; // Increased max retries
+      const INITIAL_RETRY_DELAY = 500; // Shorter initial delay for faster retry
+      const BACKOFF_FACTOR = 1.3; // Exponential backoff
+      const MAX_DELAY = 8000; // Maximum delay between retries (8 seconds)
 
       const customFetch = async (retriesLeft: number, delay: number): Promise<Response> => {
         try {
           // Add timestamp to URL to prevent caching by Cloudflare
           const urlWithCache = new URL(url.toString());
-          urlWithCache.searchParams.append('_cf_bust', Date.now().toString());
-          urlWithCache.searchParams.append('_cache_buster', Math.random().toString(36).substring(2));
+          // Add multiple cache busters with different names to have higher chance of bypassing cache
+          urlWithCache.searchParams.append('_cf_bypass', Date.now().toString());
+          urlWithCache.searchParams.append('_t', Date.now().toString());
+          urlWithCache.searchParams.append('_nocache', Math.random().toString(36).substring(2));
           
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
           
           const response = await fetch(urlWithCache.toString(), {
             ...options,
-            // Disable cache for fresh connection attempts
             cache: 'no-store',
-            // Use default credentials mode
             credentials: 'same-origin',
-            // Use controller signal for timeout
             signal: controller.signal,
-            // Add headers to bypass Cloudflare cache and provide additional info
             headers: {
               ...options?.headers,
               'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
               'Pragma': 'no-cache',
               'X-Requested-With': 'XMLHttpRequest',
-              'CF-Challenge-Bypass': 'true', // Attempt to bypass some Cloudflare challenges
-              'User-Agent': navigator.userAgent || 'ZirMD-App',
-              'X-Client-Info': 'ŽIR-MD Mobile App',
-              'Accept': 'application/json, */*',
-              'Connection': 'keep-alive'
+              'CF-Challenge-Bypass': 'true', 
+              'Accept': 'application/json, */*'
             }
           });
           
@@ -67,25 +62,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
             error.code === 1002 ||
             error.code === 'ECONNREFUSED' ||
             error.code === 'ECONNRESET' ||
-            error.message?.includes('SSL') || 
-            error.message?.includes('ssl') || 
-            error.message?.includes('handshake') ||
-            error.message?.includes('DNS') || 
-            error.message?.includes('dns') || 
-            error.message?.includes('prohibited IP') ||
-            error.message?.includes('failed to fetch') ||
             error.message?.includes('Failed to fetch') ||
             error.message?.includes('network') ||
-            error.message?.includes('Network') ||
             error.message?.includes('cloudflare') ||
-            error.message?.includes('CloudFlare') ||
-            error.message?.includes('Cloudflare') ||
             error.message?.includes('timed out') ||
             error.message?.includes('timeout') ||
             error.message?.includes('connection') ||
-            error.message?.includes('Connection') ||
-            error.message?.includes('abort') ||
-            error.message?.includes('Abort');
+            error.message?.includes('abort');
           
           console.warn(`Network request failed (${retriesLeft} attempts left): ${error.message || error.toString()}`);
           
@@ -114,23 +97,46 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Helper function to check if Supabase is reachable
 export const checkSupabaseConnection = async (): Promise<boolean> => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    // Multiple connection attempt points to increase chances of success
+    const attempts = [
+      // Attempt 1: Direct ping with cache busting
+      fetch(`${supabaseUrl}/ping?_nocache=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+        signal: AbortSignal.timeout(5000) // 5s timeout
+      }),
+      
+      // Attempt 2: Health check with different cache busting
+      fetch(`${supabaseUrl}/rest/v1/?_cfbypass=${Date.now()}`, {
+        method: 'HEAD',
+        cache: 'no-store',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Cache-Control': 'no-cache',
+        },
+        signal: AbortSignal.timeout(5000)
+      })
+    ];
     
-    const response = await fetch(`${supabaseUrl}/ping`, {
-      method: 'GET',
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-      },
-      signal: controller.signal
-    });
+    // Try all connection attempts and succeed if any succeed
+    const results = await Promise.allSettled(attempts);
+    const successfulAttempt = results.find(
+      result => result.status === 'fulfilled' && 
+      (result.value.status === 200 || result.value.status === 204)
+    );
     
-    clearTimeout(timeoutId);
-    return response.status === 200;
+    return !!successfulAttempt;
   } catch (error) {
     console.error('Supabase connection check failed:', error);
     return false;
   }
+}
+
+// Simple function to test if browser is online
+export const isBrowserOnline = (): boolean => {
+  return navigator.onLine;
 }
