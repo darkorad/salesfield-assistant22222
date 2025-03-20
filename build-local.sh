@@ -13,23 +13,39 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}==== Local Build Helper ====${NC}"
 echo ""
 
-# Check if npx is available
-if ! command -v npx &> /dev/null; then
-    echo -e "${RED}Error: npx is not installed or not in PATH${NC}"
-    echo "Please ensure you have a recent version of Node.js and npm installed."
+# Check if Node.js and npm are installed
+if ! command -v node &> /dev/null; then
+    echo -e "${RED}Error: Node.js is not installed or not in PATH${NC}"
+    echo "Please install Node.js from https://nodejs.org/"
+    exit 1
+fi
+
+if ! command -v npm &> /dev/null; then
+    echo -e "${RED}Error: npm is not installed or not in PATH${NC}"
+    echo "npm should be included with your Node.js installation."
     exit 1
 fi
 
 echo -e "${YELLOW}Environment Information:${NC}"
 echo -e "Node version: $(node -v || echo 'Not found')"
 echo -e "NPM version: $(npm -v || echo 'Not found')"
-echo -e "NPX version: $(npx -v || echo 'Not found')"
 echo -e "Working directory: $(pwd)"
-echo -e "Local node_modules/.bin path: $(npm bin)"
 echo ""
 
-echo -e "${GREEN}Building the application using local vite installation...${NC}"
-export PATH="$(npm bin):$PATH"
+# Ensure required dependencies are installed
+echo -e "${YELLOW}Checking dependencies...${NC}"
+if [ ! -d "node_modules/vite" ]; then
+    echo -e "${YELLOW}Vite not found in node_modules, running npm install...${NC}"
+    npm install
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}npm install failed. Trying with --legacy-peer-deps...${NC}"
+        npm install --legacy-peer-deps
+    fi
+fi
+
+# Use npx to run the local vite installation
+echo -e "${GREEN}Building the application...${NC}"
 npx vite build
 
 if [ $? -eq 0 ]; then
