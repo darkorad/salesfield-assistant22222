@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +60,7 @@ export const useVisitPlansData = () => {
       // Determine which table to fetch customers from based on the user's email
       const userEmail = session.session?.user.email;
       let customersResponse;
+      let customersData: Customer[] = [];
 
       // First try with kupci_darko table
       console.log("Attempting to fetch from kupci_darko table");
@@ -69,27 +71,42 @@ export const useVisitPlansData = () => {
         .eq('user_id', session.session.user.id)
         .order("name");
           
-      // If no results or error, try regular customers table
-      if (!customersResponse.data || customersResponse.data.length === 0 || customersResponse.error) {
+      if (!customersResponse.error && customersResponse.data && customersResponse.data.length > 0) {
+        console.log(`Found ${customersResponse.data.length} customers in kupci_darko`);
+        customersData = [...customersData, ...customersResponse.data as Customer[]];
+      } else {
         console.log("No data in kupci_darko or error, trying customers table");
-        console.log("Error from kupci_darko:", customersResponse.error);
-        
+        if (customersResponse.error) {
+          console.log("Error from kupci_darko:", customersResponse.error);
+        }
+      }
+      
+      // Try regular customers table with fields that definitely exist
+      try {
         customersResponse = await supabase
           .from("customers")
-          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+          .select("id, name, address, city, phone, pib, group_name, email, is_vat_registered, gps_coordinates")
           .not('name', 'is', null)
           .eq('user_id', session.session.user.id)
           .order("name");
+        
+        if (!customersResponse.error && customersResponse.data && customersResponse.data.length > 0) {
+          console.log(`Found ${customersResponse.data.length} customers in customers table`);
+          customersData = [...customersData, ...customersResponse.data as Customer[]];
+        }
+      } catch (err) {
+        console.error("Error querying customers table:", err);
       }
       
-      if (customersResponse.error) {
-        console.error("Error fetching customers:", customersResponse.error);
-        setError("Greška pri učitavanju kupaca");
-        toast.error("Greška pri učitavanju kupaca");
+      if (customersData.length === 0) {
+        console.log("No customers found in either table");
+        setError("Nema pronađenih kupaca");
+        toast.error("Nema pronađenih kupaca");
+        setIsLoading(false);
         return;
       }
 
-      console.log("Fetched customers:", customersResponse.data?.length || 0);
+      console.log("Fetched total customers:", customersData.length);
 
       // Deduplicate customers by ID and name to prevent duplicates showing up
       // First deduplicate by ID
@@ -98,7 +115,7 @@ export const useVisitPlansData = () => {
       // Then check for duplicate names and use only the first one we find
       const uniqueCustomerNames = new Set<string>();
       
-      customersResponse.data?.forEach(customer => {
+      customersData.forEach(customer => {
         if (!uniqueCustomers.has(customer.id)) {
           // If this customer name is already in our set, skip it
           if (uniqueCustomerNames.has(customer.name.toLowerCase())) {
