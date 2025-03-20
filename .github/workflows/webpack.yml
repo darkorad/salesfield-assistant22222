@@ -36,9 +36,13 @@ jobs:
         echo "NPM version: $(npm -v)"
         echo "Working directory: $(pwd)"
         echo "Directory contents: $(ls -la)"
+        which npm
+        npm config get prefix
     
     - name: Build
-      run: npm run build
+      run: |
+        export PATH="$(npm bin):$PATH"
+        npm run build
       env:
         CI: false
       
