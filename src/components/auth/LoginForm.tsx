@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const navigate = useNavigate();
+
+  // Check for existing session on component mount
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        console.log("Found existing session, redirecting to visit-plans");
+        navigate("/visit-plans", { replace: true });
+      }
+    };
+    
+    checkExistingSession();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,13 +81,25 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
         // Store the session for offline use
         await storeUserSession(data.session);
         
-        // Force a session refresh to ensure token is fresh
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-          console.error("Failed to refresh session after login:", refreshError);
+        // Multiple forced refresh to ensure token is fresh and properly stored
+        try {
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.error("Failed to refresh session after login:", refreshError);
+          }
+          
+          // First verification attempt
+          const isValid = await verifyAuthToken();
+          if (!isValid) {
+            console.log("First auth verification failed, trying again after short delay");
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await supabase.auth.refreshSession();
+          }
+        } catch (authError) {
+          console.error("Auth verification error:", authError);
         }
 
-        // Skip token verification and proceed with data sync
+        // Start data sync regardless of verification outcome
         toast.info("Sinhronizacija podataka sa ŽIR-MD servisom...");
         setSyncing(true);
         
@@ -93,6 +119,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
 
         // Navigate to the app - ensure this happens regardless of sync
         console.log("Login successful, navigating to visit-plans");
+        // Use replace:true to prevent going back to login screen
         navigate("/visit-plans", { replace: true });
         return;
       } else {

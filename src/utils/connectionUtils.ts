@@ -69,14 +69,33 @@ export const verifyAuthToken = async (): Promise<boolean> => {
       return false;
     }
     
-    // Simple way to check if the auth is working - try to access user's own profile
-    // This endpoint should always be accessible if auth is working
+    // Try both profiles and another lightweight table to verify auth
     try {
-      const { error } = await supabase.from('profiles').select('*').limit(1);
+      // Try basic profile check first - if this works, auth is good
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
       
-      if (error) {
-        console.error("Auth token verification failed:", error);
-        return false;
+      if (profileError) {
+        console.log("Profile query failed, trying to refresh auth session");
+        // Try to refresh the session
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error("Failed to refresh auth session:", refreshError);
+          return false;
+        }
+        
+        // Try again after refresh
+        const { error: retryError } = await supabase
+          .from('profiles')
+          .select('id')
+          .limit(1);
+          
+        if (retryError) {
+          console.error("Auth still not working after refresh:", retryError);
+          return false;
+        }
       }
       
       console.log("Auth token verified successfully");

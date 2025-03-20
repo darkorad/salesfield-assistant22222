@@ -33,9 +33,23 @@ const Index = () => {
           return;
         }
         
+        // Multiple checks to verify session
         if (data.session) {
-          console.log("User is authenticated, redirecting to visit plans");
-          navigate("/visit-plans");
+          console.log("Found session, attempting to verify it");
+          
+          // Force a refresh to ensure session is valid
+          await supabase.auth.refreshSession();
+          
+          // Recheck session
+          const { data: refreshData } = await supabase.auth.getSession();
+          
+          if (refreshData.session) {
+            console.log("User is authenticated, redirecting to visit plans");
+            navigate("/visit-plans", { replace: true });
+          } else {
+            console.log("Session invalid after refresh, redirecting to login");
+            navigate("/login");
+          }
         } else {
           console.log("No session found, redirecting to login");
           navigate("/login");
