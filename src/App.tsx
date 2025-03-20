@@ -14,23 +14,49 @@ import VisitPlans from './pages/VisitPlans'
 import Documents from './pages/Documents'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase, checkSupabaseConnection } from '@/integrations/supabase/client'
 
-// Create a client
-const queryClient = new QueryClient()
+// Create a client with better error handling
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // exponential backoff with max 30s
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+})
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [connectionError, setConnectionError] = useState(false)
 
   useEffect(() => {
     // Check if user is authenticated
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setIsAuthenticated(!!session)
+        // First check if we can connect to Supabase
+        const isConnected = await checkSupabaseConnection();
+        
+        if (!isConnected) {
+          console.log("Cannot connect to Supabase");
+          setConnectionError(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('Auth check error:', error)
+          setConnectionError(true);
+        } else {
+          setIsAuthenticated(!!session)
+        }
       } catch (error) {
-        console.error('Auth check error:', error)
+        console.error('Unexpected error during auth check:', error)
+        setConnectionError(true);
       } finally {
         setIsLoading(false)
       }
@@ -41,8 +67,14 @@ function App() {
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event);
         setIsAuthenticated(!!session)
         setIsLoading(false)
+        
+        // Reset connection error if we get a valid event
+        if (event) {
+          setConnectionError(false);
+        }
       }
     )
 
@@ -53,10 +85,28 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="w-full h-screen flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
+        <p className="text-gray-600">Učitavanje aplikacije...</p>
       </div>
     )
+  }
+
+  if (connectionError) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center p-4 text-center">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <p className="font-bold">Problem sa konekcijom</p>
+          <p>Nije moguće povezati se sa serverom. Molimo proverite internet konekciju i pokušajte ponovo.</p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors"
+        >
+          Pokušaj ponovo
+        </button>
+      </div>
+    );
   }
 
   return (
