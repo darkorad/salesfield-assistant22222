@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Customer, Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,8 @@ import {
   getLocalProducts,
   storeCustomersLocally,
   storeProductsLocally,
-  updateLastSyncTimestamp
+  updateLastSyncTimestamp,
+  getLastSyncTimestamp
 } from "@/utils/offlineStorage";
 
 export const useSalesData = () => {
