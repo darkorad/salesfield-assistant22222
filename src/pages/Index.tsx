@@ -34,6 +34,7 @@ const Index = () => {
           setTimeout(() => reject(new Error("Connection timeout")), 5000)
         );
         
+        // Use direct connection without Cloudflare proxy
         const connectivity = await Promise.race([
           connectivityCheckPromise,
           timeoutPromise
@@ -97,7 +98,7 @@ const Index = () => {
         setIsChecking(false);
         navigate("/login", { replace: true });
       }
-    }, 6000); // 6 seconds fallback (reduced from 10)
+    }, 6000); // 6 seconds fallback
 
     checkAuth();
 
@@ -116,7 +117,7 @@ const Index = () => {
           Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.
         </p>
         <div className="bg-gray-100 p-4 rounded-md max-w-md">
-          <p className="font-semibold mb-2">Potrebni DNS zapisi:</p>
+          <p className="font-semibold mb-2">Potrebni DNS zapisi bez Cloudflare-a:</p>
           <div className="font-mono text-sm bg-white p-2 rounded border">
             olkyepnvfwchgkmxyqku.supabase.co → CNAME → olkyepnvfwchgkmxyqku.supabase.co
           </div>

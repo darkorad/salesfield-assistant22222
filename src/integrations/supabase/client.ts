@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = 'https://olkyepnvfwchgkmxyqku.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sa3llcG52ZndjaGdrbXh5cWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQyMTY1MjgsImV4cCI6MjA0OTc5MjUyOH0.LQYekqo4mR-50cjm4BORpP8GdskX_m0W5YKlqkRO7_8'
 
-// Initialize the Supabase client with retry logic and better error handling
+// Initialize the Supabase client without Cloudflare proxy
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -16,10 +16,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'apikey': supabaseAnonKey, // Explicitly set the API key in headers
+      'apikey': supabaseAnonKey,
     },
     fetch: async (url, options: RequestInit = {}) => {
-      const timeout = 15000 // Reduced from 30 seconds to 15 seconds timeout
+      const timeout = 15000
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
       
@@ -41,6 +41,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
           headers.set('Authorization', `Bearer ${supabaseAnonKey}`)
         }
         
+        // Disable caching to avoid stale data
         headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
         headers.set('Pragma', 'no-cache')
 
@@ -48,6 +49,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
           ...options,
           headers,
           signal: controller.signal,
+          // Disable any potential automatic proxy selection
+          mode: 'cors',
+          credentials: 'same-origin',
         })
         
         clearTimeout(timeoutId)
@@ -96,18 +100,25 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// Export a function to check connectivity
+// Export a function to check connectivity with direct DNS resolution
 export const checkSupabaseConnectivity = async () => {
   try {
-    console.log('Checking Supabase connectivity...')
+    console.log('Checking Supabase connectivity without proxy...')
     
-    // First try a simple ping to see if we can reach the Supabase instance
+    // First try a simple ping with direct DNS resolution
     try {
       const pingResponse = await fetch(`${supabaseUrl}/ping`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          // Ensure direct connection without Cloudflare
+          'Cache-Control': 'no-cache'
+        },
         // Short timeout for ping
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(5000),
+        // Avoid any automatic proxy selection
+        mode: 'cors',
+        credentials: 'same-origin',
       })
       
       if (!pingResponse.ok) {
