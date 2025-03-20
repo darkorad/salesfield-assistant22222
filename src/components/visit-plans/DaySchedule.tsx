@@ -61,6 +61,37 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     );
   }
 
+  // Create a map to store customer-specific JSX content
+  const renderCustomerGrid = () => {
+    return (
+      <div className="space-y-4">
+        {filteredCustomers.map((customer) => (
+          <div key={customer.id} className="space-y-2">
+            <CustomerListItem 
+              customer={customer}
+              isCompleted={completedCustomers.has(customer.id)}
+              isSelected={customer.id === selectedCustomer?.id}
+              onClick={handleCustomerClick}
+            />
+            
+            {/* Render the order form directly under this customer if selected */}
+            {selectedCustomer?.id === customer.id && (
+              <div ref={orderFormRef}>
+                <CustomerOrderSection
+                  customer={selectedCustomer}
+                  onClose={() => setSelectedCustomer(null)}
+                  onOrderComplete={handleOrderComplete}
+                  showHistory={showHistory}
+                  setShowHistory={setShowHistory}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <CustomerSearchBar 
@@ -74,23 +105,10 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         </div>
       )}
 
-      <CustomerGrid
-        customers={filteredCustomers}
-        completedCustomers={completedCustomers}
-        selectedCustomerId={selectedCustomer?.id || null}
-        searchTerm={searchTerm}
-        onCustomerClick={handleCustomerClick}
-      />
-
-      {selectedCustomer && (
-        <CustomerOrderSection
-          customer={selectedCustomer}
-          onClose={() => setSelectedCustomer(null)}
-          onOrderComplete={handleOrderComplete}
-          showHistory={showHistory}
-          setShowHistory={setShowHistory}
-        />
-      )}
+      {renderCustomerGrid()}
     </div>
   );
 };
+
+// We need to import this component here since we're using it directly
+import { CustomerListItem } from "./customer-list/CustomerListItem";

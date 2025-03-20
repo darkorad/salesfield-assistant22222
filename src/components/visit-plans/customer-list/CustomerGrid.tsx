@@ -30,8 +30,11 @@ export const CustomerGrid = ({
     );
   }
 
+  // We're not using this component's grid layout anymore, as we've moved
+  // the grid layout to the DaySchedule component for better control
+  // of the order form positioning
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+    <div className="grid grid-cols-1 sm:grid-cols-1 gap-1.5">
       {customers.map((customer) => (
         <div key={customer.id}>
           <CustomerListItem

@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useCustomerPrices } from "./hooks/useCustomerPrices";
 import { ProductSearchSection } from "./product-selection/ProductSearchSection";
 import { CustomerInfoSection } from "./product-selection/CustomerInfoSection";
-import { Button } from "@/components/ui/button";
 
 interface ProductSelectProps {
   products: Product[];
@@ -21,7 +20,6 @@ export const ProductSelect = ({
   onOrderItemsChange,
 }: ProductSelectProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { getProductPrice, fetchCustomerPrices } = useCustomerPrices(selectedCustomer);
   const [localProducts, setLocalProducts] = useState(products);
 
@@ -55,12 +53,6 @@ export const ProductSelect = ({
       onOrderItemsChange([...orderItems, newItem]);
     }
     setSearchTerm("");
-    setSelectedProduct(null);
-  };
-
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    setSearchTerm("");
   };
 
   const handleCustomerUpdate = () => {
@@ -80,20 +72,9 @@ export const ProductSelect = ({
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           filteredProducts={filteredProducts}
-          handleAddProduct={handleProductSelect}
+          handleAddProduct={handleAddProduct}
           getProductPrice={getProductPrice}
         />
-        
-        {selectedProduct && (
-          <div className="mt-3 mb-4">
-            <Button 
-              onClick={() => handleAddProduct(selectedProduct)} 
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              Dodaj artikal: {selectedProduct.Naziv}
-            </Button>
-          </div>
-        )}
       </div>
 
       {orderItems.length > 0 && (
