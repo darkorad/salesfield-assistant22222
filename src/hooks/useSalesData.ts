@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Customer, Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +20,7 @@ export const useSalesData = () => {
   const [isOffline, setIsOffline] = useState(false);
   const navigate = useNavigate();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // First check if we're online
       const online = await checkOnlineStatus();
@@ -38,8 +37,10 @@ export const useSalesData = () => {
         
         if (localCustomers.length === 0 && localProducts.length === 0) {
           toast.error("Nema sačuvanih podataka u offline režimu");
+          setError("Nema sačuvanih podataka za offline režim. Sinhronizujte podatke kada budete online.");
         } else {
           toast.info("Koriste se lokalno sačuvani podaci (offline režim)");
+          console.log(`Loaded ${localCustomers.length} customers and ${localProducts.length} products from local storage`);
         }
         
         setCustomers(localCustomers);
@@ -99,15 +100,6 @@ export const useSalesData = () => {
           email: customer.email || null,
           dan_posete: customer.dan_posete || null
         }));
-      } else if (userEmail === 'zirmd.veljko@gmail.com') {
-        console.log("Fetching customers from regular customers table for Veljko");
-        const response = await supabase
-          .from('customers')
-          .select('*')
-          .eq('user_id', session.user.id);
-        
-        customersData = response.data;
-        customersError = response.error;
       } else {
         // For any other user, use standard customer table
         console.log("Fetching customers from regular customers table");
@@ -140,15 +132,6 @@ export const useSalesData = () => {
         
         productsData = response.data;
         productsError = response.error;
-      } else if (userEmail === 'zirmd.veljko@gmail.com') {
-        console.log("Fetching products from products_darko table for Veljko");
-        const response = await supabase
-          .from('products_darko')
-          .select('*')
-          .not('Naziv', 'eq', '');
-        
-        productsData = response.data;
-        productsError = response.error;
       } else {
         console.log("Fetching products from products_darko table");
         const response = await supabase
@@ -171,8 +154,16 @@ export const useSalesData = () => {
       console.log("Fetched products:", productsData?.length || 0);
 
       // Store data locally for offline use
-      await storeCustomersLocally(customersData || []);
-      await storeProductsLocally(productsData || []);
+      if (customersData && customersData.length > 0) {
+        await storeCustomersLocally(customersData);
+        console.log(`Stored ${customersData.length} customers locally`);
+      }
+      
+      if (productsData && productsData.length > 0) {
+        await storeProductsLocally(productsData || []);
+        console.log(`Stored ${productsData.length} products locally`);
+      }
+      
       await updateLastSyncTimestamp();
 
       setCustomers(customersData || []);
@@ -181,10 +172,24 @@ export const useSalesData = () => {
       console.error('Error:', error);
       toast.error("Greška pri učitavanju podataka");
       setError(error instanceof Error ? error.message : "Unknown error occurred");
+      
+      // Try to load from local storage as fallback when online fetch fails
+      try {
+        const localCustomers = await getLocalCustomers();
+        const localProducts = await getLocalProducts();
+        
+        if (localCustomers.length > 0 || localProducts.length > 0) {
+          toast.info("Učitani podaci iz lokalne baze kao rezervna opcija");
+          setCustomers(localCustomers);
+          setProducts(localProducts);
+        }
+      } catch (fallbackError) {
+        console.error('Error loading fallback data:', fallbackError);
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchData();
@@ -256,14 +261,35 @@ export const useSalesData = () => {
       }
     });
 
-    // Cleanup subscriptions
+    // Set up periodic sync check when app is online
+    const checkSyncStatus = async () => {
+      const online = await checkOnlineStatus();
+      if (online) {
+        const lastSync = await getLastSyncTimestamp();
+        if (!lastSync) {
+          toast.info("Potrebno je sinhronizovati podatke. Kliknite na dugme za sinhronizaciju.");
+        }
+      }
+    };
+    
+    checkSyncStatus();
+    
+    // Handle reconnection events
+    const handleReconnect = () => {
+      console.log("Device reconnected, checking for data updates");
+      checkSyncStatus();
+    };
+    
+    window.addEventListener('online', handleReconnect);
+    
     return () => {
       subscription.unsubscribe();
       supabase.removeChannel(customersChannel);
       supabase.removeChannel(kupciDarkoChannel);
       supabase.removeChannel(productsChannel);
+      window.removeEventListener('online', handleReconnect);
     };
-  }, [navigate]);
+  }, [navigate, fetchData]);
 
   return { 
     customers, 

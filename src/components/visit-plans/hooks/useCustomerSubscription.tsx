@@ -3,8 +3,14 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const useCustomerSubscription = (fetchData: () => Promise<void>) => {
+export const useCustomerSubscription = (fetchData: () => Promise<void>, isOffline: boolean = false) => {
   useEffect(() => {
+    // Don't set up subscription if offline
+    if (isOffline) {
+      console.log("Skipping real-time subscription setup - device is offline");
+      return;
+    }
+    
     // Set up real-time subscription for customer updates
     const channel = supabase
       .channel('customer-changes')
@@ -39,5 +45,5 @@ export const useCustomerSubscription = (fetchData: () => Promise<void>) => {
       supabase.removeChannel(channel);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [fetchData]);
+  }, [fetchData, isOffline]);
 };

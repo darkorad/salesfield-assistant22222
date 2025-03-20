@@ -27,7 +27,8 @@ export const useVisitPlansData = () => {
     isLoading, 
     error, 
     fetchCustomers,
-    lastDataRefresh 
+    lastDataRefresh,
+    isOffline
   } = useCustomerData();
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -43,7 +44,7 @@ export const useVisitPlansData = () => {
   }, [fetchData, today]);
 
   // Use the subscription hook
-  useCustomerSubscription(fetchData);
+  useCustomerSubscription(fetchData, isOffline);
 
   return {
     visitPlans,
@@ -52,6 +53,7 @@ export const useVisitPlansData = () => {
     error,
     fetchData,
     today,
-    lastDataRefresh
+    lastDataRefresh,
+    isOffline
   };
 };

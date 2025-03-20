@@ -14,29 +14,51 @@ export const useOfflineSync = () => {
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [hasLocalData, setHasLocalData] = useState<boolean>(false);
 
-  // Update online status when it changes
+  // Update online status and check for local data
   useEffect(() => {
-    const updateOnlineStatus = async () => {
+    const updateStatus = async () => {
       const status = await checkOnlineStatus();
       setIsOnline(status);
+      
+      // Check if we have local data
+      const [customers, products] = await Promise.all([
+        getLocalCustomers(),
+        getLocalProducts()
+      ]);
+      
+      setHasLocalData(customers.length > 0 && products.length > 0);
+      
+      // Get last sync time
+      const timestamp = await getLastSyncTimestamp();
+      setLastSyncTime(timestamp);
     };
 
     // Check initial status
-    updateOnlineStatus();
+    updateStatus();
 
     // Add event listeners for online/offline status
-    window.addEventListener('online', () => setIsOnline(true));
-    window.addEventListener('offline', () => setIsOnline(false));
+    const handleOnline = async () => {
+      setIsOnline(true);
+      await updateStatus();
+    };
+    
+    const handleOffline = async () => {
+      setIsOnline(false);
+      await updateStatus();
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
-    // Get last sync time
-    getLastSyncTimestamp().then(timestamp => {
-      setLastSyncTime(timestamp);
-    });
+    // Set up an interval to periodically check status
+    const interval = setInterval(updateStatus, 60000); // Check every minute
 
     return () => {
-      window.removeEventListener('online', () => setIsOnline(true));
-      window.removeEventListener('offline', () => setIsOnline(false));
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
     };
   }, []);
 
@@ -82,6 +104,9 @@ export const useOfflineSync = () => {
         // Update last sync time
         const newTimestamp = new Date().toISOString();
         setLastSyncTime(newTimestamp);
+        
+        // Update hasLocalData state
+        setHasLocalData(true);
       } else {
         toast.error(`Greška pri sinhronizaciji: ${result.error || 'Nepoznata greška'}`);
       }
@@ -101,6 +126,7 @@ export const useOfflineSync = () => {
         getLocalProducts()
       ]);
       
+      setHasLocalData(customers.length > 0 && products.length > 0);
       return { customers, products };
     } catch (error) {
       console.error('Error getting local data:', error);
@@ -114,6 +140,7 @@ export const useOfflineSync = () => {
     lastSyncTime,
     formattedLastSync,
     syncData,
-    getLocalData
+    getLocalData,
+    hasLocalData
   };
 };

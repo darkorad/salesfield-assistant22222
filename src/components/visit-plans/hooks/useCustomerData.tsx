@@ -1,19 +1,42 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Customer } from "@/types";
+import { checkOnlineStatus, getLocalCustomers } from "@/utils/offlineStorage";
 
 export const useCustomerData = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastDataRefresh, setLastDataRefresh] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState<boolean>(false);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Check if we're online
+      const online = await checkOnlineStatus();
+      setIsOffline(!online);
+      
+      if (!online) {
+        console.log("Device is offline, loading customers from local storage");
+        // Load from local storage when offline
+        const localCustomers = await getLocalCustomers();
+        
+        if (localCustomers.length === 0) {
+          console.log("No customers found in local storage");
+          setError("Nema sačuvanih kupaca u offline režimu. Sinhronizujte podatke kada budete online.");
+          toast.error("Nema sačuvanih kupaca u offline režimu");
+          return [];
+        }
+        
+        console.log(`Loaded ${localCustomers.length} customers from local storage`);
+        toast.info("Koriste se lokalno sačuvani podaci (offline režim)");
+        return localCustomers;
+      }
       
       // First check if user is authenticated
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -151,13 +174,26 @@ export const useCustomerData = () => {
       return finalCustomers;
     } catch (error) {
       console.error("Unexpected error:", error);
+      
+      // Try to load from local storage if online fetch fails
+      try {
+        const localCustomers = await getLocalCustomers();
+        if (localCustomers.length > 0) {
+          console.log("Falling back to local data");
+          toast.info("Koriste se lokalno sačuvani podaci");
+          return localCustomers;
+        }
+      } catch (fallbackError) {
+        console.error("Error loading fallback data:", fallbackError);
+      }
+      
       setError("Neočekivana greška pri učitavanju podataka. Molimo pokušajte ponovo.");
       toast.error("Neočekivana greška pri učitavanju podataka");
       return [];
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return {
     customers,
@@ -165,6 +201,7 @@ export const useCustomerData = () => {
     isLoading,
     error,
     fetchCustomers,
-    lastDataRefresh
+    lastDataRefresh,
+    isOffline
   };
 };

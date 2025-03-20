@@ -5,7 +5,7 @@ import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const SyncButton = () => {
-  const { isOnline, isSyncing, syncData, formattedLastSync } = useOfflineSync();
+  const { isOnline, isSyncing, syncData, formattedLastSync, hasLocalData } = useOfflineSync();
 
   return (
     <TooltipProvider>
@@ -32,7 +32,10 @@ export const SyncButton = () => {
           <p>
             {isOnline 
               ? `Status: Online • Poslednja sinhronizacija: ${formattedLastSync()}`
-              : "Status: Offline • Promene će biti sinhronizovane kada budete online"}
+              : hasLocalData 
+                ? "Status: Offline • Koriste se lokalni podaci"
+                : "Status: Offline • Nema lokalnih podataka, potrebna je sinhronizacija"
+            }
           </p>
         </TooltipContent>
       </Tooltip>
