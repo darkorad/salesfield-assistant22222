@@ -38,11 +38,12 @@ jobs:
         echo "Directory contents: $(ls -la)"
         which npm
         npm config get prefix
+        echo "Node modules bin directory: $(npm bin)"
     
     - name: Build
       run: |
         export PATH="$(npm bin):$PATH"
-        npm run build
+        npx vite build
       env:
         CI: false
       
