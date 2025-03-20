@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -39,9 +38,10 @@ interface TodayVisitsProps {
   isLoading: boolean;
   visitPlans: VisitPlan[];
   date: string;
+  isOffline?: boolean;
 }
 
-export const TodayVisits = ({ isLoading, visitPlans, date }: TodayVisitsProps) => {
+export const TodayVisits = ({ isLoading, visitPlans, date, isOffline }: TodayVisitsProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);

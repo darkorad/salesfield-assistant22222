@@ -1,6 +1,6 @@
 
 import { Customer } from "@/types";
-import { RefreshCw, LoaderIcon } from "lucide-react";
+import { RefreshCw, LoaderIcon, WifiOff } from "lucide-react";
 import { TodayVisits } from "./TodayVisits";
 import { Button } from "@/components/ui/button";
 
@@ -22,18 +22,23 @@ interface TodayVisitsSectionProps {
   isLoading: boolean;
   visitPlans: VisitPlan[];
   lastDataRefresh?: string | null;
+  isOffline?: boolean;
 }
 
 export const TodayVisitsSection = ({ 
   isLoading,
   visitPlans,
-  lastDataRefresh
+  lastDataRefresh,
+  isOffline
 }: TodayVisitsSectionProps) => {
   return (
     <div className="mt-6 space-y-4">
       {lastDataRefresh && (
-        <div className="text-xs text-muted-foreground mb-2">
-          Poslednji uvoz podataka o kupcima: {new Date(lastDataRefresh).toLocaleString('sr-Latn-RS')}
+        <div className="text-xs text-muted-foreground mb-2 flex items-center">
+          {isOffline && <WifiOff className="h-3 w-3 mr-1 text-blue-600" />}
+          <span>
+            Poslednji uvoz podataka o kupcima: {new Date(lastDataRefresh).toLocaleString('sr-Latn-RS')}
+          </span>
         </div>
       )}
       
