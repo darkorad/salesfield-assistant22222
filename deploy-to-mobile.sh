@@ -26,6 +26,16 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
+# Check if build-local.sh has execution permissions
+if [ ! -x "./build-local.sh" ]; then
+    echo -e "${YELLOW}Setting execution permissions for build-local.sh...${NC}"
+    chmod +x ./build-local.sh
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to set execution permissions. Try running: chmod +x ./build-local.sh${NC}"
+        exit 1
+    fi
+fi
+
 # Check if Capacitor CLI is installed
 if ! command -v npx cap &> /dev/null; then
     echo -e "${YELLOW}Capacitor CLI seems to be missing. Installing...${NC}"
