@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { performFullSync, storeUserSession } from "@/utils/offlineStorage";
-import { verifyConnection } from "@/utils/connectionUtils";
+import { verifyConnection, verifyAuthToken } from "@/utils/connectionUtils";
 
 interface LoginFormProps {
   setIsOffline: (isOffline: boolean) => void;
@@ -89,6 +90,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
         
         // Store the session for offline use
         await storeUserSession(loginData.session);
+
+        // Verify auth token is working properly
+        const isTokenValid = await verifyAuthToken();
+        if (!isTokenValid) {
+          toast.warning("Problem sa autentikacijom. Pokušajte ponovo.");
+          setLoading(false);
+          return;
+        }
 
         // Start data sync
         setSyncing(true);

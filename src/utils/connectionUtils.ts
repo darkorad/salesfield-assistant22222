@@ -54,3 +54,52 @@ export const getCurrentSession = async (): Promise<{
     return { session: null, error };
   }
 };
+
+/**
+ * Verify that authentication token is properly set and working
+ */
+export const verifyAuthToken = async (): Promise<boolean> => {
+  try {
+    // First get the current session
+    const { session, error } = await getCurrentSession();
+    
+    if (error || !session) {
+      console.error("No valid session found:", error);
+      return false;
+    }
+    
+    // Try a simple authenticated request to verify token works
+    const { error: testError } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1);
+    
+    if (testError) {
+      console.error("Auth token verification failed:", testError);
+      
+      // If the token doesn't work, try refreshing the session
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.error("Failed to refresh session:", refreshError);
+        return false;
+      }
+      
+      // Try one more time after refresh
+      const { error: retryError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
+        
+      if (retryError) {
+        console.error("Auth token still not working after refresh:", retryError);
+        return false;
+      }
+    }
+    
+    console.log("Auth token verified successfully");
+    return true;
+  } catch (error) {
+    console.error("Error verifying auth token:", error);
+    return false;
+  }
+};

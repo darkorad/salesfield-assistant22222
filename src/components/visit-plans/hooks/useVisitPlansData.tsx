@@ -1,8 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Customer } from "@/types";
+import { verifyAuthToken } from "@/utils/connectionUtils";
+import { useNavigate } from "react-router-dom";
 
 interface VisitPlan {
   id: string;
@@ -24,6 +27,8 @@ export const useVisitPlansData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastDataRefresh, setLastDataRefresh] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const navigate = useNavigate();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const fetchData = async () => {
@@ -31,33 +36,62 @@ export const useVisitPlansData = () => {
       setIsLoading(true);
       setError(null);
       
-      const { data: session, error: sessionError } = await supabase.auth.getSession();
+      // Get session and verify token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error("Session error:", sessionError);
         setError("Greška pri proveri sesije");
         toast.error("Greška pri proveri sesije");
+        
+        // Try to refresh the session
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error("Failed to refresh session:", refreshError);
+          // If refresh fails, redirect to login
+          navigate("/login");
+          return;
+        }
+        
+        // If refresh succeeds, retry fetch
+        setRetryCount(prev => prev + 1);
         return;
       }
       
-      if (!session.session) {
+      if (!session) {
         console.log("No active session found");
         setError("Niste prijavljeni");
         toast.error("Niste prijavljeni");
+        navigate("/login");
         return;
       }
 
+      // Verify auth token is working before proceeding
+      if (retryCount === 0) {
+        const isTokenValid = await verifyAuthToken();
+        if (!isTokenValid) {
+          console.error("Auth token verification failed");
+          // Only retry once to prevent infinite loops
+          setRetryCount(1);
+          // Force a session refresh
+          await supabase.auth.refreshSession();
+          // Try fetching data again
+          fetchData();
+          return;
+        }
+      }
+
       // Check if there was a recent data import
-      const userId = session.session.user.id;
+      const userId = session.user.id;
       const lastImport = localStorage.getItem(`lastCustomersImport_${userId}`);
       setLastDataRefresh(lastImport);
 
       console.log("Fetching customers for visit plans");
-      console.log("User ID:", session.session?.user.id);
-      console.log("User Email:", session.session?.user.email);
+      console.log("User ID:", session?.user.id);
+      console.log("User Email:", session?.user.email);
 
       // Determine which table to fetch customers from based on the user's email
-      const userEmail = session.session?.user.email;
+      const userEmail = session?.user.email;
       let customersData;
       let customersError;
 
@@ -67,7 +101,7 @@ export const useVisitPlansData = () => {
           .from("kupci_darko")
           .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
           .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
+          .eq('user_id', session.user.id)
           .order("name");
           
         customersData = response.data;
@@ -78,7 +112,7 @@ export const useVisitPlansData = () => {
           .from("customers")
           .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
           .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
+          .eq('user_id', session.user.id)
           .order("name");
           
         customersData = response.data;
@@ -89,14 +123,14 @@ export const useVisitPlansData = () => {
           .from("kupci_darko")
           .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
           .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
+          .eq('user_id', session.user.id)
           .order("name");
           
         const customersResponse = await supabase
           .from("customers")
           .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
           .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
+          .eq('user_id', session.user.id)
           .order("name");
           
         // Combine results
@@ -106,6 +140,22 @@ export const useVisitPlansData = () => {
 
       if (customersError) {
         console.error("Error fetching customers:", customersError);
+        
+        // If we get an auth error, try refreshing the session and retry
+        if (customersError.message === "JWT expired" || 
+            customersError.message.includes("No API key found") || 
+            customersError.message.includes("JWT")) {
+          console.log("JWT error detected, refreshing session...");
+          await supabase.auth.refreshSession();
+          
+          // Only retry once to prevent infinite loops
+          if (retryCount < 2) {
+            setRetryCount(prev => prev + 1);
+            fetchData();
+            return;
+          }
+        }
+        
         setError("Greška pri učitavanju kupaca");
         toast.error("Greška pri učitavanju kupaca");
         return;
@@ -140,6 +190,9 @@ export const useVisitPlansData = () => {
       // For visit plans, we're setting it to an empty array as we deleted all records
       setVisitPlans([]);
       setCustomers(finalCustomers);
+      
+      // Reset retry count on success
+      setRetryCount(0);
     } catch (error) {
       console.error("Unexpected error:", error);
       setError("Neočekivana greška pri učitavanju podataka");
