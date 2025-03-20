@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = 'https://olkyepnvfwchgkmxyqku.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sa3llcG52ZndjaGdrbXh5cWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQyMTY1MjgsImV4cCI6MjA0OTc5MjUyOH0.LQYekqo4mR-50cjm4BORpP8GdskX_m0W5YKlqkRO7_8'
 
-// Initialize the Supabase client
+// Initialize the Supabase client with direct connection (no proxy)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -13,6 +13,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: window.localStorage,
     flowType: 'pkce',
     storageKey: 'zirmd-auth-token',
+  },
+  global: {
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+    },
+    fetch: (url, options) => {
+      // Log the request for debugging
+      console.log(`Making request to: ${url}`);
+      return fetch(url, {
+        ...options,
+        cache: 'no-store',
+        mode: 'cors',
+        credentials: 'omit',
+      });
+    }
   }
 })
 
@@ -21,65 +37,58 @@ export const checkSupabaseConnectivity = async () => {
   try {
     console.log('Checking Supabase connectivity...')
     
-    // First try a simple ping to see if we can reach the Supabase instance
+    // Try a simpler method to check connectivity - just check session endpoint
     try {
-      const pingResponse = await fetch(`${supabaseUrl}/ping`, {
+      console.log('Trying direct API call to check connectivity...')
+      const response = await fetch(`${supabaseUrl}/auth/v1/session`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        // Short timeout for ping
-        signal: AbortSignal.timeout(5000)
-      })
+        headers: { 
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey
+        },
+        signal: AbortSignal.timeout(10000)
+      });
       
-      if (!pingResponse.ok) {
-        console.error('Supabase ping failed:', pingResponse.status)
+      if (response.ok) {
+        console.log('Direct API call succeeded');
+        return { connected: true };
+      } else {
+        console.error('Direct API call failed:', response.status, response.statusText);
+      }
+    } catch (directApiError) {
+      console.error('Direct API call error:', directApiError);
+    }
+    
+    // Fallback - try supabase auth.getSession()
+    try {
+      console.log('Trying supabase.auth.getSession()...');
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Supabase session check failed:', sessionError);
         return { 
           connected: false, 
-          error: 'Server nije dostupan. Proverite internet konekciju i DNS podešavanja.' 
-        }
+          error: 'Greška pri povezivanju sa Supabase serverom: ' + sessionError.message,
+          isAuthError: true 
+        };
       }
-    } catch (pingError) {
-      console.error('Ping error:', pingError)
-      return { 
-        connected: false, 
-        error: 'Server nije dostupan. Proverite internet konekciju i DNS podešavanja.' 
-      }
+      
+      console.log('Session check succeeded');
+      return { connected: true, session: data.session };
+    } catch (sessionError) {
+      console.error('Session check error:', sessionError);
     }
     
-    // Verify the session is valid
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    if (sessionError) {
-      console.error('Supabase session check failed:', sessionError)
-      return { connected: false, error: sessionError.message, isAuthError: true }
-    }
-    
-    if (!session) {
-      console.log('No active session found')
-      return { connected: true, isAuthenticated: false }
-    }
-    
-    console.log('Session valid, checking database access...')
-    
-    // Make a simple query that shouldn't require authentication
-    const { data, error } = await supabase.from('customers').select('count').limit(1)
-    
-    if (error) {
-      console.error('Supabase connectivity check failed:', error)
-      return { 
-        connected: false, 
-        error: error.message, 
-        isPermissionError: error.message.includes('permission denied'),
-        code: error.code
-      }
-    }
-    
-    console.log('Supabase connectivity check succeeded')
-    return { connected: true, isAuthenticated: true }
+    // If all checks failed, return connectivity error
+    return { 
+      connected: false, 
+      error: 'Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.' 
+    };
   } catch (err) {
-    console.error('Supabase connectivity check exception:', err)
+    console.error('Supabase connectivity check exception:', err);
     return { 
       connected: false, 
       error: err instanceof Error ? err.message : 'Nepoznata greška pri povezivanju'
-    }
+    };
   }
 }

@@ -13,6 +13,7 @@ interface ConnectivityResult {
   isAuthError?: boolean;
   isAuthenticated?: boolean;
   code?: string;
+  session?: any;
 }
 
 const Index = () => {
@@ -21,6 +22,7 @@ const Index = () => {
   const [connectionError, setConnectionError] = useState(false);
   const [errorDetails, setErrorDetails] = useState("");
   const [checkAttempts, setCheckAttempts] = useState(0);
+  const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -28,10 +30,20 @@ const Index = () => {
         setIsChecking(true);
         console.log("Index page: Checking authentication... Attempt:", checkAttempts + 1);
         
-        // First check connectivity with a timeout
+        // Check if we're online at all
+        if (!navigator.onLine) {
+          console.log("Browser reports device is offline");
+          setConnectionError(true);
+          setErrorDetails("Uređaj nije povezan na internet. Proverite mrežnu konekciju.");
+          setNetworkStatus('offline');
+          setIsChecking(false);
+          return;
+        }
+        
+        // Check connectivity with a timeout
         const connectivityCheckPromise = checkSupabaseConnectivity();
         const timeoutPromise = new Promise<ConnectivityResult>((_, reject) => 
-          setTimeout(() => reject(new Error("Connection timeout")), 5000)
+          setTimeout(() => reject(new Error("Veza je istekla - server ne odgovara")), 10000)
         );
         
         const connectivity = await Promise.race([
@@ -39,13 +51,14 @@ const Index = () => {
           timeoutPromise
         ]).catch(error => {
           console.error('Connection timeout:', error);
-          return { connected: false, error: "Connection timeout" } as ConnectivityResult;
+          return { connected: false, error: "Veza je istekla - server ne odgovara" } as ConnectivityResult;
         });
         
         if (!connectivity.connected) {
           console.error('Connection error:', connectivity.error);
           setConnectionError(true);
           setErrorDetails(connectivity.error || "");
+          setNetworkStatus('offline');
           setIsChecking(false);
           toast.error("Problem sa povezivanjem na server");
           
@@ -64,6 +77,8 @@ const Index = () => {
           }
           return;
         }
+
+        setNetworkStatus('online');
 
         // Check session
         console.log("Index page: Checking session...");
@@ -90,6 +105,25 @@ const Index = () => {
       }
     };
 
+    // Add event listeners for online/offline events
+    const handleOnline = () => {
+      console.log("Device went online");
+      setNetworkStatus('online');
+      toast.success("Povezani ste na internet");
+      checkAuth();
+    };
+    
+    const handleOffline = () => {
+      console.log("Device went offline");
+      setNetworkStatus('offline');
+      setConnectionError(true);
+      setErrorDetails("Uređaj nije povezan na internet. Proverite mrežnu konekciju.");
+      toast.error("Izgubljena internet konekcija");
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
     // Add a fallback timer in case something gets stuck
     const fallbackTimer = setTimeout(() => {
       if (isChecking) {
@@ -97,11 +131,15 @@ const Index = () => {
         setIsChecking(false);
         navigate("/login", { replace: true });
       }
-    }, 6000); // 6 seconds fallback
+    }, 12000); // 12 seconds fallback
 
     checkAuth();
 
-    return () => clearTimeout(fallbackTimer);
+    return () => {
+      clearTimeout(fallbackTimer);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, [navigate, checkAttempts]);
 
   if (isChecking) {
@@ -113,16 +151,18 @@ const Index = () => {
       <div className="w-full h-screen flex flex-col items-center justify-center p-4">
         <div className="text-red-600 text-2xl font-bold mb-4">Greška povezivanja</div>
         <p className="text-center max-w-md mb-6">
-          Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.
+          {errorDetails || "Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja."}
         </p>
         <div className="bg-gray-100 p-4 rounded-md max-w-md">
+          <p className="font-semibold mb-2">Status mreže: {
+            networkStatus === 'online' ? 'Online' : 
+            networkStatus === 'offline' ? 'Offline' : 
+            'Provera konekcije...'
+          }</p>
           <p className="font-semibold mb-2">Potrebni DNS zapisi:</p>
           <div className="font-mono text-sm bg-white p-2 rounded border">
             olkyepnvfwchgkmxyqku.supabase.co → CNAME → olkyepnvfwchgkmxyqku.supabase.co
           </div>
-          <p className="text-xs text-gray-600 mt-2">
-            Detalji greške: {errorDetails}
-          </p>
           <button 
             onClick={() => window.location.reload()} 
             className="mt-4 w-full py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
