@@ -11,22 +11,35 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     storage: window.localStorage,
     flowType: 'pkce',
-    // Improved security settings
     storageKey: 'zirmd-auth-token',
-    // Note: autoRefreshTime is not a valid property in the current API
-    // Using the standard configuration for token refresh
   },
   global: {
-    // Add request timeout to prevent hanging requests
     fetch: (url, options) => {
-      const timeout = 30000 // 30 seconds timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), timeout)
-      
-      return fetch(url, {
-        ...options,
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId))
+      // Retry logic for SSL handshake failures
+      const MAX_RETRIES = 3;
+      const RETRY_DELAY = 1000; // 1 second
+
+      const customFetch = async (retriesLeft: number): Promise<Response> => {
+        try {
+          return await fetch(url, {
+            ...options,
+            // Setting cache to 'no-store' can help with SSL issues
+            cache: 'no-store',
+            // Set longer timeout
+            signal: options?.signal || new AbortController().signal
+          });
+        } catch (error) {
+          if (retriesLeft > 0 && (error.message?.includes('SSL') || error.message?.includes('handshake'))) {
+            console.warn(`SSL/Handshake error. Retrying... (${retriesLeft} attempts left)`);
+            return new Promise(resolve => {
+              setTimeout(() => resolve(customFetch(retriesLeft - 1)), RETRY_DELAY);
+            });
+          }
+          throw error;
+        }
+      };
+
+      return customFetch(MAX_RETRIES);
     }
   }
 })
