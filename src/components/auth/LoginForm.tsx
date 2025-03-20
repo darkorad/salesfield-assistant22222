@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,30 +66,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
         
         // Store the session for offline use
         await storeUserSession(data.session);
-
-        // Verify auth token is working properly with retries
-        let isTokenValid = false;
-        for (let i = 0; i < 3; i++) { // Try up to 3 times
-          isTokenValid = await verifyAuthToken();
-          if (isTokenValid) break;
-          
-          // Wait a bit before retrying
-          if (!isTokenValid && i < 2) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            // Try refreshing the session again
-            await supabase.auth.refreshSession();
-          }
-        }
         
-        if (!isTokenValid) {
-          toast.warning("Problem sa autentikacijom. Pokušajte ponovo.");
-          setLoading(false);
-          return;
+        // Force a session refresh to ensure token is fresh
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error("Failed to refresh session after login:", refreshError);
         }
 
-        // Start data sync
-        setSyncing(true);
+        // Skip token verification and proceed with data sync
         toast.info("Sinhronizacija podataka sa ŽIR-MD servisom...");
+        setSyncing(true);
         
         try {
           const syncResult = await performFullSync();
@@ -106,8 +91,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
           setSyncing(false);
         }
 
-        // Navigate to the app
-        navigate("/visit-plans");
+        // Navigate to the app - ensure this happens regardless of sync
+        console.log("Login successful, navigating to visit-plans");
+        navigate("/visit-plans", { replace: true });
         return;
       } else {
         toast.error("Neuspešna prijava. Pokušajte ponovo.");

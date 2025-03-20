@@ -57,48 +57,34 @@ export const getCurrentSession = async (): Promise<{
 
 /**
  * Verify that authentication token is properly set and working
+ * Returns true if token verification succeeded
  */
 export const verifyAuthToken = async (): Promise<boolean> => {
   try {
     // First get the current session
-    const { session, error } = await getCurrentSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (error || !session) {
-      console.error("No valid session found:", error);
+    if (sessionError || !session) {
+      console.error("No valid session found:", sessionError);
       return false;
     }
     
-    // Use the Supabase client for the request which automatically includes auth headers
-    // We don't need to manually specify the API key as the client handles this
-    const { error: testError } = await supabase
-      .from('profiles')
-      .select('id')
-      .limit(1);
-    
-    if (testError) {
-      console.error("Auth token verification failed:", testError);
+    // Simple way to check if the auth is working - try to access user's own profile
+    // This endpoint should always be accessible if auth is working
+    try {
+      const { error } = await supabase.from('profiles').select('*').limit(1);
       
-      // If the token doesn't work, try refreshing the session
-      const { error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        console.error("Failed to refresh session:", refreshError);
+      if (error) {
+        console.error("Auth token verification failed:", error);
         return false;
       }
       
-      // Try one more time after refresh
-      const { error: retryError } = await supabase
-        .from('profiles')
-        .select('id')
-        .limit(1);
-        
-      if (retryError) {
-        console.error("Auth token still not working after refresh:", retryError);
-        return false;
-      }
+      console.log("Auth token verified successfully");
+      return true;
+    } catch (e) {
+      console.error("Error during auth verification:", e);
+      return false;
     }
-    
-    console.log("Auth token verified successfully");
-    return true;
   } catch (error) {
     console.error("Error verifying auth token:", error);
     return false;
