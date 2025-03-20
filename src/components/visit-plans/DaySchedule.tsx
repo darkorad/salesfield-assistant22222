@@ -2,12 +2,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Customer } from "@/types";
 import { CustomerSearchBar } from "./customer-list/CustomerSearchBar";
-import { CustomerGrid } from "./customer-list/CustomerGrid";
-import { CustomerOrderSection } from "./customer-order/CustomerOrderSection";
 import { useCompletedCustomers } from "./hooks/useCompletedCustomers";
 import { useCustomerSearch } from "./hooks/useCustomerSearch";
 import { useCustomersByDay } from "./hooks/useCustomersByDay";
-import { toast } from "sonner";
+import { DayScheduleInfo } from "./day-schedule/DayScheduleInfo";
+import { LoadingState } from "./day-schedule/LoadingState";
+import { CustomersList } from "./day-schedule/CustomersList";
 
 interface DayScheduleProps {
   day: string;
@@ -52,45 +52,8 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   };
 
   if (completedLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-        <div className="col-span-full text-center text-gray-500 py-2 text-xs">
-          Učitavanje...
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
-
-  // Create a map to store customer-specific JSX content
-  const renderCustomerGrid = () => {
-    return (
-      <div className="space-y-4">
-        {filteredCustomers.map((customer) => (
-          <div key={customer.id} className="space-y-2">
-            <CustomerListItem 
-              customer={customer}
-              isCompleted={completedCustomers.has(customer.id)}
-              isSelected={customer.id === selectedCustomer?.id}
-              onClick={handleCustomerClick}
-            />
-            
-            {/* Render the order form directly under this customer if selected */}
-            {selectedCustomer?.id === customer.id && (
-              <div ref={orderFormRef}>
-                <CustomerOrderSection
-                  customer={selectedCustomer}
-                  onClose={() => setSelectedCustomer(null)}
-                  onOrderComplete={handleOrderComplete}
-                  showHistory={showHistory}
-                  setShowHistory={setShowHistory}
-                />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-4">
@@ -99,16 +62,21 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         onChange={setSearchTerm}
       />
 
-      {customersForDay.length > 0 && (
-        <div className="p-2 bg-amber-50 rounded text-xs border border-amber-200 mb-2">
-          Prikazuje se {customersForDay.length} kupaca za {day}
-        </div>
-      )}
+      <DayScheduleInfo 
+        day={day} 
+        customersCount={customersForDay.length} 
+      />
 
-      {renderCustomerGrid()}
+      <CustomersList 
+        customers={filteredCustomers}
+        selectedCustomer={selectedCustomer}
+        completedCustomers={completedCustomers}
+        orderFormRef={orderFormRef}
+        onCustomerClick={handleCustomerClick}
+        showHistory={showHistory}
+        setShowHistory={setShowHistory}
+        onOrderComplete={handleOrderComplete}
+      />
     </div>
   );
 };
-
-// We need to import this component here since we're using it directly
-import { CustomerListItem } from "./customer-list/CustomerListItem";
