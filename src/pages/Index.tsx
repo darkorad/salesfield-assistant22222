@@ -51,7 +51,11 @@ const Index = () => {
           timeoutPromise
         ]).catch(error => {
           console.error('Connection timeout:', error);
-          return { connected: false, error: "Veza je istekla - server ne odgovara" } as ConnectivityResult;
+          return { 
+            connected: false, 
+            error: "Veza je istekla - server ne odgovara",
+            isPermissionError: false 
+          } as ConnectivityResult;
         });
         
         if (!connectivity.connected) {

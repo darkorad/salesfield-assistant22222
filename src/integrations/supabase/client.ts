@@ -51,9 +51,17 @@ export const checkSupabaseConnectivity = async () => {
       
       if (response.ok) {
         console.log('Direct API call succeeded');
-        return { connected: true };
+        return { connected: true, isPermissionError: false };
       } else {
         console.error('Direct API call failed:', response.status, response.statusText);
+        // Check if it's a permission error (403)
+        if (response.status === 403) {
+          return { 
+            connected: true, 
+            isPermissionError: true,
+            error: 'Nemate odgovarajuće dozvole za pristup podacima.'
+          };
+        }
       }
     } catch (directApiError) {
       console.error('Direct API call error:', directApiError);
@@ -69,12 +77,13 @@ export const checkSupabaseConnectivity = async () => {
         return { 
           connected: false, 
           error: 'Greška pri povezivanju sa Supabase serverom: ' + sessionError.message,
-          isAuthError: true 
+          isAuthError: true,
+          isPermissionError: false
         };
       }
       
       console.log('Session check succeeded');
-      return { connected: true, session: data.session };
+      return { connected: true, session: data.session, isPermissionError: false };
     } catch (sessionError) {
       console.error('Session check error:', sessionError);
     }
@@ -82,13 +91,15 @@ export const checkSupabaseConnectivity = async () => {
     // If all checks failed, return connectivity error
     return { 
       connected: false, 
-      error: 'Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.' 
+      error: 'Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.',
+      isPermissionError: false
     };
   } catch (err) {
     console.error('Supabase connectivity check exception:', err);
     return { 
       connected: false, 
-      error: err instanceof Error ? err.message : 'Nepoznata greška pri povezivanju'
+      error: err instanceof Error ? err.message : 'Nepoznata greška pri povezivanju',
+      isPermissionError: false
     };
   }
 }
