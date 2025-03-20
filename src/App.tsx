@@ -5,7 +5,8 @@ import './App.css'
 import { Toaster } from './components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useAuthStatus } from './hooks/useAuthStatus'
+import { AuthProvider } from './contexts/AuthContext'
+import { useAuth } from './contexts/AuthContext'
 import { LoadingScreen } from './components/app/LoadingScreen'
 import { ConnectionErrorScreen } from './components/app/ConnectionErrorScreen'
 import { PermissionErrorScreen } from './components/app/PermissionErrorScreen'
@@ -35,8 +36,9 @@ const queryClient = new QueryClient({
   },
 })
 
-function App() {
-  const { isLoading, isAuthenticated, connectionError, permissionError } = useAuthStatus();
+// Component that uses auth context and renders the appropriate screen
+const AuthenticatedApp = () => {
+  const { isLoading, isAuthenticated, connectionError, permissionError } = useAuth();
 
   // Show a simpler loading state that won't get stuck
   if (isLoading) {
@@ -51,14 +53,20 @@ function App() {
     return <PermissionErrorScreen onRetry={() => window.location.reload()} />;
   }
 
+  return <AppRoutes isAuthenticated={isAuthenticated} />;
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <SonnerToaster richColors position="top-center" />
-        <AppRoutes isAuthenticated={isAuthenticated} />
-        <Toaster />
-        <ReactQueryDevtools initialIsOpen={false} />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <SonnerToaster richColors position="top-center" />
+          <AuthenticatedApp />
+          <Toaster />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }

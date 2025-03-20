@@ -7,9 +7,11 @@ import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { useLogin } from "@/hooks/useLogin";
 import { ConnectionErrorMessage } from "@/components/login/ConnectionErrorMessage";
 import { LoginForm } from "@/components/login/LoginForm";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { 
     networkStatus, 
     connectionError, 
@@ -31,6 +33,13 @@ const Login = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // If already authenticated via context, redirect
+        if (isAuthenticated) {
+          console.log("Login page: Already authenticated, redirecting...");
+          navigate("/visit-plans", { replace: true });
+          return;
+        }
+        
         if (networkStatus === 'online') {
           console.log("Login page: Connection successful, checking session...");
           const { data: { session } } = await supabase.auth.getSession();
@@ -47,7 +56,7 @@ const Login = () => {
     if (!isCheckingConnection && networkStatus === 'online') {
       checkSession();
     }
-  }, [navigate, networkStatus, isCheckingConnection]);
+  }, [navigate, networkStatus, isCheckingConnection, isAuthenticated]);
 
   if (isCheckingConnection) {
     return (

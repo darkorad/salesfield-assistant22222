@@ -1,11 +1,10 @@
-
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase, checkSupabaseConnectivity } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LoadingState } from "@/components/visit-plans/day-schedule/LoadingState";
+import { useAuth } from "@/contexts/AuthContext";
 
-// Define the type for connectivity check result
 interface ConnectivityResult {
   connected: boolean;
   error?: string;
@@ -18,6 +17,7 @@ interface ConnectivityResult {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   const [connectionError, setConnectionError] = useState(false);
   const [errorDetails, setErrorDetails] = useState("");
@@ -30,7 +30,6 @@ const Index = () => {
         setIsChecking(true);
         console.log("Index page: Checking authentication... Attempt:", checkAttempts + 1);
         
-        // Check if we're online at all
         if (!navigator.onLine) {
           console.log("Browser reports device is offline");
           setConnectionError(true);
@@ -40,7 +39,6 @@ const Index = () => {
           return;
         }
         
-        // Check connectivity with a timeout
         const connectivityCheckPromise = checkSupabaseConnectivity();
         const timeoutPromise = new Promise<ConnectivityResult>((_, reject) => 
           setTimeout(() => reject(new Error("Veza je istekla - server ne odgovara")), 10000)
@@ -66,14 +64,11 @@ const Index = () => {
           setIsChecking(false);
           toast.error("Problem sa povezivanjem na server");
           
-          // If we have connectivity problems, redirect to login after multiple attempts
           if (checkAttempts >= 1) {
             console.log("Multiple connectivity failures, redirecting to login");
             navigate("/login", { replace: true });
           } else {
-            // Increment attempts for next try
             setCheckAttempts(prev => prev + 1);
-            // Try again after a short delay
             setTimeout(() => {
               setIsChecking(true);
               checkAuth();
@@ -84,16 +79,19 @@ const Index = () => {
 
         setNetworkStatus('online');
 
-        // Check session
+        if (isAuthenticated) {
+          console.log("Index page: User is authenticated, navigating to app");
+          navigate("/visit-plans", { replace: true });
+          return;
+        }
+
         console.log("Index page: Checking session...");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
           console.log("Index page: Session found, navigating to app");
-          // Navigate directly without refresh attempt to avoid potential hangs
           navigate("/visit-plans", { replace: true });
         } else {
-          // No session found
           console.log("Index page: No session found, navigating to login");
           navigate("/login", { replace: true });
         }
@@ -102,14 +100,12 @@ const Index = () => {
         setConnectionError(true);
         setErrorDetails(error instanceof Error ? error.message : "Unknown error");
         toast.error("Problem sa proverom autentikacije");
-        // After error, direct to login
         navigate("/login", { replace: true });
       } finally {
         setIsChecking(false);
       }
     };
 
-    // Add event listeners for online/offline events
     const handleOnline = () => {
       console.log("Device went online");
       setNetworkStatus('online');
@@ -128,14 +124,13 @@ const Index = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Add a fallback timer in case something gets stuck
     const fallbackTimer = setTimeout(() => {
       if (isChecking) {
         console.log("Fallback timer triggered, navigating to login");
         setIsChecking(false);
         navigate("/login", { replace: true });
       }
-    }, 12000); // 12 seconds fallback
+    }, 12000);
 
     checkAuth();
 
@@ -144,7 +139,7 @@ const Index = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [navigate, checkAttempts]);
+  }, [navigate, checkAttempts, isAuthenticated]);
 
   if (isChecking) {
     return <LoadingState message="Učitavanje aplikacije..." />;

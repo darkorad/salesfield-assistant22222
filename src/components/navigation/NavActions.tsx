@@ -5,9 +5,11 @@ import { LogOut, Settings, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SyncButton } from "./SyncButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const NavActions = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -17,6 +19,10 @@ export const NavActions = () => {
     }
     navigate("/login");
   };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex items-center gap-2">

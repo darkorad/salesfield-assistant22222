@@ -3,24 +3,24 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DocumentsList } from "@/components/documents/DocumentsList";
 import { getStoredFiles, StoredFile } from "@/utils/fileStorage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Documents = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [files, setFiles] = useState<StoredFile[]>([]);
   const [activeTab, setActiveTab] = useState("documents");
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      if (!isAuthenticated) {
         toast.error("Niste prijavljeni");
         navigate("/login");
         return;
@@ -30,7 +30,7 @@ const Documents = () => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, isAuthenticated]);
 
   const loadFiles = async () => {
     setIsLoading(true);

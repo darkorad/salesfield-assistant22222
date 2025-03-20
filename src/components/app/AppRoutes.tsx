@@ -10,12 +10,11 @@ import DailyOrders from '../../pages/DailyOrders';
 import VisitPlans from '../../pages/VisitPlans';
 import Documents from '../../pages/Documents';
 import Index from '../../pages/Index';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface AppRoutesProps {
-  isAuthenticated: boolean;
-}
-
-export const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthenticated }) => {
+export const AppRoutes: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

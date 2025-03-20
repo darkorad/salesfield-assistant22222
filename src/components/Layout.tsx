@@ -6,9 +6,11 @@ import { MainSidebar } from "./navigation/MainSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const isLoginPage = location.pathname === "/login";
   const isMobile = useIsMobile();
   const [showBackdrop, setShowBackdrop] = useState(false);
@@ -20,7 +22,7 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
     }
   }, [location.pathname, isMobile]);
 
-  if (isLoginPage) {
+  if (isLoginPage || !isAuthenticated) {
     return (
       <main className="container mx-auto animate-fade-in">
         {children || <Outlet />}
