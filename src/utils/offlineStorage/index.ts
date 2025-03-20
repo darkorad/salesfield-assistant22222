@@ -1,5 +1,5 @@
 
-import { Storage } from '@capacitor/storage';
+import { Preferences } from '@capacitor/preferences';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Customer, Product, Order } from "@/types";
@@ -18,7 +18,7 @@ const STORAGE_KEYS = {
  */
 export const storeCustomersLocally = async (customers: Customer[]): Promise<void> => {
   try {
-    await Storage.set({
+    await Preferences.set({
       key: STORAGE_KEYS.CUSTOMERS,
       value: JSON.stringify(customers)
     });
@@ -33,7 +33,7 @@ export const storeCustomersLocally = async (customers: Customer[]): Promise<void
  */
 export const storeProductsLocally = async (products: Product[]): Promise<void> => {
   try {
-    await Storage.set({
+    await Preferences.set({
       key: STORAGE_KEYS.PRODUCTS,
       value: JSON.stringify(products)
     });
@@ -48,7 +48,7 @@ export const storeProductsLocally = async (products: Product[]): Promise<void> =
  */
 export const getLocalCustomers = async (): Promise<Customer[]> => {
   try {
-    const { value } = await Storage.get({ key: STORAGE_KEYS.CUSTOMERS });
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.CUSTOMERS });
     if (!value) return [];
     return JSON.parse(value);
   } catch (error) {
@@ -62,7 +62,7 @@ export const getLocalCustomers = async (): Promise<Customer[]> => {
  */
 export const getLocalProducts = async (): Promise<Product[]> => {
   try {
-    const { value } = await Storage.get({ key: STORAGE_KEYS.PRODUCTS });
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.PRODUCTS });
     if (!value) return [];
     return JSON.parse(value);
   } catch (error) {
@@ -77,12 +77,12 @@ export const getLocalProducts = async (): Promise<Product[]> => {
 export const storePendingSale = async (sale: Order): Promise<void> => {
   try {
     // Get existing pending sales
-    const { value } = await Storage.get({ key: STORAGE_KEYS.PENDING_SALES });
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.PENDING_SALES });
     const pendingSales: Order[] = value ? JSON.parse(value) : [];
     
     // Add new sale and store
     pendingSales.push(sale);
-    await Storage.set({
+    await Preferences.set({
       key: STORAGE_KEYS.PENDING_SALES,
       value: JSON.stringify(pendingSales)
     });
@@ -99,7 +99,7 @@ export const storePendingSale = async (sale: Order): Promise<void> => {
  */
 export const getPendingSales = async (): Promise<Order[]> => {
   try {
-    const { value } = await Storage.get({ key: STORAGE_KEYS.PENDING_SALES });
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.PENDING_SALES });
     if (!value) return [];
     return JSON.parse(value);
   } catch (error) {
@@ -113,7 +113,7 @@ export const getPendingSales = async (): Promise<Order[]> => {
  */
 export const clearPendingSales = async (): Promise<void> => {
   try {
-    await Storage.remove({ key: STORAGE_KEYS.PENDING_SALES });
+    await Preferences.remove({ key: STORAGE_KEYS.PENDING_SALES });
     console.log('Cleared pending sales');
   } catch (error) {
     console.error('Error clearing pending sales:', error);
@@ -125,7 +125,7 @@ export const clearPendingSales = async (): Promise<void> => {
  */
 export const storeUserSession = async (session: any): Promise<void> => {
   try {
-    await Storage.set({
+    await Preferences.set({
       key: STORAGE_KEYS.USER_SESSION,
       value: JSON.stringify(session)
     });
@@ -140,7 +140,7 @@ export const storeUserSession = async (session: any): Promise<void> => {
  */
 export const getLocalUserSession = async (): Promise<any | null> => {
   try {
-    const { value } = await Storage.get({ key: STORAGE_KEYS.USER_SESSION });
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.USER_SESSION });
     if (!value) return null;
     return JSON.parse(value);
   } catch (error) {
@@ -154,7 +154,7 @@ export const getLocalUserSession = async (): Promise<any | null> => {
  */
 export const updateLastSyncTimestamp = async (): Promise<void> => {
   try {
-    await Storage.set({
+    await Preferences.set({
       key: STORAGE_KEYS.LAST_SYNC,
       value: new Date().toISOString()
     });
@@ -168,7 +168,7 @@ export const updateLastSyncTimestamp = async (): Promise<void> => {
  */
 export const getLastSyncTimestamp = async (): Promise<string | null> => {
   try {
-    const { value } = await Storage.get({ key: STORAGE_KEYS.LAST_SYNC });
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.LAST_SYNC });
     return value;
   } catch (error) {
     console.error('Error getting last sync timestamp:', error);
