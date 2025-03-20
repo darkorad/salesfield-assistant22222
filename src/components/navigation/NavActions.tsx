@@ -1,7 +1,7 @@
 
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SyncButton } from "./SyncButton";
@@ -21,6 +21,18 @@ export const NavActions = () => {
   return (
     <div className="flex items-center gap-2">
       <SyncButton />
+      
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate("/visit-plans")}
+        className="gap-2"
+      >
+        <Calendar className="h-4 w-4" />
+        <span className="sr-only sm:not-sr-only sm:inline-block">
+          Plan poseta
+        </span>
+      </Button>
       
       <Button
         variant="ghost"
