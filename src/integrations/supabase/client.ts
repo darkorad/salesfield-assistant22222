@@ -23,9 +23,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
       
-      // Ensure headers object exists and includes the API key
+      // Create a new headers object correctly by merging with existing headers if they exist
       const headers = {
-        ...options.headers,
+        ...(options.headers as Record<string, string> || {}),
         'apikey': supabaseAnonKey,
         'Authorization': `Bearer ${supabaseAnonKey}`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
