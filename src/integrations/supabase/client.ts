@@ -15,31 +15,57 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     fetch: (url, options) => {
-      // Retry logic for SSL handshake failures
-      const MAX_RETRIES = 3;
-      const RETRY_DELAY = 1000; // 1 second
+      // Enhanced retry logic for network errors including DNS and SSL issues
+      const MAX_RETRIES = 4;
+      const RETRY_DELAY = 2000; // 2 seconds
+      const BACKOFF_FACTOR = 1.5; // Each retry waits 1.5x longer
 
-      const customFetch = async (retriesLeft: number): Promise<Response> => {
+      const customFetch = async (retriesLeft: number, delay: number): Promise<Response> => {
         try {
           return await fetch(url, {
             ...options,
-            // Setting cache to 'no-store' can help with SSL issues
+            // Disable cache for fresh connection attempts
             cache: 'no-store',
-            // Set longer timeout
-            signal: options?.signal || new AbortController().signal
+            // Prevent CORS issues with credentials
+            credentials: 'same-origin',
+            // Copy existing signal or create new one
+            signal: options?.signal || new AbortController().signal,
+            // Add headers to prevent caching
+            headers: {
+              ...options?.headers,
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            }
           });
-        } catch (error) {
-          if (retriesLeft > 0 && (error.message?.includes('SSL') || error.message?.includes('handshake'))) {
-            console.warn(`SSL/Handshake error. Retrying... (${retriesLeft} attempts left)`);
+        } catch (error: any) {
+          // Check for network-related errors that might be retryable
+          const isNetworkError = 
+            error.message?.includes('SSL') || 
+            error.message?.includes('handshake') ||
+            error.message?.includes('DNS') || 
+            error.message?.includes('prohibited IP') ||
+            error.message?.includes('failed to fetch') ||
+            error.message?.includes('network') ||
+            error.name === 'TypeError' ||
+            error.code === 1000 ||
+            error.code === 'ECONNREFUSED';
+          
+          if (retriesLeft > 0 && isNetworkError) {
+            console.warn(`Network error: ${error.message || error.toString()}. Retrying... (${retriesLeft} attempts left)`);
+            
             return new Promise(resolve => {
-              setTimeout(() => resolve(customFetch(retriesLeft - 1)), RETRY_DELAY);
+              // Use exponential backoff for retry delay
+              setTimeout(() => resolve(customFetch(retriesLeft - 1, delay * BACKOFF_FACTOR)), delay);
             });
           }
+          
+          // If we've run out of retries or it's not a network error, throw it
+          console.error('Error fetching from Supabase:', error);
           throw error;
         }
       };
 
-      return customFetch(MAX_RETRIES);
+      return customFetch(MAX_RETRIES, RETRY_DELAY);
     }
   }
 })
