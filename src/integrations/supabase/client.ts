@@ -23,9 +23,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
       
-      // Create a new headers object correctly by merging with existing headers
-      const existingHeaders = options.headers || {};
-      const headers = new Headers(existingHeaders as HeadersInit);
+      // Create a new headers object by properly merging existing headers
+      const headers = new Headers(options.headers || {});
       
       // Add required headers
       headers.set('apikey', supabaseAnonKey);

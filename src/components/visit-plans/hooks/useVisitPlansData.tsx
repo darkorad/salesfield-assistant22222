@@ -32,19 +32,20 @@ export const useVisitPlansData = () => {
       setIsLoading(true);
       setError(null);
       
+      // First check if user is authenticated
       const { data: session, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error("Session error:", sessionError);
-        setError("Greška pri proveri sesije");
-        toast.error("Greška pri proveri sesije");
+        setError("Greška pri proveri sesije. Molimo prijavite se ponovo.");
+        toast.error("Greška pri proveri sesije. Molimo prijavite se ponovo.");
         return;
       }
       
       if (!session.session) {
         console.log("No active session found");
-        setError("Niste prijavljeni");
-        toast.error("Niste prijavljeni");
+        setError("Niste prijavljeni. Molimo prijavite se.");
+        toast.error("Niste prijavljeni. Molimo prijavite se.");
         return;
       }
 
@@ -54,96 +55,88 @@ export const useVisitPlansData = () => {
       setLastDataRefresh(lastImport);
 
       console.log("Fetching customers for visit plans");
-      console.log("User ID:", session.session?.user.id);
+      console.log("User ID:", userId);
       console.log("User Email:", session.session?.user.email);
 
-      // Determine which table to fetch customers from based on the user's email
-      const userEmail = session.session?.user.email;
+      // Collect all customers from both tables
       let customersData: Customer[] = [];
-
+      
       // First try with kupci_darko table
-      console.log("Attempting to fetch from kupci_darko table");
-      let kupciDarkoResponse = await supabase
+      console.log("Fetching from kupci_darko table...");
+      const kupciDarkoResponse = await supabase
         .from("kupci_darko")
         .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
-        .not('name', 'is', null)
-        .eq('user_id', session.session.user.id)
+        .eq('user_id', userId)
         .order("name");
-          
-      if (!kupciDarkoResponse.error && kupciDarkoResponse.data && kupciDarkoResponse.data.length > 0) {
+      
+      if (kupciDarkoResponse.error) {
+        console.error("Error fetching from kupci_darko:", kupciDarkoResponse.error);
+        
+        if (kupciDarkoResponse.error.message.includes("permission denied")) {
+          console.log("Permission denied for kupci_darko table");
+        }
+      } else if (kupciDarkoResponse.data && kupciDarkoResponse.data.length > 0) {
         console.log(`Found ${kupciDarkoResponse.data.length} customers in kupci_darko`);
         customersData = [...customersData, ...kupciDarkoResponse.data as Customer[]];
-      } else {
-        if (kupciDarkoResponse.error) {
-          console.error("Error from kupci_darko:", kupciDarkoResponse.error);
-        } else {
-          console.log("No data found in kupci_darko table");
-        }
       }
       
-      // Try regular customers table with fields that definitely exist
-      try {
-        const customersResponse = await supabase
-          .from("customers")
-          .select("id, name, address, city, phone, pib, group_name, email, is_vat_registered, gps_coordinates, dan_obilaska, visit_day")
-          .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
-          .order("name");
+      // Then try with regular customers table
+      console.log("Fetching from customers table...");
+      const customersResponse = await supabase
+        .from("customers")
+        .select("id, name, address, city, phone, pib, visit_day, dan_obilaska, group_name, naselje, email, is_vat_registered, gps_coordinates")
+        .eq('user_id', userId)
+        .order("name");
+      
+      if (customersResponse.error) {
+        console.error("Error fetching from customers:", customersResponse.error);
         
-        if (!customersResponse.error && customersResponse.data && customersResponse.data.length > 0) {
-          console.log(`Found ${customersResponse.data.length} customers in customers table`);
-          customersData = [...customersData, ...customersResponse.data as Customer[]];
-        } else if (customersResponse.error) {
-          console.error("Error from customers table:", customersResponse.error);
-        } else {
-          console.log("No data found in customers table");
+        if (customersResponse.error.message.includes("permission denied")) {
+          console.log("Permission denied for customers table");
         }
-      } catch (err) {
-        console.error("Error querying customers table:", err);
+      } else if (customersResponse.data && customersResponse.data.length > 0) {
+        console.log(`Found ${customersResponse.data.length} customers in customers table`);
+        customersData = [...customersData, ...customersResponse.data as Customer[]];
       }
       
+      // Check if we got any customers
       if (customersData.length === 0) {
         console.log("No customers found in either table");
         
-        // Check if the user has the right permissions
-        const { data: customerPermissions } = await supabase
-          .from("customers")
-          .select("count(*)")
-          .limit(1);
-          
-        // Try to suggest why no customers might exist
-        if (customerPermissions === null) {
-          setError("Nemate dozvolu za pregled kupaca");
-          toast.error("Nemate dozvolu za pregled kupaca");
+        // Try a permission check to see if we can at least access the tables
+        const permissionCheck = await supabase.rpc('check_access_permission');
+        console.log("Permission check result:", permissionCheck);
+        
+        if (permissionCheck.error) {
+          if (permissionCheck.error.message.includes("permission denied") || 
+              permissionCheck.error.message.includes("function") || 
+              permissionCheck.error.message.includes("does not exist")) {
+            // This is likely a permissions issue
+            setError("Nemate dozvolu za pregled kupaca. Molimo kontaktirajte administratora.");
+            toast.error("Nemate dozvolu za pregled kupaca");
+          } else {
+            // Some other error
+            setError("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
+            toast.error("Nema pronađenih kupaca");
+          }
         } else {
+          // If we can access the DB but no customers, suggest import
           setError("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
-          toast.error("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
+          toast.error("Nema pronađenih kupaca");
         }
         
         setIsLoading(false);
         return;
       }
 
-      console.log("Fetched total customers:", customersData.length);
+      console.log("Successfully fetched customers:", customersData.length);
 
-      // Deduplicate customers by ID and name to prevent duplicates showing up
-      // First deduplicate by ID
+      // Deduplicate customers by ID to prevent duplicates
       const uniqueCustomers = new Map<string, Customer>();
-      
-      // Then check for duplicate names and use only the first one we find
-      const uniqueCustomerNames = new Set<string>();
       
       customersData.forEach(customer => {
         if (!uniqueCustomers.has(customer.id)) {
-          // If this customer name is already in our set, skip it
-          if (uniqueCustomerNames.has(customer.name.toLowerCase())) {
-            console.log(`Skipping duplicate customer by name: ${customer.name}`);
-            return;
-          }
-          
-          // Otherwise, add it to both maps
-          uniqueCustomers.set(customer.id, customer as Customer);
-          uniqueCustomerNames.add(customer.name.toLowerCase());
+          uniqueCustomers.set(customer.id, customer);
         }
       });
       
@@ -155,7 +148,7 @@ export const useVisitPlansData = () => {
       setCustomers(finalCustomers);
     } catch (error) {
       console.error("Unexpected error:", error);
-      setError("Neočekivana greška pri učitavanju podataka");
+      setError("Neočekivana greška pri učitavanju podataka. Molimo pokušajte ponovo.");
       toast.error("Neočekivana greška pri učitavanju podataka");
     } finally {
       setIsLoading(false);
