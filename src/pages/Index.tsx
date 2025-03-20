@@ -16,8 +16,20 @@ const Index = () => {
         setIsChecking(true);
         console.log("Index page: Checking authentication...");
         
-        // First check connectivity
-        const connectivity = await checkSupabaseConnectivity();
+        // First check connectivity with a timeout
+        const connectivityCheckPromise = checkSupabaseConnectivity();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Connection timeout")), 10000)
+        );
+        
+        const connectivity = await Promise.race([
+          connectivityCheckPromise,
+          timeoutPromise
+        ]).catch(error => {
+          console.error('Connection timeout:', error);
+          return { connected: false, error: "Connection timeout" };
+        });
+        
         if (!connectivity.connected) {
           console.error('Connection error:', connectivity.error);
           setConnectionError(true);
@@ -61,13 +73,25 @@ const Index = () => {
       }
     };
 
+    // Add a fallback timer in case something gets stuck
+    const fallbackTimer = setTimeout(() => {
+      if (isChecking) {
+        console.log("Fallback timer triggered, navigating to login");
+        setIsChecking(false);
+        navigate("/login", { replace: true });
+      }
+    }, 15000); // 15 seconds fallback
+
     checkAuth();
+
+    return () => clearTimeout(fallbackTimer);
   }, [navigate]);
 
   if (isChecking) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="w-full h-screen flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
+        <p className="text-gray-600">Učitavanje aplikacije...</p>
       </div>
     );
   }

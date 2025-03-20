@@ -17,11 +17,10 @@ import { useState, useEffect } from 'react'
 import { supabase, checkSupabaseConnectivity } from '@/integrations/supabase/client'
 import Index from './pages/Index'
 
-// Create a client
+// Create a client with better error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Add retry logic for network issues
       retry: (failureCount, error) => {
         // Don't retry on 401/403 errors
         if (
@@ -31,9 +30,13 @@ const queryClient = new QueryClient({
         ) {
           return false
         }
+        // Limit retries to 3
         return failureCount < 3
       },
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Add shorter timeout to prevent infinite loading
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
     },
   },
 })
@@ -45,6 +48,14 @@ function App() {
   const [permissionError, setPermissionError] = useState(false)
 
   useEffect(() => {
+    // Add a fallback timeout to prevent infinite loading
+    const fallbackTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log("App fallback timeout triggered");
+        setIsLoading(false);
+      }
+    }, 10000); // 10 seconds fallback
+    
     // Check connectivity and authentication
     const checkAuth = async () => {
       try {
@@ -72,6 +83,7 @@ function App() {
         setConnectionError(true)
       } finally {
         setIsLoading(false)
+        clearTimeout(fallbackTimeout); // Clear the fallback if completed normally
       }
     }
 
@@ -93,18 +105,22 @@ function App() {
           setIsAuthenticated(!!session)
         }
         setIsLoading(false)
+        clearTimeout(fallbackTimeout); // Clear the fallback if auth state changes
       }
     )
 
     return () => {
       subscription.unsubscribe()
+      clearTimeout(fallbackTimeout);
     }
   }, [])
 
+  // Show a simpler loading state that won't get stuck
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
+        <p className="text-gray-600">Učitavanje aplikacije...</p>
       </div>
     )
   }
@@ -162,7 +178,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <SonnerToaster richColors />
+        <SonnerToaster richColors position="top-center" />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Index />} />
