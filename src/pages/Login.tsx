@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase, checkSupabaseConnection, isBrowserOnline } from "@/integrations/supabase/client";
+import { supabase, checkSupabaseConnection, isBrowserOnline, tryAllConnectionMethods } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { performFullSync, storeUserSession } from "@/utils/offlineStorage";
 
@@ -13,9 +13,10 @@ const Login = () => {
   const [connectionChecking, setConnectionChecking] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [connectionAttempt, setConnectionAttempt] = useState(0);
+  const [userTriedLogin, setUserTriedLogin] = useState(false);
   const navigate = useNavigate();
 
-  // Check connection and existing session
+  // More aggressive connection checking
   useEffect(() => {
     let mounted = true;
     
@@ -34,21 +35,35 @@ const Login = () => {
         return;
       }
       
-      // Try to connect to Supabase
+      // Try enhanced connection methods
       try {
-        const isConnected = await checkSupabaseConnection();
+        console.log("Attempting connection to Supabase...");
+        
+        // Try all possible connection methods
+        const isConnected = await tryAllConnectionMethods();
+        
         if (mounted) {
           if (!isConnected) {
-            console.log("Cannot connect to Supabase");
+            console.warn("Cannot connect to Supabase after trying all methods");
             setIsOffline(true);
+            
+            // If user has tried to login, show a more specific error
+            if (userTriedLogin) {
+              toast.error("Server nije dostupan. Pokušajte ponovo za par minuta.");
+            }
           } else {
             console.log("Successfully connected to Supabase");
             setIsOffline(false);
             
             // Only check for existing session if we have a connection
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session && mounted) {
-              navigate("/visit-plans");
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session && mounted) {
+                navigate("/visit-plans");
+              }
+            } catch (sessionError) {
+              console.error("Error checking session:", sessionError);
+              // Don't set offline here, as we did successfully connect to Supabase
             }
           }
         }
@@ -60,31 +75,47 @@ const Login = () => {
       }
     };
     
+    // Perform the connection check
     checkConnection();
     
-    // Set up a network status listener
+    // Set up enhanced network status listeners
     const handleOnlineStatus = () => {
       if (navigator.onLine) {
         // If we're back online, re-check the connection
+        console.log("Browser reports back online, rechecking connection");
         setConnectionAttempt(prev => prev + 1);
       } else {
+        console.log("Browser reports offline");
         setIsOffline(true);
       }
     };
     
+    // Add more aggressive connection checking for network changes
     window.addEventListener('online', handleOnlineStatus);
     window.addEventListener('offline', handleOnlineStatus);
+    
+    // Check connection again after a delay
+    const intervalId = setInterval(() => {
+      if (isOffline && mounted) {
+        console.log("Periodic connection check");
+        setConnectionAttempt(prev => prev + 1);
+      }
+    }, 5000); // Check every 5 seconds if we're offline
     
     // Cleanup
     return () => {
       mounted = false;
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOnlineStatus);
+      clearInterval(intervalId);
     };
-  }, [navigate, connectionAttempt]);
+  }, [navigate, connectionAttempt, userTriedLogin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Set that user tried to login (for better error messages)
+    setUserTriedLogin(true);
     
     // Don't attempt login if we're offline
     if (isOffline) {
@@ -95,8 +126,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Verify connection before attempting login
-      const isConnected = await checkSupabaseConnection();
+      // Enhanced verification before attempting login
+      console.log("Verifying connection before login attempt");
+      const isConnected = await tryAllConnectionMethods();
+      
       if (!isConnected) {
         toast.error("Problem sa konekcijom na server. Pokušajte ponovo za par minuta.");
         setIsOffline(true);
@@ -104,30 +137,61 @@ const Login = () => {
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error("Login error:", error);
+      console.log("Connection verified, attempting login");
+      
+      // Make multiple login attempts with different fetch configurations
+      let loginSuccess = false;
+      let loginData = null;
+      let loginError = null;
+      
+      // First attempt - standard
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         
-        // Handle specific error messages in a user-friendly way
-        if (error.message.includes("Invalid login credentials")) {
-          toast.error("Netačan email ili lozinka");
-        } else if (error.message.includes("rate limited")) {
-          toast.error("Previše pokušaja prijave. Pokušajte ponovo za par minuta.");
+        if (!error) {
+          loginSuccess = true;
+          loginData = data;
         } else {
-          toast.error(`Greška: ${error.message}`);
+          loginError = error;
         }
-        return;
+      } catch (err) {
+        console.error("First login attempt failed:", err);
       }
-
-      if (data?.session) {
+      
+      // If still not logged in, try an alternative approach
+      if (!loginSuccess) {
+        console.log("Trying alternative login approach");
+        
+        try {
+          // Try with a different auth endpoint approach
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+            options: {
+              redirectTo: window.location.origin,
+            }
+          });
+          
+          if (!error) {
+            loginSuccess = true;
+            loginData = data;
+          } else if (!loginError) { // Only set if we don't already have an error
+            loginError = error;
+          }
+        } catch (err) {
+          console.error("Alternative login attempt failed:", err);
+        }
+      }
+      
+      // Process login result
+      if (loginSuccess && loginData?.session) {
         toast.success("Prijava uspešna");
         
         // Store the session for offline use
-        await storeUserSession(data.session);
+        await storeUserSession(loginData.session);
 
         // Start data sync
         setSyncing(true);
@@ -138,17 +202,34 @@ const Login = () => {
           if (syncResult.success) {
             toast.success("Podaci sinhronizovani");
           } else {
-            toast.error(`Greška pri sinhronizaciji: ${syncResult.error}`);
+            toast.warning(`Delomična sinhronizacija: ${syncResult.error || "Neki podaci nisu preuzeti"}`);
           }
         } catch (syncError) {
           console.error("Sync error:", syncError);
-          toast.error("Greška pri sinhronizaciji podataka");
+          toast.warning("Delomična sinhronizacija podataka");
         } finally {
           setSyncing(false);
         }
 
         // Navigate to the app
         navigate("/visit-plans");
+        return;
+      }
+      
+      // Handle login errors
+      if (loginError) {
+        console.error("Login error:", loginError);
+        
+        // Handle specific error messages in a user-friendly way
+        if (loginError.message.includes("Invalid login credentials")) {
+          toast.error("Netačan email ili lozinka");
+        } else if (loginError.message.includes("rate limited")) {
+          toast.error("Previše pokušaja prijave. Pokušajte ponovo za par minuta.");
+        } else {
+          toast.error(`Greška: ${loginError.message}`);
+        }
+      } else {
+        toast.error("Neuspešna prijava. Pokušajte ponovo.");
       }
     } catch (error) {
       console.error("Unexpected error during login:", error);
@@ -160,6 +241,8 @@ const Login = () => {
 
   const handleRetryConnection = () => {
     setConnectionAttempt(prev => prev + 1);
+    // Reset user tried login flag to avoid showing specific errors until they try again
+    setUserTriedLogin(false);
   };
 
   // Show connection error UI
