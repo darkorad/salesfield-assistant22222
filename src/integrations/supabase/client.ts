@@ -69,7 +69,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
             
             return new Response(JSON.stringify({
               error: {
-                message: 'Network error connecting to Supabase. Please check your internet connection and DNS configuration.'
+                message: 'Problem sa internet konekcijom. Molimo proverite vašu internet vezu i DNS podešavanja.'
               }
             }), {
               status: 503,
@@ -81,7 +81,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
             console.error('Request timed out after 15 seconds')
             return new Response(JSON.stringify({
               error: {
-                message: 'Request timed out after 15 seconds'
+                message: 'Server nije odgovorio u očekivanom vremenu. Molimo pokušajte ponovo.'
               }
             }), {
               status: 408,
@@ -114,14 +114,14 @@ export const checkSupabaseConnectivity = async () => {
         console.error('Supabase ping failed:', pingResponse.status)
         return { 
           connected: false, 
-          error: 'Server unreachable. Check internet connection and DNS configuration.' 
+          error: 'Server nije dostupan. Proverite internet konekciju i DNS podešavanja.' 
         }
       }
     } catch (pingError) {
       console.error('Ping error:', pingError)
       return { 
         connected: false, 
-        error: 'Server unreachable. Check internet connection and DNS configuration.' 
+        error: 'Server nije dostupan. Proverite internet konekciju i DNS podešavanja.' 
       }
     }
     
@@ -159,7 +159,7 @@ export const checkSupabaseConnectivity = async () => {
     console.error('Supabase connectivity check exception:', err)
     return { 
       connected: false, 
-      error: err instanceof Error ? err.message : 'Unknown connection error'
+      error: err instanceof Error ? err.message : 'Nepoznata greška pri povezivanju'
     }
   }
 }
