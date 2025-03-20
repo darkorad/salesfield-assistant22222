@@ -31,7 +31,7 @@ const Index = () => {
         // First check connectivity with a timeout
         const connectivityCheckPromise = checkSupabaseConnectivity();
         const timeoutPromise = new Promise<ConnectivityResult>((_, reject) => 
-          setTimeout(() => reject(new Error("Connection timeout")), 8000)
+          setTimeout(() => reject(new Error("Connection timeout")), 5000)
         );
         
         const connectivity = await Promise.race([
@@ -56,16 +56,22 @@ const Index = () => {
           } else {
             // Increment attempts for next try
             setCheckAttempts(prev => prev + 1);
+            // Try again after a short delay
+            setTimeout(() => {
+              setIsChecking(true);
+              checkAuth();
+            }, 2000);
           }
           return;
         }
 
-        // Check session and refresh if available
+        // Check session
         console.log("Index page: Checking session...");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
           console.log("Index page: Session found, navigating to app");
+          // Navigate directly without refresh attempt to avoid potential hangs
           navigate("/visit-plans", { replace: true });
         } else {
           // No session found
@@ -91,7 +97,7 @@ const Index = () => {
         setIsChecking(false);
         navigate("/login", { replace: true });
       }
-    }, 10000); // 10 seconds fallback (reduced from 15)
+    }, 6000); // 6 seconds fallback (reduced from 10)
 
     checkAuth();
 

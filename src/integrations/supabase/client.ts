@@ -19,7 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       'apikey': supabaseAnonKey, // Explicitly set the API key in headers
     },
     fetch: async (url, options: RequestInit = {}) => {
-      const timeout = 30000 // 30 seconds timeout
+      const timeout = 15000 // Reduced from 30 seconds to 15 seconds timeout
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
       
@@ -66,7 +66,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         if (error instanceof Error) {
           if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
             console.error('Network error connecting to Supabase. This might be due to DNS configuration issues.')
-            // Create a custom response to avoid breaking the app
+            
             return new Response(JSON.stringify({
               error: {
                 message: 'Network error connecting to Supabase. Please check your internet connection and DNS configuration.'
@@ -78,10 +78,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
           }
           
           if (error.name === 'AbortError') {
-            console.error('Request timed out after 30 seconds')
+            console.error('Request timed out after 15 seconds')
             return new Response(JSON.stringify({
               error: {
-                message: 'Request timed out after 30 seconds'
+                message: 'Request timed out after 15 seconds'
               }
             }), {
               status: 408,
@@ -101,7 +101,31 @@ export const checkSupabaseConnectivity = async () => {
   try {
     console.log('Checking Supabase connectivity...')
     
-    // First verify the session is valid
+    // First try a simple ping to see if we can reach the Supabase instance
+    try {
+      const pingResponse = await fetch(`${supabaseUrl}/ping`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        // Short timeout for ping
+        signal: AbortSignal.timeout(5000)
+      })
+      
+      if (!pingResponse.ok) {
+        console.error('Supabase ping failed:', pingResponse.status)
+        return { 
+          connected: false, 
+          error: 'Server unreachable. Check internet connection and DNS configuration.' 
+        }
+      }
+    } catch (pingError) {
+      console.error('Ping error:', pingError)
+      return { 
+        connected: false, 
+        error: 'Server unreachable. Check internet connection and DNS configuration.' 
+      }
+    }
+    
+    // Verify the session is valid
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
     if (sessionError) {
