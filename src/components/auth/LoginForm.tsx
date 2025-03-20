@@ -40,59 +40,48 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
 
       console.log("Connection verified, attempting login");
       
-      // Make multiple login attempts with different fetch configurations
-      let loginSuccess = false;
-      let loginData = null;
-      let loginError = null;
-      
-      // First attempt - standard
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (!error) {
-          loginSuccess = true;
-          loginData = data;
-        } else {
-          loginError = error;
-        }
-      } catch (err) {
-        console.error("First login attempt failed:", err);
-      }
-      
-      // If still not logged in, try an alternative approach
-      if (!loginSuccess) {
-        console.log("Trying alternative login approach");
-        
-        try {
-          // Try with a different auth endpoint approach - without the redirectTo property
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
-          
-          if (!error) {
-            loginSuccess = true;
-            loginData = data;
-          } else if (!loginError) { // Only set if we don't already have an error
-            loginError = error;
-          }
-        } catch (err) {
-          console.error("Alternative login attempt failed:", err);
-        }
-      }
+      // Make login attempt
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
       // Process login result
-      if (loginSuccess && loginData?.session) {
+      if (error) {
+        console.error("Login error:", error);
+        
+        // Handle specific error messages in a user-friendly way
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Netačan email ili lozinka");
+        } else if (error.message.includes("rate limited")) {
+          toast.error("Previše pokušaja prijave. Pokušajte ponovo za par minuta.");
+        } else {
+          toast.error(`Greška: ${error.message}`);
+        }
+        setLoading(false);
+        return;
+      }
+      
+      if (data?.session) {
         toast.success("Prijava uspešna");
         
         // Store the session for offline use
-        await storeUserSession(loginData.session);
+        await storeUserSession(data.session);
 
-        // Verify auth token is working properly
-        const isTokenValid = await verifyAuthToken();
+        // Verify auth token is working properly with retries
+        let isTokenValid = false;
+        for (let i = 0; i < 3; i++) { // Try up to 3 times
+          isTokenValid = await verifyAuthToken();
+          if (isTokenValid) break;
+          
+          // Wait a bit before retrying
+          if (!isTokenValid && i < 2) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Try refreshing the session again
+            await supabase.auth.refreshSession();
+          }
+        }
+        
         if (!isTokenValid) {
           toast.warning("Problem sa autentikacijom. Pokušajte ponovo.");
           setLoading(false);
@@ -120,20 +109,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
         // Navigate to the app
         navigate("/visit-plans");
         return;
-      }
-      
-      // Handle login errors
-      if (loginError) {
-        console.error("Login error:", loginError);
-        
-        // Handle specific error messages in a user-friendly way
-        if (loginError.message.includes("Invalid login credentials")) {
-          toast.error("Netačan email ili lozinka");
-        } else if (loginError.message.includes("rate limited")) {
-          toast.error("Previše pokušaja prijave. Pokušajte ponovo za par minuta.");
-        } else {
-          toast.error(`Greška: ${loginError.message}`);
-        }
       } else {
         toast.error("Neuspešna prijava. Pokušajte ponovo.");
       }

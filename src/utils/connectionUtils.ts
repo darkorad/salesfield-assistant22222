@@ -68,7 +68,8 @@ export const verifyAuthToken = async (): Promise<boolean> => {
       return false;
     }
     
-    // Try a simple authenticated request to verify token works
+    // Use the Supabase client for the request which automatically includes auth headers
+    // We don't need to manually specify the API key as the client handles this
     const { error: testError } = await supabase
       .from('profiles')
       .select('id')
