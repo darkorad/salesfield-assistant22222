@@ -15,20 +15,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'zirmd-auth-token',
   },
   global: {
-    fetch: (url, options) => {
+    headers: {
+      'apikey': supabaseAnonKey, // Explicitly set the API key in headers
+    },
+    fetch: (url, options = {}) => {
       const timeout = 30000 // 30 seconds timeout
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
       
+      // Ensure headers object exists and includes the API key
+      const headers = {
+        ...options.headers,
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+      }
+
       return fetch(url, {
         ...options,
+        headers,
         signal: controller.signal,
-        // Add cache control headers to prevent caching issues with Cloudflare
-        headers: {
-          ...options?.headers,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-        },
       })
       .then(response => {
         clearTimeout(timeoutId)
@@ -59,6 +66,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Export a function to check connectivity
 export const checkSupabaseConnectivity = async () => {
   try {
+    console.log('Checking Supabase connectivity...')
     // Make a simple query that shouldn't require authentication
     const { data, error } = await supabase.from('customers').select('count').limit(1)
     
@@ -67,6 +75,7 @@ export const checkSupabaseConnectivity = async () => {
       return { connected: false, error: error.message }
     }
     
+    console.log('Supabase connectivity check succeeded')
     return { connected: true }
   } catch (err) {
     console.error('Supabase connectivity check exception:', err)

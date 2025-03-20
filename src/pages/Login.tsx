@@ -11,30 +11,40 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const navigate = useNavigate();
 
-  // Check for existing session and connectivity
+  // Check for connectivity and existing session
   useEffect(() => {
-    const checkSession = async () => {
+    const checkConnection = async () => {
+      setIsCheckingConnection(true);
       try {
+        console.log("Login page: Checking Supabase connectivity...");
         // First check connectivity to Supabase
         const connectivity = await checkSupabaseConnectivity();
         if (!connectivity.connected) {
+          console.log("Login page: Connection failed", connectivity.error);
           setConnectionError(connectivity.error || "Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.");
+          setIsCheckingConnection(false);
           return;
         }
 
         // If connected, check for session
+        console.log("Login page: Connection successful, checking session...");
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
+          console.log("Login page: Session found, redirecting...");
           navigate("/visit-plans", { replace: true });
         }
       } catch (error) {
-        console.error("Error checking session:", error);
+        console.error("Login page: Error checking connection:", error);
         setConnectionError("Greška prilikom provere sesije. Molimo pokušajte ponovo kasnije.");
+      } finally {
+        setIsCheckingConnection(false);
       }
     };
-    checkSession();
+    
+    checkConnection();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,25 +53,30 @@ const Login = () => {
     setConnectionError(null);
 
     try {
+      console.log("Login page: Attempting login...");
       // Check connectivity first
       const connectivity = await checkSupabaseConnectivity();
       if (!connectivity.connected) {
+        console.log("Login page: Connection failed during login", connectivity.error);
         setConnectionError(connectivity.error || "Nije moguće povezati se sa serverom. Proverite internet konekciju i DNS podešavanja.");
         setLoading(false);
         return;
       }
 
+      console.log("Login page: Connection successful, signing in...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("Login page: Sign in error", error);
         toast.error(error.message);
         return;
       }
 
       if (data?.session) {
+        console.log("Login page: Sign in successful");
         toast.success("Prijava uspešna");
         
         // Store the session for offline use
@@ -92,12 +107,20 @@ const Login = () => {
         navigate("/visit-plans", { replace: true });
       }
     } catch (error) {
-      console.error(error);
+      console.error("Login page: Unexpected error", error);
       toast.error("Problem sa prijavom, pokušajte ponovo");
     } finally {
       setLoading(false);
     }
   };
+
+  if (isCheckingConnection) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -119,6 +142,15 @@ const Login = () => {
               <p className="text-xs text-red-500 mt-1">
                 Potrebno je da imate pravilno podešene DNS zapise i pristup internetu.
               </p>
+              <div className="mt-2 p-2 bg-white rounded text-xs font-mono border border-red-100">
+                olkyepnvfwchgkmxyqku.supabase.co → CNAME → olkyepnvfwchgkmxyqku.supabase.co
+              </div>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-2 w-full py-1 bg-red-100 text-red-700 text-xs rounded-md hover:bg-red-200"
+              >
+                Pokušaj ponovo
+              </button>
             </div>
           )}
         </div>
