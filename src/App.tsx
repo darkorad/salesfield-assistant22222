@@ -38,7 +38,7 @@ const queryClient = new QueryClient({
 
 // Component that uses auth context and renders the appropriate screen
 const AuthenticatedApp = () => {
-  const { isLoading, isAuthenticated, connectionError, permissionError } = useAuth();
+  const { isLoading, isAuthenticated, connectionError, permissionError, refresh } = useAuth();
 
   // Show a simpler loading state that won't get stuck
   if (isLoading) {
@@ -46,14 +46,14 @@ const AuthenticatedApp = () => {
   }
 
   if (connectionError) {
-    return <ConnectionErrorScreen onRetry={() => window.location.reload()} />;
+    return <ConnectionErrorScreen onRetry={() => refresh()} />;
   }
 
   if (permissionError && isAuthenticated) {
-    return <PermissionErrorScreen onRetry={() => window.location.reload()} />;
+    return <PermissionErrorScreen onRetry={() => refresh()} />;
   }
 
-  return <AppRoutes isAuthenticated={isAuthenticated} />;
+  return <AppRoutes />;
 }
 
 function App() {

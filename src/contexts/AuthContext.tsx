@@ -7,7 +7,8 @@ const AuthContext = createContext<AuthStatus>({
   isLoading: true,
   isAuthenticated: false,
   connectionError: false,
-  permissionError: false
+  permissionError: false,
+  refresh: async () => {}
 });
 
 interface AuthProviderProps {

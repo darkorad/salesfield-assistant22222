@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase, checkSupabaseConnectivity } from '@/integrations/supabase/client'
 
 export type AuthStatus = {
@@ -7,6 +7,7 @@ export type AuthStatus = {
   isAuthenticated: boolean
   connectionError: boolean
   permissionError: boolean
+  refresh: () => Promise<void>
 }
 
 export const useAuthStatus = () => {
@@ -14,8 +15,59 @@ export const useAuthStatus = () => {
     isLoading: true,
     isAuthenticated: false,
     connectionError: false,
-    permissionError: false
+    permissionError: false,
+    refresh: async () => {}
   })
+
+  const checkAuth = useCallback(async () => {
+    try {
+      // First check connectivity
+      const connectivity = await checkSupabaseConnectivity()
+      console.log("Connectivity check result:", connectivity)
+      
+      if (!connectivity.connected) {
+        console.error('Connectivity check failed:', connectivity.error)
+        setStatus(prev => ({
+          ...prev,
+          isLoading: false,
+          isAuthenticated: false,
+          connectionError: true,
+          permissionError: false
+        }))
+        return
+      }
+      
+      if (connectivity.isPermissionError) {
+        console.error('Permission error detected:', connectivity.error)
+        setStatus(prev => ({ ...prev, permissionError: true }))
+      }
+      
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession()
+      setStatus(prev => ({
+        ...prev,
+        isAuthenticated: !!session,
+        isLoading: false
+      }))
+    } catch (error) {
+      console.error('Auth check error:', error)
+      setStatus(prev => ({
+        ...prev,
+        isLoading: false,
+        isAuthenticated: false,
+        connectionError: true,
+        permissionError: false
+      }))
+    }
+  }, [])
+
+  // Create the refresh function that can be called from components
+  const refresh = useCallback(async () => {
+    console.log("Refreshing auth status...")
+    setStatus(prev => ({ ...prev, isLoading: true }))
+    await checkAuth()
+    console.log("Auth status refreshed")
+  }, [checkAuth])
 
   useEffect(() => {
     // Add a fallback timeout to prevent infinite loading
@@ -26,49 +78,7 @@ export const useAuthStatus = () => {
       }
     }, 10000); // 10 seconds fallback
     
-    // Check connectivity and authentication
-    const checkAuth = async () => {
-      try {
-        // First check connectivity
-        const connectivity = await checkSupabaseConnectivity()
-        console.log("Connectivity check result:", connectivity)
-        
-        if (!connectivity.connected) {
-          console.error('Connectivity check failed:', connectivity.error)
-          setStatus({
-            isLoading: false,
-            isAuthenticated: false,
-            connectionError: true,
-            permissionError: false
-          })
-          return
-        }
-        
-        if (connectivity.isPermissionError) {
-          console.error('Permission error detected:', connectivity.error)
-          setStatus(prev => ({ ...prev, permissionError: true }))
-        }
-        
-        // Check if user is authenticated
-        const { data: { session } } = await supabase.auth.getSession()
-        setStatus(prev => ({
-          ...prev,
-          isAuthenticated: !!session,
-          isLoading: false
-        }))
-      } catch (error) {
-        console.error('Auth check error:', error)
-        setStatus({
-          isLoading: false,
-          isAuthenticated: false,
-          connectionError: true,
-          permissionError: false
-        })
-      } finally {
-        clearTimeout(fallbackTimeout); // Clear the fallback if completed normally
-      }
-    }
-
+    // Initial auth check
     checkAuth()
 
     // Subscribe to auth changes
@@ -91,11 +101,14 @@ export const useAuthStatus = () => {
       }
     )
 
+    // Update the refresh function in the status
+    setStatus(prev => ({ ...prev, refresh }))
+
     return () => {
       subscription.unsubscribe()
       clearTimeout(fallbackTimeout);
     }
-  }, [])
+  }, [checkAuth, refresh])
 
   return status
 }
