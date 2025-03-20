@@ -53,9 +53,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         throw error
       })
     }
-  },
-  // Add debug mode to log operations during development
-  debug: process.env.NODE_ENV === 'development'
+  }
 })
 
 // Export a function to check connectivity
