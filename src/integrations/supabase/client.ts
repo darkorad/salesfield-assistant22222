@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = 'https://olkyepnvfwchgkmxyqku.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sa3llcG52ZndjaGdrbXh5cWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQyMTY1MjgsImV4cCI6MjA0OTc5MjUyOH0.LQYekqo4mR-50cjm4BORpP8GdskX_m0W5YKlqkRO7_8'
 
-// Initialize the Supabase client without Cloudflare proxy
+// Initialize the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -13,112 +13,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: window.localStorage,
     flowType: 'pkce',
     storageKey: 'zirmd-auth-token',
-  },
-  global: {
-    headers: {
-      'apikey': supabaseAnonKey,
-    },
-    fetch: async (url, options: RequestInit = {}) => {
-      const timeout = 15000
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), timeout)
-      
-      try {
-        // Get the current session token to include in headers
-        const { data } = await supabase.auth.getSession()
-        const sessionToken = data.session?.access_token
-        
-        // Create a new headers object by properly merging existing headers
-        const headers = new Headers(options.headers || {})
-        
-        // Add required headers
-        headers.set('apikey', supabaseAnonKey)
-        
-        // Only add Authorization header if we have a session token
-        if (sessionToken) {
-          headers.set('Authorization', `Bearer ${sessionToken}`)
-        } else {
-          headers.set('Authorization', `Bearer ${supabaseAnonKey}`)
-        }
-        
-        // Disable caching to avoid stale data
-        headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
-        headers.set('Pragma', 'no-cache')
-
-        const response = await fetch(url, {
-          ...options,
-          headers,
-          signal: controller.signal,
-          // Disable any potential automatic proxy selection
-          mode: 'cors',
-          credentials: 'same-origin',
-        })
-        
-        clearTimeout(timeoutId)
-        
-        // Log status and URL for debugging
-        if (!response.ok) {
-          console.error(`Supabase request failed: ${response.status} ${response.statusText} for ${url}`)
-        }
-        
-        return response
-      } catch (error) {
-        clearTimeout(timeoutId)
-        console.error('Supabase fetch error:', error)
-        
-        // For network errors, provide more helpful information
-        if (error instanceof Error) {
-          if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-            console.error('Network error connecting to Supabase. This might be due to DNS configuration issues.')
-            
-            return new Response(JSON.stringify({
-              error: {
-                message: 'Problem sa internet konekcijom. Molimo proverite vašu internet vezu i DNS podešavanja.'
-              }
-            }), {
-              status: 503,
-              headers: { 'Content-Type': 'application/json' }
-            })
-          }
-          
-          if (error.name === 'AbortError') {
-            console.error('Request timed out after 15 seconds')
-            return new Response(JSON.stringify({
-              error: {
-                message: 'Server nije odgovorio u očekivanom vremenu. Molimo pokušajte ponovo.'
-              }
-            }), {
-              status: 408,
-              headers: { 'Content-Type': 'application/json' }
-            })
-          }
-        }
-        
-        throw error
-      }
-    }
   }
 })
 
-// Export a function to check connectivity with direct DNS resolution
+// Export a function to check connectivity
 export const checkSupabaseConnectivity = async () => {
   try {
-    console.log('Checking Supabase connectivity without proxy...')
+    console.log('Checking Supabase connectivity...')
     
-    // First try a simple ping with direct DNS resolution
+    // First try a simple ping to see if we can reach the Supabase instance
     try {
       const pingResponse = await fetch(`${supabaseUrl}/ping`, {
         method: 'GET',
-        headers: { 
-          'Content-Type': 'application/json',
-          // Ensure direct connection without Cloudflare
-          'Cache-Control': 'no-cache'
-        },
+        headers: { 'Content-Type': 'application/json' },
         // Short timeout for ping
-        signal: AbortSignal.timeout(5000),
-        // Avoid any automatic proxy selection
-        mode: 'cors',
-        credentials: 'same-origin',
+        signal: AbortSignal.timeout(5000)
       })
       
       if (!pingResponse.ok) {
