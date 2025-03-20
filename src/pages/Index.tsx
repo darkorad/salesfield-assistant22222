@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase, checkSupabaseConnectivity } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/visit-plans/day-schedule/LoadingState";
 
 // Define the type for connectivity check result
 interface ConnectivityResult {
@@ -19,17 +20,18 @@ const Index = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [connectionError, setConnectionError] = useState(false);
   const [errorDetails, setErrorDetails] = useState("");
+  const [checkAttempts, setCheckAttempts] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         setIsChecking(true);
-        console.log("Index page: Checking authentication...");
+        console.log("Index page: Checking authentication... Attempt:", checkAttempts + 1);
         
         // First check connectivity with a timeout
         const connectivityCheckPromise = checkSupabaseConnectivity();
         const timeoutPromise = new Promise<ConnectivityResult>((_, reject) => 
-          setTimeout(() => reject(new Error("Connection timeout")), 10000)
+          setTimeout(() => reject(new Error("Connection timeout")), 8000)
         );
         
         const connectivity = await Promise.race([
@@ -46,6 +48,15 @@ const Index = () => {
           setErrorDetails(connectivity.error || "");
           setIsChecking(false);
           toast.error("Problem sa povezivanjem na server");
+          
+          // If we have connectivity problems, redirect to login after multiple attempts
+          if (checkAttempts >= 1) {
+            console.log("Multiple connectivity failures, redirecting to login");
+            navigate("/login", { replace: true });
+          } else {
+            // Increment attempts for next try
+            setCheckAttempts(prev => prev + 1);
+          }
           return;
         }
 
@@ -54,19 +65,7 @@ const Index = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
-          console.log("Index page: Session found, refreshing...");
-          // Try to refresh the session to ensure it's valid
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (refreshError || !refreshData.session) {
-            console.error("Session refresh failed:", refreshError);
-            toast.error("Sesija je istekla, molimo prijavite se ponovo");
-            navigate("/login", { replace: true });
-            return;
-          }
-          
-          // Successfully refreshed session, navigate to app
-          console.log("Index page: Session refreshed, navigating to app");
+          console.log("Index page: Session found, navigating to app");
           navigate("/visit-plans", { replace: true });
         } else {
           // No session found
@@ -78,6 +77,8 @@ const Index = () => {
         setConnectionError(true);
         setErrorDetails(error instanceof Error ? error.message : "Unknown error");
         toast.error("Problem sa proverom autentikacije");
+        // After error, direct to login
+        navigate("/login", { replace: true });
       } finally {
         setIsChecking(false);
       }
@@ -90,20 +91,15 @@ const Index = () => {
         setIsChecking(false);
         navigate("/login", { replace: true });
       }
-    }, 15000); // 15 seconds fallback
+    }, 10000); // 10 seconds fallback (reduced from 15)
 
     checkAuth();
 
     return () => clearTimeout(fallbackTimer);
-  }, [navigate]);
+  }, [navigate, checkAttempts]);
 
   if (isChecking) {
-    return (
-      <div className="w-full h-screen flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
-        <p className="text-gray-600">Učitavanje aplikacije...</p>
-      </div>
-    );
+    return <LoadingState message="Učitavanje aplikacije..." />;
   }
 
   if (connectionError) {
