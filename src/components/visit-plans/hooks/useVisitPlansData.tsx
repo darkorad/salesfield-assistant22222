@@ -58,60 +58,38 @@ export const useVisitPlansData = () => {
 
       // Determine which table to fetch customers from based on the user's email
       const userEmail = session.session?.user.email;
-      let customersData;
-      let customersError;
+      let customersResponse;
 
-      if (userEmail === 'zirmd.darko@gmail.com') {
-        // Fetch from kupci_darko for Darko
-        const response = await supabase
-          .from("kupci_darko")
-          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
-          .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
-          .order("name");
+      // First try with kupci_darko table
+      console.log("Attempting to fetch from kupci_darko table");
+      customersResponse = await supabase
+        .from("kupci_darko")
+        .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+        .not('name', 'is', null)
+        .eq('user_id', session.session.user.id)
+        .order("name");
           
-        customersData = response.data;
-        customersError = response.error;
-      } else if (userEmail === 'zirmd.veljko@gmail.com') {
-        // Fetch from customers table for Veljko
-        const response = await supabase
+      // If no results or error, try regular customers table
+      if (!customersResponse.data || customersResponse.data.length === 0 || customersResponse.error) {
+        console.log("No data in kupci_darko or error, trying customers table");
+        console.log("Error from kupci_darko:", customersResponse.error);
+        
+        customersResponse = await supabase
           .from("customers")
           .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
           .not('name', 'is', null)
           .eq('user_id', session.session.user.id)
           .order("name");
-          
-        customersData = response.data;
-        customersError = response.error;
-      } else {
-        // For any other user, try both tables
-        const kupciDarkoResponse = await supabase
-          .from("kupci_darko")
-          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
-          .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
-          .order("name");
-          
-        const customersResponse = await supabase
-          .from("customers")
-          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
-          .not('name', 'is', null)
-          .eq('user_id', session.session.user.id)
-          .order("name");
-          
-        // Combine results
-        customersData = [...(kupciDarkoResponse.data || []), ...(customersResponse.data || [])];
-        customersError = kupciDarkoResponse.error || customersResponse.error;
       }
-
-      if (customersError) {
-        console.error("Error fetching customers:", customersError);
+      
+      if (customersResponse.error) {
+        console.error("Error fetching customers:", customersResponse.error);
         setError("Greška pri učitavanju kupaca");
         toast.error("Greška pri učitavanju kupaca");
         return;
       }
 
-      console.log("Fetched customers:", customersData?.length || 0);
+      console.log("Fetched customers:", customersResponse.data?.length || 0);
 
       // Deduplicate customers by ID and name to prevent duplicates showing up
       // First deduplicate by ID
@@ -120,7 +98,7 @@ export const useVisitPlansData = () => {
       // Then check for duplicate names and use only the first one we find
       const uniqueCustomerNames = new Set<string>();
       
-      customersData?.forEach(customer => {
+      customersResponse.data?.forEach(customer => {
         if (!uniqueCustomers.has(customer.id)) {
           // If this customer name is already in our set, skip it
           if (uniqueCustomerNames.has(customer.name.toLowerCase())) {

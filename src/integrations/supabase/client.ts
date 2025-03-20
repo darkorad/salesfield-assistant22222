@@ -18,19 +18,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     headers: {
       'apikey': supabaseAnonKey, // Explicitly set the API key in headers
     },
-    fetch: (url, options = {} as RequestInit) => {
+    fetch: (url, options: RequestInit = {}) => {
       const timeout = 30000 // 30 seconds timeout
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
       
-      // Create a new headers object correctly by merging with existing headers if they exist
-      const headers = {
-        ...(options.headers as Record<string, string> || {}),
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-      }
+      // Create a new headers object correctly by merging with existing headers
+      const existingHeaders = options.headers || {};
+      const headers = new Headers(existingHeaders as HeadersInit);
+      
+      // Add required headers
+      headers.set('apikey', supabaseAnonKey);
+      headers.set('Authorization', `Bearer ${supabaseAnonKey}`);
+      headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      headers.set('Pragma', 'no-cache');
 
       return fetch(url, {
         ...options,
