@@ -33,7 +33,7 @@ export const useVisitPlansData = () => {
       setError(null);
       
       // First check if user is authenticated
-      const { data: session, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error("Session error:", sessionError);
@@ -42,7 +42,7 @@ export const useVisitPlansData = () => {
         return;
       }
       
-      if (!session.session) {
+      if (!session) {
         console.log("No active session found");
         setError("Niste prijavljeni. Molimo prijavite se.");
         toast.error("Niste prijavljeni. Molimo prijavite se.");
@@ -50,79 +50,103 @@ export const useVisitPlansData = () => {
       }
 
       // Check if there was a recent data import
-      const userId = session.session.user.id;
+      const userId = session.user.id;
       const lastImport = localStorage.getItem(`lastCustomersImport_${userId}`);
       setLastDataRefresh(lastImport);
 
       console.log("Fetching customers for visit plans");
       console.log("User ID:", userId);
-      console.log("User Email:", session.session?.user.email);
+      console.log("User Email:", session.user.email);
+
+      // Create a single function to handle table access errors consistently
+      const handleTableAccessError = (error: any, tableName: string) => {
+        console.error(`Error accessing ${tableName} table:`, error);
+        
+        if (error.message.includes("permission denied")) {
+          console.error(`Permission denied for ${tableName} table`);
+          return true; // Indicates permission error
+        }
+        return false; // Not a permission error
+      };
 
       // Collect all customers from both tables
       let customersData: Customer[] = [];
+      let permissionError = false;
       
-      // First try with kupci_darko table
-      console.log("Fetching from kupci_darko table...");
-      const kupciDarkoResponse = await supabase
-        .from("kupci_darko")
-        .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
-        .eq('user_id', userId)
-        .order("name");
-      
-      if (kupciDarkoResponse.error) {
-        console.error("Error fetching from kupci_darko:", kupciDarkoResponse.error);
+      // Try with kupci_darko table first - with better error handling
+      try {
+        console.log("Fetching from kupci_darko table...");
+        const kupciDarkoResponse = await supabase
+          .from("kupci_darko")
+          .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
+          .eq('user_id', userId)
+          .order("name");
         
-        if (kupciDarkoResponse.error.message.includes("permission denied")) {
-          console.log("Permission denied for kupci_darko table");
+        if (kupciDarkoResponse.error) {
+          permissionError = handleTableAccessError(kupciDarkoResponse.error, "kupci_darko");
+        } else if (kupciDarkoResponse.data && kupciDarkoResponse.data.length > 0) {
+          console.log(`Found ${kupciDarkoResponse.data.length} customers in kupci_darko`);
+          customersData = [...customersData, ...kupciDarkoResponse.data as Customer[]];
         }
-      } else if (kupciDarkoResponse.data && kupciDarkoResponse.data.length > 0) {
-        console.log(`Found ${kupciDarkoResponse.data.length} customers in kupci_darko`);
-        customersData = [...customersData, ...kupciDarkoResponse.data as Customer[]];
+      } catch (error) {
+        console.error("Unexpected error fetching from kupci_darko:", error);
       }
       
-      // Then try with regular customers table
-      console.log("Fetching from customers table...");
-      const customersResponse = await supabase
-        .from("customers")
-        .select("id, name, address, city, phone, pib, visit_day, dan_obilaska, group_name, naselje, email, is_vat_registered, gps_coordinates")
-        .eq('user_id', userId)
-        .order("name");
-      
-      if (customersResponse.error) {
-        console.error("Error fetching from customers:", customersResponse.error);
-        
-        if (customersResponse.error.message.includes("permission denied")) {
-          console.log("Permission denied for customers table");
+      // Then try with regular customers table - if we don't have a permission error already
+      if (!permissionError) {
+        try {
+          console.log("Fetching from customers table...");
+          const customersResponse = await supabase
+            .from("customers")
+            .select("id, name, address, city, phone, pib, visit_day, dan_obilaska, group_name, naselje, email, is_vat_registered, gps_coordinates")
+            .eq('user_id', userId)
+            .order("name");
+          
+          if (customersResponse.error) {
+            permissionError = handleTableAccessError(customersResponse.error, "customers");
+          } else if (customersResponse.data && customersResponse.data.length > 0) {
+            console.log(`Found ${customersResponse.data.length} customers in customers table`);
+            customersData = [...customersData, ...customersResponse.data as Customer[]];
+          }
+        } catch (error) {
+          console.error("Unexpected error fetching from customers:", error);
         }
-      } else if (customersResponse.data && customersResponse.data.length > 0) {
-        console.log(`Found ${customersResponse.data.length} customers in customers table`);
-        customersData = [...customersData, ...customersResponse.data as Customer[]];
+      }
+      
+      // If we had a permission error with either table
+      if (permissionError) {
+        setError("Nemate dozvolu za pregled kupaca. Molimo kontaktirajte administratora.");
+        toast.error("Nemate dozvolu za pregled kupaca");
+        setIsLoading(false);
+        return;
       }
       
       // Check if we got any customers
       if (customersData.length === 0) {
         console.log("No customers found in either table");
         
-        // Try a permission check to see if we can at least access the tables
-        const permissionCheck = await supabase.rpc('check_access_permission');
-        console.log("Permission check result:", permissionCheck);
-        
-        if (permissionCheck.error) {
-          if (permissionCheck.error.message.includes("permission denied") || 
-              permissionCheck.error.message.includes("function") || 
-              permissionCheck.error.message.includes("does not exist")) {
-            // This is likely a permissions issue
-            setError("Nemate dozvolu za pregled kupaca. Molimo kontaktirajte administratora.");
-            toast.error("Nemate dozvolu za pregled kupaca");
+        // Do one more check on permissions by trying a different approach
+        try {
+          // Try a simpler query to check access permissions
+          const permissionCheck = await supabase.from('profiles').select('id').limit(1);
+          console.log("Permission check result:", permissionCheck);
+          
+          if (permissionCheck.error) {
+            if (permissionCheck.error.message.includes("permission denied")) {
+              setError("Nemate dozvolu za pregled kupaca. Molimo kontaktirajte administratora.");
+              toast.error("Nemate dozvolu za pregled kupaca");
+            } else {
+              setError("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
+              toast.error("Nema pronađenih kupaca");
+            }
           } else {
-            // Some other error
+            // If we can access the DB but no customers, suggest import
             setError("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
             toast.error("Nema pronađenih kupaca");
           }
-        } else {
-          // If we can access the DB but no customers, suggest import
-          setError("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
-          toast.error("Nema pronađenih kupaca");
+        } catch (error) {
+          console.error("Error during permission check:", error);
+          setError("Greška pri proveri dozvola. Molimo pokušajte ponovo kasnije.");
         }
         
         setIsLoading(false);

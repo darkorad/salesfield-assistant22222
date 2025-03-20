@@ -42,6 +42,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [connectionError, setConnectionError] = useState(false)
+  const [permissionError, setPermissionError] = useState(false)
 
   useEffect(() => {
     // Check connectivity and authentication
@@ -49,11 +50,18 @@ function App() {
       try {
         // First check connectivity
         const connectivity = await checkSupabaseConnectivity()
+        console.log("Connectivity check result:", connectivity)
+        
         if (!connectivity.connected) {
           console.error('Connectivity check failed:', connectivity.error)
           setConnectionError(true)
           setIsLoading(false)
           return
+        }
+        
+        if (connectivity.isPermissionError) {
+          console.error('Permission error detected:', connectivity.error)
+          setPermissionError(true)
         }
         
         // Check if user is authenticated
@@ -76,6 +84,10 @@ function App() {
           // When signed in, refresh the session to ensure it's properly stored
           supabase.auth.refreshSession().then(() => {
             setIsAuthenticated(true)
+            // When the user signs in, check permissions again
+            checkSupabaseConnectivity().then(connectivity => {
+              setPermissionError(connectivity.isPermissionError || false)
+            })
           })
         } else {
           setIsAuthenticated(!!session)
@@ -115,6 +127,33 @@ function App() {
           >
             Pokušaj ponovo
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (permissionError && isAuthenticated) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center p-4">
+        <div className="text-red-600 text-2xl font-bold mb-4">Greška pristupa</div>
+        <div className="bg-gray-100 p-4 rounded-md max-w-md">
+          <p className="text-center mb-4">
+            Nemate odgovarajuće dozvole za pristup podacima. Molimo kontaktirajte administratora sistema.
+          </p>
+          <div className="flex gap-2 mt-4">
+            <button 
+              onClick={() => supabase.auth.signOut().then(() => window.location.reload())} 
+              className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+            >
+              Odjava
+            </button>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="flex-1 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Pokušaj ponovo
+            </button>
+          </div>
         </div>
       </div>
     )
