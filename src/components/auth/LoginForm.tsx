@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,13 +66,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ setIsOffline, setUserTriedLogin }
         console.log("Trying alternative login approach");
         
         try {
-          // Try with a different auth endpoint approach
+          // Try with a different auth endpoint approach - without the redirectTo property
           const { data, error } = await supabase.auth.signInWithPassword({
             email,
-            password,
-            options: {
-              redirectTo: window.location.origin,
-            }
+            password
           });
           
           if (!error) {
