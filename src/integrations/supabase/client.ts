@@ -18,7 +18,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     headers: {
       'apikey': supabaseAnonKey, // Explicitly set the API key in headers
     },
-    fetch: (url, options = {}) => {
+    fetch: (url, options = {} as RequestInit) => {
       const timeout = 30000 // 30 seconds timeout
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
