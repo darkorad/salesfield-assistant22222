@@ -5,7 +5,6 @@
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
-    "url": "https://aplikacija.zirmdcompany.com",
     "cleartext": true
   },
   "android": {
@@ -31,8 +30,7 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21"
       ]
     },
-    "useLegacyStorage": false,
-    "path": "salesfield-assistant22222"
+    "useLegacyStorage": false
   },
   "plugins": {
     "SplashScreen": {
