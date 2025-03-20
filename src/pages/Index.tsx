@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import { supabase, checkSupabaseConnectivity } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Define the type for connectivity check result
+interface ConnectivityResult {
+  connected: boolean;
+  error?: string;
+  isPermissionError?: boolean;
+  isAuthError?: boolean;
+  isAuthenticated?: boolean;
+  code?: string;
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
@@ -18,7 +28,7 @@ const Index = () => {
         
         // First check connectivity with a timeout
         const connectivityCheckPromise = checkSupabaseConnectivity();
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise<ConnectivityResult>((_, reject) => 
           setTimeout(() => reject(new Error("Connection timeout")), 10000)
         );
         
@@ -27,7 +37,7 @@ const Index = () => {
           timeoutPromise
         ]).catch(error => {
           console.error('Connection timeout:', error);
-          return { connected: false, error: "Connection timeout" };
+          return { connected: false, error: "Connection timeout" } as ConnectivityResult;
         });
         
         if (!connectivity.connected) {
