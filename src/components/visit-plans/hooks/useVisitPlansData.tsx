@@ -59,33 +59,33 @@ export const useVisitPlansData = () => {
 
       // Determine which table to fetch customers from based on the user's email
       const userEmail = session.session?.user.email;
-      let customersResponse;
       let customersData: Customer[] = [];
 
       // First try with kupci_darko table
       console.log("Attempting to fetch from kupci_darko table");
-      customersResponse = await supabase
+      let kupciDarkoResponse = await supabase
         .from("kupci_darko")
         .select("id, name, address, city, phone, pib, dan_posete, dan_obilaska, visit_day, group_name, naselje, email, is_vat_registered, gps_coordinates")
         .not('name', 'is', null)
         .eq('user_id', session.session.user.id)
         .order("name");
           
-      if (!customersResponse.error && customersResponse.data && customersResponse.data.length > 0) {
-        console.log(`Found ${customersResponse.data.length} customers in kupci_darko`);
-        customersData = [...customersData, ...customersResponse.data as Customer[]];
+      if (!kupciDarkoResponse.error && kupciDarkoResponse.data && kupciDarkoResponse.data.length > 0) {
+        console.log(`Found ${kupciDarkoResponse.data.length} customers in kupci_darko`);
+        customersData = [...customersData, ...kupciDarkoResponse.data as Customer[]];
       } else {
-        console.log("No data in kupci_darko or error, trying customers table");
-        if (customersResponse.error) {
-          console.log("Error from kupci_darko:", customersResponse.error);
+        if (kupciDarkoResponse.error) {
+          console.error("Error from kupci_darko:", kupciDarkoResponse.error);
+        } else {
+          console.log("No data found in kupci_darko table");
         }
       }
       
       // Try regular customers table with fields that definitely exist
       try {
-        customersResponse = await supabase
+        const customersResponse = await supabase
           .from("customers")
-          .select("id, name, address, city, phone, pib, group_name, email, is_vat_registered, gps_coordinates")
+          .select("id, name, address, city, phone, pib, group_name, email, is_vat_registered, gps_coordinates, dan_obilaska, visit_day")
           .not('name', 'is', null)
           .eq('user_id', session.session.user.id)
           .order("name");
@@ -93,6 +93,10 @@ export const useVisitPlansData = () => {
         if (!customersResponse.error && customersResponse.data && customersResponse.data.length > 0) {
           console.log(`Found ${customersResponse.data.length} customers in customers table`);
           customersData = [...customersData, ...customersResponse.data as Customer[]];
+        } else if (customersResponse.error) {
+          console.error("Error from customers table:", customersResponse.error);
+        } else {
+          console.log("No data found in customers table");
         }
       } catch (err) {
         console.error("Error querying customers table:", err);
@@ -100,8 +104,22 @@ export const useVisitPlansData = () => {
       
       if (customersData.length === 0) {
         console.log("No customers found in either table");
-        setError("Nema pronađenih kupaca");
-        toast.error("Nema pronađenih kupaca");
+        
+        // Check if the user has the right permissions
+        const { data: customerPermissions } = await supabase
+          .from("customers")
+          .select("count(*)")
+          .limit(1);
+          
+        // Try to suggest why no customers might exist
+        if (customerPermissions === null) {
+          setError("Nemate dozvolu za pregled kupaca");
+          toast.error("Nemate dozvolu za pregled kupaca");
+        } else {
+          setError("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
+          toast.error("Nema pronađenih kupaca. Molimo uvezite listu kupaca.");
+        }
+        
         setIsLoading(false);
         return;
       }
