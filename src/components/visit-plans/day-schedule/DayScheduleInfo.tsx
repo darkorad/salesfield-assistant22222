@@ -1,5 +1,6 @@
 
 import React from "react";
+import { WifiOff } from "lucide-react";
 
 interface DayScheduleInfoProps {
   day: string;
@@ -13,9 +14,17 @@ export const DayScheduleInfo = ({ day, customersCount, isOffline }: DayScheduleI
   }
   
   return (
-    <div className={`p-2 rounded text-xs border mb-2 ${isOffline ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'}`}>
-      {isOffline && <span className="font-medium text-blue-600 mr-1">Offline:</span>}
-      Prikazuje se {customersCount} kupaca za {day}
+    <div className={`p-3 rounded text-sm flex items-center ${isOffline ? 'bg-blue-50 border border-blue-200' : 'bg-amber-50 border border-amber-200'}`}>
+      {isOffline && (
+        <div className="mr-2 flex items-center">
+          <WifiOff className="h-4 w-4 mr-1 text-blue-600" />
+          <span className="font-medium text-blue-600">Offline</span>
+          <span className="mx-1">•</span>
+        </div>
+      )}
+      <span>
+        Prikazuje se {customersCount} kupaca za {day}
+      </span>
     </div>
   );
 };

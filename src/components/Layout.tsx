@@ -4,10 +4,21 @@ import NavLogo from "./navigation/NavLogo";
 import { NavActions } from "./navigation/NavActions";
 import { MainSidebar } from "./navigation/MainSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useEffect, useState } from "react";
 
 export const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
+  const isMobile = useIsMobile();
+  const [showBackdrop, setShowBackdrop] = useState(false);
+  
+  // Close the mobile menu when changing routes
+  useEffect(() => {
+    if (isMobile) {
+      setShowBackdrop(false);
+    }
+  }, [location.pathname, isMobile]);
 
   if (isLoginPage) {
     return (
@@ -29,9 +40,15 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
             </div>
           </div>
         </nav>
-        <div className="flex">
+        <div className="flex relative">
           <MainSidebar />
-          <main className="container mx-auto py-6 md:py-8 px-4 md:px-6 animate-fade-in flex-1">
+          {showBackdrop && (
+            <div 
+              className="fixed inset-0 bg-black/25 z-40 md:hidden"
+              onClick={() => setShowBackdrop(false)}
+            />
+          )}
+          <main className="container mx-auto py-4 md:py-8 px-3 md:px-6 animate-fade-in flex-1 max-w-full overflow-x-hidden">
             {children || <Outlet />}
           </main>
         </div>

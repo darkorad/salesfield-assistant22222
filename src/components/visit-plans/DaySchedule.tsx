@@ -8,14 +8,16 @@ import { useCustomersByDay } from "./hooks/useCustomersByDay";
 import { DayScheduleInfo } from "./day-schedule/DayScheduleInfo";
 import { LoadingState } from "./day-schedule/LoadingState";
 import { CustomersList } from "./day-schedule/CustomersList";
+import { useCustomerData } from "./hooks/useCustomerData";
 
 interface DayScheduleProps {
   day: string;
   customers: Customer[];
   onCustomerSelect: (customer: Customer) => void;
+  isOffline?: boolean;
 }
 
-export const DaySchedule = ({ day, customers, onCustomerSelect }: DayScheduleProps) => {
+export const DaySchedule = ({ day, customers, onCustomerSelect, isOffline }: DayScheduleProps) => {
   const { completedCustomers, isLoading: completedLoading, loadCompletedCustomers } = useCompletedCustomers();
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -33,17 +35,23 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
     console.log(`DaySchedule for ${day}:`, {
       totalCustomers: customers.length,
       customersForDay: customersForDay.length,
-      filteredCustomers: filteredCustomers.length
+      filteredCustomers: filteredCustomers.length,
+      isOffline: isOffline
     });
-  }, [day, customers.length, customersForDay.length, filteredCustomers.length]);
+  }, [day, customers.length, customersForDay.length, filteredCustomers.length, isOffline]);
 
   const handleCustomerClick = (customer: Customer) => {
-    setSelectedCustomer(customer);
+    setSelectedCustomer(prevCustomer => 
+      prevCustomer?.id === customer.id ? null : customer
+    );
     onCustomerSelect(customer);
 
-    setTimeout(() => {
-      orderFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    // If selecting a new customer (not deselecting the current one)
+    if (!selectedCustomer || selectedCustomer.id !== customer.id) {
+      setTimeout(() => {
+        orderFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
   };
 
   const handleOrderComplete = () => {
@@ -52,7 +60,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
   };
 
   if (completedLoading) {
-    return <LoadingState />;
+    return <LoadingState isOffline={isOffline} />;
   }
 
   return (
@@ -64,7 +72,8 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
 
       <DayScheduleInfo 
         day={day} 
-        customersCount={customersForDay.length} 
+        customersCount={customersForDay.length}
+        isOffline={isOffline}
       />
 
       <CustomersList 
@@ -76,6 +85,7 @@ export const DaySchedule = ({ day, customers, onCustomerSelect }: DaySchedulePro
         showHistory={showHistory}
         setShowHistory={setShowHistory}
         onOrderComplete={handleOrderComplete}
+        isOffline={isOffline}
       />
     </div>
   );

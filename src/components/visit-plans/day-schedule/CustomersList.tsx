@@ -3,6 +3,7 @@ import React, { RefObject } from "react";
 import { Customer } from "@/types";
 import { CustomerListItem } from "../customer-list/CustomerListItem";
 import { CustomerOrderSection } from "../customer-order/CustomerOrderSection";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CustomersListProps {
   customers: Customer[];
@@ -13,6 +14,7 @@ interface CustomersListProps {
   showHistory: boolean;
   setShowHistory: (show: boolean) => void;
   onOrderComplete: () => void;
+  isOffline?: boolean;
 }
 
 export const CustomersList = ({
@@ -23,12 +25,20 @@ export const CustomersList = ({
   onCustomerClick,
   showHistory,
   setShowHistory,
-  onOrderComplete
+  onOrderComplete,
+  isOffline
 }: CustomersListProps) => {
+  const isMobile = useIsMobile();
+
   if (customers.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-2 text-xs">
-        Nema kupaca koji zadovoljavaju kriterijume pretrage
+      <div className="text-center text-gray-500 py-4 my-8">
+        <p className="text-sm">Nema kupaca koji zadovoljavaju kriterijume pretrage</p>
+        {isOffline && (
+          <p className="text-xs mt-2 text-blue-600">
+            U offline režimu prikazuju se samo prethodno sinhronizovani kupci
+          </p>
+        )}
       </div>
     );
   }
@@ -46,7 +56,10 @@ export const CustomersList = ({
           
           {/* Render the order form directly under this customer if selected */}
           {selectedCustomer?.id === customer.id && (
-            <div ref={orderFormRef}>
+            <div 
+              ref={orderFormRef}
+              className={isMobile ? "bg-white shadow-lg rounded-lg p-4 border" : ""}
+            >
               <CustomerOrderSection
                 customer={selectedCustomer}
                 onClose={() => onCustomerClick(selectedCustomer)}

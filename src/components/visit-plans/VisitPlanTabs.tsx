@@ -10,10 +10,11 @@ interface VisitPlanTabsProps {
   selectedDay: string;
   onDayChange: (day: string) => void;
   customers: Customer[];
+  isOffline?: boolean;
 }
 
-export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlanTabsProps) => {
-  console.log("VisitPlanTabs rendering with customers count:", customers.length);
+export const VisitPlanTabs = ({ selectedDay, onDayChange, customers, isOffline }: VisitPlanTabsProps) => {
+  console.log("VisitPlanTabs rendering with customers count:", customers.length, "isOffline:", isOffline);
   
   return (
     <div className="space-y-2">
@@ -25,6 +26,7 @@ export const VisitPlanTabs = ({ selectedDay, onDayChange, customers }: VisitPlan
             <DaySchedule 
               day={day} 
               customers={customers}
+              isOffline={isOffline}
               onCustomerSelect={(customer) => {
                 // We don't need to do anything with the customer here now,
                 // since the DaySchedule component handles this internally

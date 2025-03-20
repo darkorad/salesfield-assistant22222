@@ -38,9 +38,9 @@
 
 .card {
   padding: 1em;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
   backdrop-filter: blur(8px);
   animation: fade-in 0.3s ease-out;
 }
@@ -49,35 +49,46 @@
   color: #888;
 }
 
-/* Add responsive container styles */
+/* Responsive container styles for small screens */
 @media (max-width: 640px) {
   #root {
     padding: 0;
   }
   
   .card {
-    padding: 0.5em;
+    padding: 0.75em;
+    margin: 0.5em 0;
+  }
+  
+  /* Fix input zoom issues on iOS */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
   }
 }
 
-/* Add premium styling */
+/* Optimized input styling for touch devices */
 input, select, textarea {
   transition: all 0.2s ease-in-out;
+  -webkit-appearance: none; /* Removes default styling on iOS */
+  -moz-appearance: none;
+  appearance: none;
 }
 
 input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(155, 135, 245, 0.2);
+  outline: none; /* Removes default focus outline */
 }
 
 button {
   transition: all 0.2s ease-in-out;
+  touch-action: manipulation; /* Better touch behavior */
 }
 
 button:active {
   transform: translateY(1px);
 }
 
-/* Add subtle animations */
+/* Fast appearing animations */
 .fade-in {
   animation: fadeIn 0.3s ease-in;
 }
@@ -90,5 +101,32 @@ button:active {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Prevent horizontal overflow */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch; /* Better scrolling on iOS */
+}
+
+/* Fix for 100vh issue on mobile browsers */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+html {
+  height: -webkit-fill-available;
+}
+
+/* Fix Safari overscroll background */
+body {
+  background-color: #f8f9fa;
+  overscroll-behavior-y: none;
+}
+
+/* Faster transitions for mobile */
+@media (max-width: 768px) {
+  * {
+    transition-duration: 0.15s !important;
   }
 }

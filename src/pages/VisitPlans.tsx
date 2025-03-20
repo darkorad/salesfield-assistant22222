@@ -7,7 +7,7 @@ import { TodayVisitsSection } from "@/components/visit-plans/TodayVisitsSection"
 import { useVisitPlansData } from "@/components/visit-plans/hooks/useVisitPlansData";
 import { FileImport } from "@/components/settings/FileImport";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, AlertCircle } from "lucide-react";
+import { UploadCloud, AlertCircle, WifiOff } from "lucide-react";
 
 const getCurrentDayInSerbian = () => {
   const day = new Date().toLocaleString('sr-Latn-RS', { weekday: 'long' }).toLowerCase();
@@ -31,13 +31,24 @@ const getCurrentDayInSerbian = () => {
 };
 
 const VisitPlans = () => {
-  const { visitPlans, customers, isLoading, error, fetchData, lastDataRefresh } = useVisitPlansData();
+  const { visitPlans, customers, isLoading, error, fetchData, lastDataRefresh, isOffline } = useVisitPlansData();
   const [selectedDay, setSelectedDay] = useState(getCurrentDayInSerbian());
   const [showImport, setShowImport] = useState(false);
 
   return (
     <div className="container mx-auto p-2">
       <VisitPlansHeader error={error} onRetry={fetchData} />
+      
+      {isOffline && (
+        <div className="my-2 p-3 rounded-md bg-blue-50 border border-blue-200 flex items-center">
+          <WifiOff className="mr-2 h-5 w-5 text-blue-600" />
+          <div>
+            <p className="text-sm font-medium text-blue-700">
+              Offline režim - koriste se lokalno sačuvani podaci
+            </p>
+          </div>
+        </div>
+      )}
       
       {error && (
         <div className={`mt-4 p-4 rounded-md ${error.includes("Nemate dozvolu") ? "bg-red-50 border border-red-200" : "bg-amber-50 border border-amber-200"}`}>
@@ -106,12 +117,14 @@ const VisitPlans = () => {
             selectedDay={selectedDay}
             onDayChange={setSelectedDay}
             customers={customers}
+            isOffline={isOffline}
           />
 
           <TodayVisitsSection 
             isLoading={isLoading}
             visitPlans={visitPlans}
             lastDataRefresh={lastDataRefresh}
+            isOffline={isOffline}
           />
         </>
       )}
