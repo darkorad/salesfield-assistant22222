@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { checkOnlineStatus, getLastSyncTimestamp } from "@/utils/offlineStorage";
 

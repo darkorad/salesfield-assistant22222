@@ -6,6 +6,7 @@ import { fetchOnlineOfflineData } from "./sales/useOnlineOfflineData";
 import { useRealtimeSubscriptions } from "./sales/useRealtimeSubscriptions";
 import { useSyncStatusCheck } from "./sales/useSyncStatusCheck";
 import { useAuthStateListener } from "./sales/useAuthStateListener";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useSalesData = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
