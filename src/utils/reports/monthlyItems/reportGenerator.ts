@@ -114,9 +114,5 @@ export async function exportWorkbookToFileAndStorage(
   
   // Export the workbook using proper options
   console.log(`Exporting monthly items report with filename: ${fileName}`);
-  await exportWorkbook(wb, fileName, {
-    showToasts: true,
-    onSuccess: () => console.log("Monthly items report exported successfully"),
-    onError: (err) => console.error("Error exporting monthly items report:", err)
-  });
+  await exportWorkbook(wb, fileName);
 }

@@ -1,5 +1,4 @@
 
-import { blobToBase64 } from '../fileExport/utils';
 import { NavigateFunction } from 'react-router-dom';
 
 /**
