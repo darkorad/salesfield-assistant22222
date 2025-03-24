@@ -87,11 +87,15 @@ export async function exportWorkbookToFileAndStorage(
   fileName: string,
   redirectToDocuments?: () => void
 ): Promise<void> {
+  // Format filename with proper date format
+  const today = new Date();
+  const day = today.getDate().toString().padStart(2, '0');
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const year = today.getFullYear();
+  
   // Include date in the filename if not already present
   if (!fileName.includes('-')) {
-    const today = new Date();
-    const dateStr = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`;
-    fileName = `${fileName}-${dateStr}`;
+    fileName = `${fileName}-${day}-${month}-${year}`;
   }
 
   // Save to storage

@@ -35,6 +35,7 @@ const Documents = () => {
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [files, setFiles] = useState<StoredFile[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -52,11 +53,15 @@ const Documents = () => {
 
   const loadFiles = async () => {
     setIsLoading(true);
+    setError(null);
     try {
+      console.log("Loading documents...");
       const storedFiles = await getStoredFiles();
+      console.log("Found documents:", storedFiles.length);
       setFiles(storedFiles);
     } catch (error) {
       console.error("Error loading files:", error);
+      setError("Greška pri učitavanju dokumenata");
       toast.error("Greška pri učitavanju dokumenata");
     } finally {
       setIsLoading(false);
@@ -155,6 +160,19 @@ const Documents = () => {
                 <Skeleton className="w-full h-20 rounded-md" />
                 <Skeleton className="w-full h-20 rounded-md" />
                 <Skeleton className="w-full h-20 rounded-md" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-8 bg-red-50 rounded-lg border border-dashed border-red-200">
+                <p className="text-red-600 mb-2">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={refreshFiles}
+                  className="mt-2"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Pokušaj ponovo
+                </Button>
               </div>
             ) : (
               <DocumentsList files={files} onRefresh={refreshFiles} />

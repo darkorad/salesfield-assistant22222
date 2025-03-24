@@ -41,7 +41,8 @@ export const getStoredFiles = async (): Promise<StoredFile[]> => {
       await Filesystem.writeFile({
         path: 'documents/registry.json',
         data: JSON.stringify([]),
-        directory: Directory.Data
+        directory: Directory.Data,
+        recursive: true
       });
       return [];
     }
@@ -67,7 +68,8 @@ export const addFileToRegistry = async (fileInfo: StoredFile): Promise<void> => 
     await Filesystem.writeFile({
       path: 'documents/registry.json',
       data: JSON.stringify(files),
-      directory: Directory.Data
+      directory: Directory.Data,
+      recursive: true
     });
   } catch (error) {
     console.error('Error adding file to registry:', error);

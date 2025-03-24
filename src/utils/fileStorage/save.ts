@@ -47,6 +47,18 @@ export const saveWorkbookToStorage = async (
       throw new Error('Failed to convert file to base64 string');
     }
     
+    try {
+      // Ensure the documents directory exists
+      await Filesystem.mkdir({
+        path: 'documents',
+        directory: Directory.Data,
+        recursive: true
+      });
+    } catch (err) {
+      // Directory might already exist, which is fine
+      console.log('Directory exists or creation failed:', err);
+    }
+    
     // Save file to app storage
     const result = await Filesystem.writeFile({
       path: `documents/${fileName}`,

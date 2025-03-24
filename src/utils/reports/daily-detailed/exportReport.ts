@@ -31,7 +31,10 @@ export const exportDailyDetailedReport = async (redirectToDocuments?: () => void
     
     // Generate a more descriptive filename with the current date
     const today = new Date();
-    const dateStr = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`;
+    const day = today.getDate().toString().padStart(2, '0');
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const year = today.getFullYear();
+    const dateStr = `${day}-${month}-${year}`;
     const filename = `Dnevni-Detaljan-Izvestaj-${dateStr}`;
 
     // Save to app storage first, then try normal export as fallback
