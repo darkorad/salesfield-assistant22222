@@ -18,6 +18,8 @@ import {
  */
 export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void) => {
   try {
+    console.log("Starting monthly items report export");
+    
     // Get current user session
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -65,6 +67,7 @@ export const exportMonthlyItemsReport = async (redirectToDocuments?: () => void)
     // Export and save workbook
     await exportWorkbookToFileAndStorage(wb, fileName, redirectToDocuments);
     
+    console.log("Finished monthly items report export");
   } catch (error) {
     console.error('Error generating monthly items report:', error);
     toast.error(`Greška pri generisanju izveštaja: ${error instanceof Error ? error.message : String(error)}`);

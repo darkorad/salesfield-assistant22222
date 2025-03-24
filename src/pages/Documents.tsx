@@ -69,6 +69,7 @@ const Documents = () => {
   };
 
   const refreshFiles = () => {
+    toast.info("Osvežavanje liste dokumenata...");
     loadFiles();
   };
 

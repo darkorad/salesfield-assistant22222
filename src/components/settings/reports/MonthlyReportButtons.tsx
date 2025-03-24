@@ -4,11 +4,13 @@ import { FileSpreadsheet } from "lucide-react";
 import { useState } from "react";
 import { exportMonthlySalesReport } from "@/utils/reports/exportMonthlySalesReport";
 import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
+import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
 import { ReportButtonProps } from "./ReportsContainer";
 
 export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps) => {
   const [isExportingSales, setIsExportingSales] = useState(false);
   const [isExportingCustomers, setIsExportingCustomers] = useState(false);
+  const [isExportingItems, setIsExportingItems] = useState(false);
 
   const handleExportSales = async () => {
     if (isExportingSales) return;
@@ -40,6 +42,21 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
     }
   };
 
+  const handleExportItems = async () => {
+    if (isExportingItems) return;
+    
+    setIsExportingItems(true);
+    try {
+      console.log("Starting monthly items report export");
+      await exportMonthlyItemsReport(redirectToDocuments);
+      console.log("Finished monthly items report export");
+    } catch (error) {
+      console.error("Error in monthly items report export:", error);
+    } finally {
+      setIsExportingItems(false);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Button
@@ -60,6 +77,16 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
       >
         <FileSpreadsheet className="mr-2 h-5 w-5" />
         {isExportingCustomers ? "Izvoz u toku..." : "Mesečni izveštaj po kupcima"}
+      </Button>
+
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={handleExportItems}
+        disabled={isExportingItems}
+      >
+        <FileSpreadsheet className="mr-2 h-5 w-5" />
+        {isExportingItems ? "Izvoz u toku..." : "Mesečni izveštaj po artiklima"}
       </Button>
     </div>
   );

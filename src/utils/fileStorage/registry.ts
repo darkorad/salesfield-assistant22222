@@ -9,61 +9,51 @@ export const getStoredFiles = async (): Promise<StoredFile[]> => {
   try {
     console.log('Getting stored files from registry');
     
-    // Create multiple possible document directories to ensure at least one exists
-    const documentDirectories = [
-      { path: 'documents', directory: Directory.Data },
-      { path: 'Documents', directory: Directory.Data }
-    ];
-    
-    for (const dir of documentDirectories) {
-      try {
-        await Filesystem.mkdir({
-          path: dir.path,
-          directory: dir.directory,
-          recursive: true
-        });
-        console.log(`Ensured directory exists: ${dir.path}`);
-      } catch (err) {
-        // Directory might already exist, which is fine
-        console.log(`Directory might already exist: ${dir.path}`, err);
-      }
+    // Ensure the documents directory exists
+    try {
+      await Filesystem.mkdir({
+        path: 'documents',
+        directory: Directory.Data,
+        recursive: true
+      });
+      console.log('Ensured documents directory exists');
+    } catch (err) {
+      // Directory might already exist, which is fine
+      console.log('Directory might already exist:', err);
     }
     
-    // Try multiple registry locations
-    const registryLocations = [
-      { path: 'documents/registry.json', directory: Directory.Data },
-      { path: 'Documents/registry.json', directory: Directory.Data },
-      { path: 'registry.json', directory: Directory.Data }
-    ];
+    let registryData;
     
-    let registryData = null;
-    let registrySavePath = '';
-    
-    // Try to read from any registry location
-    for (const location of registryLocations) {
-      try {
-        console.log(`Attempting to read registry from: ${location.directory}/${location.path}`);
-        const result = await Filesystem.readFile({
-          path: location.path,
-          directory: location.directory
-        });
-        
-        if (result && result.data) {
-          registryData = result.data;
-          registrySavePath = location.path;
-          console.log(`Successfully read registry from: ${location.path}`);
-          break;
-        }
-      } catch (err) {
-        console.log(`Could not read registry from ${location.path}:`, err);
-      }
+    try {
+      // Try to read the registry file
+      const result = await Filesystem.readFile({
+        path: 'documents/registry.json',
+        directory: Directory.Data
+      });
+      
+      registryData = result.data;
+      console.log('Registry data read successfully');
+    } catch (error) {
+      console.log('Registry file not found, creating new one:', error);
+      
+      // Create a new registry file if it doesn't exist
+      await Filesystem.writeFile({
+        path: 'documents/registry.json',
+        data: JSON.stringify([]),
+        directory: Directory.Data
+      });
+      
+      console.log('Created new registry file');
+      return [];
     }
     
+    // Parse registry data
     if (registryData) {
-      // Ensure that data is a string before parsing
-      const data = typeof registryData === 'string' ? registryData : '';
       try {
+        // Ensure that data is a string before parsing
+        const data = typeof registryData === 'string' ? registryData : '';
         const files = JSON.parse(data);
+        
         // Sort files by date (newest first)
         return Array.isArray(files) ? files.sort((a, b) => 
           new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -72,26 +62,9 @@ export const getStoredFiles = async (): Promise<StoredFile[]> => {
         console.error('Error parsing registry JSON:', parseError);
         return [];
       }
-    } else {
-      console.log('No registry found, creating new one in multiple locations');
-      
-      // Create new registry in all potential locations
-      for (const location of registryLocations) {
-        try {
-          await Filesystem.writeFile({
-            path: location.path,
-            data: JSON.stringify([]),
-            directory: location.directory,
-            recursive: true
-          });
-          console.log(`Created new registry at: ${location.path}`);
-        } catch (err) {
-          console.warn(`Failed to create registry at ${location.path}:`, err);
-        }
-      }
-      
-      return [];
     }
+    
+    return [];
   } catch (error) {
     console.error('Error getting stored files:', error);
     return [];
@@ -103,33 +76,22 @@ export const getStoredFiles = async (): Promise<StoredFile[]> => {
  */
 export const addFileToRegistry = async (fileInfo: StoredFile): Promise<void> => {
   try {
+    // Get existing files
     const files = await getStoredFiles();
     
     // Add new file
     files.unshift(fileInfo);
     
-    // Save updated registry to multiple locations for redundancy
-    const registryLocations = [
-      { path: 'documents/registry.json', directory: Directory.Data },
-      { path: 'Documents/registry.json', directory: Directory.Data },
-      { path: 'registry.json', directory: Directory.Data }
-    ];
+    console.log(`Adding file to registry. Registry now has ${files.length} files.`);
     
-    const registryData = JSON.stringify(files);
+    // Save updated registry
+    await Filesystem.writeFile({
+      path: 'documents/registry.json',
+      data: JSON.stringify(files),
+      directory: Directory.Data
+    });
     
-    for (const location of registryLocations) {
-      try {
-        await Filesystem.writeFile({
-          path: location.path,
-          data: registryData,
-          directory: location.directory,
-          recursive: true
-        });
-        console.log(`Updated registry at: ${location.path}`);
-      } catch (err) {
-        console.warn(`Failed to update registry at ${location.path}:`, err);
-      }
-    }
+    console.log('Registry updated successfully');
   } catch (error) {
     console.error('Error adding file to registry:', error);
   }
