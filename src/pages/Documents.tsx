@@ -1,22 +1,40 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardDescription 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DocumentsList } from "@/components/documents/DocumentsList";
 import { getStoredFiles, StoredFile } from "@/utils/fileStorage";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info } from "lucide-react";
+import { 
+  FileText, 
+  Info, 
+  RefreshCw, 
+  Settings, 
+  ArrowLeft 
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
 
 const Documents = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [files, setFiles] = useState<StoredFile[]>([]);
-  const [activeTab, setActiveTab] = useState("documents");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,57 +67,101 @@ const Documents = () => {
     loadFiles();
   };
 
-  const navigateTo = (path: string) => {
-    navigate(path);
+  const handleGoToSettings = () => {
+    navigate("/settings");
+  };
+
+  const handleGoToPlans = () => {
+    navigate("/visit-plans");
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="documents">Dokumenti</TabsTrigger>
-          <TabsTrigger value="sales" onClick={() => navigateTo('/sales')}>Prodaja</TabsTrigger>
-          <TabsTrigger value="settings" onClick={() => navigateTo('/settings')}>Podešavanja</TabsTrigger>
-          <TabsTrigger value="daily-orders" onClick={() => navigateTo('/daily-orders')}>Dnevni nalozi</TabsTrigger>
-        </TabsList>
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink onClick={handleGoToPlans}>Plan poseta</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Dokumenti</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         
-        <TabsContent value="documents">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  <span>Dokumenti</span>
-                  <Button 
-                    variant="outline" 
-                    onClick={refreshFiles}
-                  >
-                    Osveži
-                  </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleGoToSettings}
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Podešavanja</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleGoToPlans}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Plan poseta</span>
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6">
+        <Card className="border-t-4 border-t-accent shadow-md">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-accent" />
+                  Dokumenti
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm bg-muted/30 p-3 mb-4 rounded-md flex gap-2">
-                  <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                  <p>
-                    Ovde su sačuvani svi vaši izveštaji. Možete ih otvoriti, preuzeti ili poslati nekome.
-                    Dokumenti se čuvaju u vašoj aplikaciji i dostupni su i kada niste povezani na internet.
-                  </p>
-                </div>
-                
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="w-full h-12" />
-                    <Skeleton className="w-full h-12" />
-                    <Skeleton className="w-full h-12" />
-                  </div>
-                ) : (
-                  <DocumentsList files={files} onRefresh={refreshFiles} />
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                <CardDescription>
+                  Pregled svih vaših izveštaja i dokumenata
+                </CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={refreshFiles}
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span className="hidden sm:inline">Osveži</span>
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="bg-blue-50 border border-blue-100 rounded-md p-3 mb-4 flex gap-2">
+              <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-700">
+                <p className="font-medium mb-1">O vašim dokumentima</p>
+                <p>
+                  Ovde su sačuvani svi vaši izveštaji. Dokumenti se čuvaju u vašoj aplikaciji 
+                  i dostupni su i kada niste povezani na internet.
+                </p>
+              </div>
+            </div>
+            
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="w-full h-20 rounded-md" />
+                <Skeleton className="w-full h-20 rounded-md" />
+                <Skeleton className="w-full h-20 rounded-md" />
+              </div>
+            ) : (
+              <DocumentsList files={files} onRefresh={refreshFiles} />
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
