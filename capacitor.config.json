@@ -1,13 +1,20 @@
 
 {
-  "appId": "com.salesapp.app",
+  "appId": "app.zirmd.salesfield",
   "appName": "ŽIR-MD COMPANY",
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
-    "cleartext": true
+    "cleartext": true,
+    "allowNavigation": [
+      "*.supabase.co"
+    ]
   },
   "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "useLegacyBridge": false,
+    "webContentsDebuggingEnabled": true,
     "buildOptions": {
       "keystorePath": null,
       "keystoreAlias": null,
@@ -59,6 +66,12 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_EXTERNAL_STORAGE"
       ]
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "CapacitorCookies": {
+      "enabled": true
     }
   }
 }
