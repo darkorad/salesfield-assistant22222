@@ -125,6 +125,7 @@ const VisitPlans = () => {
             visitPlans={visitPlans}
             lastDataRefresh={lastDataRefresh}
             isOffline={isOffline}
+            customers={customers}
           />
         </>
       )}
