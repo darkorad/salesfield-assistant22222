@@ -1,5 +1,5 @@
 
-import { exportWorkbook } from './core';
+import { exportWorkbook } from './exportWorkbook';
 import { createRedirectToDocuments } from './utils';
 
 export { 
