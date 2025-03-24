@@ -24,9 +24,11 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     lastDay.setHours(0, 0, 0, 0);
 
+    console.log(`Fetching sales data for ${firstDay.toISOString()} to ${lastDay.toISOString()}`);
+
     const { data: salesData, error } = await supabase
       .from('sales')
-      .select('*, customer:customers(*)')
+      .select('*, customer:customers(*), kupci_darko(*)')
       .eq('user_id', session.user.id)
       .gte('date', firstDay.toISOString())
       .lt('date', lastDay.toISOString())
@@ -34,7 +36,7 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
 
     if (error) {
       console.error("Error loading sales:", error);
-      toast.error("Greška pri učitavanju prodaje");
+      toast.error(`Greška pri učitavanju prodaje: ${error.message}`);
       return;
     }
 
@@ -43,33 +45,48 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
       return;
     }
 
+    console.log(`Found ${salesData.length} sales records for current month`);
+
     // Prepare data for the first sheet (customer orders)
-    const customerOrdersData = salesData.map((sale: Order) => ({
-      'Datum': new Date(sale.date).toLocaleDateString('sr-RS'),
-      'Kupac': sale.customer.name,
-      'Artikli': sale.items.map(item => 
-        `${item.product.Naziv} (${item.quantity} ${item.product["Jedinica mere"]})`
-      ).join(', '),
-      'Način plaćanja': sale.payment_type === 'cash' ? 'Gotovina' : 'Račun',
-      'Ukupno (RSD)': sale.total
-    }));
+    const customerOrdersData = salesData.map((sale: Order) => {
+      // Get customer data from either customers or kupci_darko
+      const customerName = sale.customer?.name || sale.kupci_darko?.name || 'Nepoznat kupac';
+      
+      return {
+        'Datum': new Date(sale.date).toLocaleDateString('sr-RS'),
+        'Kupac': customerName,
+        'Artikli': sale.items.map(item => 
+          `${item.product.Naziv} (${item.quantity} ${item.product["Jedinica mere"]})`
+        ).join(', '),
+        'Način plaćanja': sale.payment_type === 'cash' ? 'Gotovina' : 'Račun',
+        'Ukupno (RSD)': sale.total
+      };
+    });
 
     // Prepare data for the second sheet (product quantities)
-    const productQuantities: { [key: string]: number } = {};
+    const productQuantities: { [key: string]: { quantity: number, value: number } } = {};
     salesData.forEach((sale: Order) => {
       sale.items.forEach(item => {
         const productName = item.product.Naziv;
-        productQuantities[productName] = (productQuantities[productName] || 0) + item.quantity;
+        if (!productQuantities[productName]) {
+          productQuantities[productName] = { 
+            quantity: 0, 
+            value: 0 
+          };
+        }
+        productQuantities[productName].quantity += item.quantity;
+        productQuantities[productName].value += item.quantity * item.product.Cena;
       });
     });
 
     // Convert to array and sort by quantity in descending order
     const productQuantitiesData = Object.entries(productQuantities)
-      .map(([product, quantity]) => ({
+      .map(([product, data]) => ({
         'Artikal': product,
-        'Količina': quantity
+        'Količina': data.quantity,
+        'Ukupna vrednost (RSD)': data.value
       }))
-      .sort((a, b) => b.Količina - a.Količina);
+      .sort((a, b) => b['Količina'] - a['Količina']);
 
     // Create workbook with two sheets
     const wb = XLSX.utils.book_new();
@@ -94,6 +111,7 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
     ws2['!cols'] = [
       { wch: 40 }, // Artikal
       { wch: 15 }, // Količina
+      { wch: 20 }, // Ukupna vrednost
     ];
 
     // Get month name in Serbian
@@ -127,9 +145,13 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
 
     // Export the file for download as well
     await exportWorkbook(wb, filename);
+    toast.success("Mesečni izveštaj je uspešno izvezen", {
+      description: "Preuzimanje će početi automatski",
+      duration: 5000
+    });
     
   } catch (error) {
     console.error("Error generating report:", error);
-    toast.error("Greška pri generisanju izveštaja");
+    toast.error(`Greška pri generisanju izveštaja: ${error instanceof Error ? error.message : String(error)}`);
   }
 };

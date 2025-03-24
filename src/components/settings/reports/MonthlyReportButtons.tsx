@@ -1,11 +1,12 @@
 
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, Download } from "lucide-react";
 import { useState } from "react";
 import { exportMonthlySalesReport } from "@/utils/reports/exportMonthlySalesReport";
 import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
 import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
 import { ReportButtonProps } from "./ReportsContainer";
+import { toast } from "sonner";
 
 export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps) => {
   const [isExportingSales, setIsExportingSales] = useState(false);
@@ -18,10 +19,12 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
     setIsExportingSales(true);
     try {
       console.log("Starting monthly sales report export");
+      toast.info("Izvoz mesečnog izveštaja prodaje u toku...");
       await exportMonthlySalesReport(redirectToDocuments);
       console.log("Finished monthly sales report export");
     } catch (error) {
       console.error("Error in monthly sales report export:", error);
+      toast.error("Greška pri izvozu mesečnog izveštaja prodaje");
     } finally {
       setIsExportingSales(false);
     }
@@ -33,10 +36,12 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
     setIsExportingCustomers(true);
     try {
       console.log("Starting monthly customer report export");
+      toast.info("Izvoz mesečnog izveštaja po kupcima u toku...");
       await exportMonthlyCustomerReport(redirectToDocuments);
       console.log("Finished monthly customer report export");
     } catch (error) {
       console.error("Error in monthly customer report export:", error);
+      toast.error("Greška pri izvozu mesečnog izveštaja po kupcima");
     } finally {
       setIsExportingCustomers(false);
     }
@@ -48,10 +53,12 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
     setIsExportingItems(true);
     try {
       console.log("Starting monthly items report export");
+      toast.info("Izvoz mesečnog izveštaja po artiklima u toku...");
       await exportMonthlyItemsReport(redirectToDocuments);
       console.log("Finished monthly items report export");
     } catch (error) {
       console.error("Error in monthly items report export:", error);
+      toast.error("Greška pri izvozu mesečnog izveštaja po artiklima");
     } finally {
       setIsExportingItems(false);
     }
