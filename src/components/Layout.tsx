@@ -37,7 +37,6 @@ export const Layout = ({ children }: { children?: React.ReactNode }) => {
           <div className="max-w-full px-4 md:px-6">
             <div className="flex justify-between h-16 items-center">
               <NavLogo />
-              <h1 className="text-lg font-semibold hidden md:block">ŽIR-MD COMPANY</h1>
               <NavActions />
             </div>
           </div>
