@@ -13,6 +13,11 @@ import { MonthlyReportButtons } from "./MonthlyReportButtons";
 import { createRedirectToDocuments } from "@/utils/fileExport";
 import { FileSpreadsheet } from "lucide-react";
 
+// Update type definition to include redirectToDocuments
+interface ReportButtonProps {
+  redirectToDocuments: () => void;
+}
+
 export const ReportsContainer = () => {
   const navigate = useNavigate();
   const redirectToDocuments = createRedirectToDocuments(navigate);
