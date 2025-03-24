@@ -1,98 +1,66 @@
 
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { createRedirectToDocuments } from "@/utils/fileExport";
-import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomer";
-import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItems";
-import { supabase } from "@/integrations/supabase/client";
+import { FileSpreadsheet } from "lucide-react";
+import { useState } from "react";
+import { exportMonthlySalesReport } from "@/utils/reports/exportMonthlySalesReport";
+import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
+import { ReportButtonProps } from "./ReportsContainer";
 
-export const MonthlyReportButtons = () => {
-  const [isGeneratingCustomer, setIsGeneratingCustomer] = useState(false);
-  const [isGeneratingItems, setIsGeneratingItems] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const navigate = useNavigate();
+export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps) => {
+  const [isExportingSales, setIsExportingSales] = useState(false);
+  const [isExportingCustomers, setIsExportingCustomers] = useState(false);
 
-  useEffect(() => {
-    // Check user on component mount
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
-      }
-    };
+  const handleExportSales = async () => {
+    if (isExportingSales) return;
     
-    checkUser();
-  }, []);
-
-  const handleGenerateCustomerReport = async () => {
+    setIsExportingSales(true);
     try {
-      setIsGeneratingCustomer(true);
-      
-      // Create redirection function
-      const redirectToDocuments = createRedirectToDocuments(navigate);
-      
-      // Generate the report using the appropriate function for each user
-      await exportMonthlyCustomerReport(redirectToDocuments);
+      console.log("Starting monthly sales report export");
+      await exportMonthlySalesReport(redirectToDocuments);
+      console.log("Finished monthly sales report export");
     } catch (error) {
-      console.error("Error generating customer report:", error);
-      toast.error("Greška pri generisanju izveštaja");
+      console.error("Error in monthly sales report export:", error);
     } finally {
-      setIsGeneratingCustomer(false);
+      setIsExportingSales(false);
     }
   };
 
-  const handleGenerateItemsReport = async () => {
+  const handleExportCustomers = async () => {
+    if (isExportingCustomers) return;
+    
+    setIsExportingCustomers(true);
     try {
-      setIsGeneratingItems(true);
-      
-      // Create redirection function
-      const redirectToDocuments = createRedirectToDocuments(navigate);
-      
-      // Generate the report
-      await exportMonthlyItemsReport(redirectToDocuments);
+      console.log("Starting monthly customer report export");
+      await exportMonthlyCustomerReport(redirectToDocuments);
+      console.log("Finished monthly customer report export");
     } catch (error) {
-      console.error("Error generating items report:", error);
-      toast.error("Greška pri generisanju izveštaja");
+      console.error("Error in monthly customer report export:", error);
     } finally {
-      setIsGeneratingItems(false);
+      setIsExportingCustomers(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-white rounded-md border">
-      <h3 className="text-lg font-medium">Mesečni izveštaji</h3>
+    <div className="space-y-2">
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={handleExportSales}
+        disabled={isExportingSales}
+      >
+        <FileSpreadsheet className="mr-2 h-5 w-5" />
+        {isExportingSales ? "Izvoz u toku..." : "Mesečni izveštaj prodaje"}
+      </Button>
       
-      <div>
-        <h4 className="text-sm font-medium mb-2">Izveštaj po kupcima</h4>
-        <p className="text-sm text-gray-500 mb-2">
-          Pregled kupovina svih kupaca za trenutni mesec.
-        </p>
-        <Button 
-          onClick={handleGenerateCustomerReport}
-          disabled={isGeneratingCustomer}
-          variant="outline"
-          className="w-full"
-        >
-          {isGeneratingCustomer ? "Generisanje..." : "Izveštaj po kupcima"}
-        </Button>
-      </div>
-      
-      <div className="mt-2">
-        <h4 className="text-sm font-medium mb-2">Izveštaj po artiklima</h4>
-        <p className="text-sm text-gray-500 mb-2">
-          Pregled prodaje svih artikala za trenutni mesec.
-        </p>
-        <Button 
-          onClick={handleGenerateItemsReport}
-          disabled={isGeneratingItems}
-          variant="outline"
-          className="w-full"
-        >
-          {isGeneratingItems ? "Generisanje..." : "Izveštaj po artiklima"}
-        </Button>
-      </div>
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={handleExportCustomers}
+        disabled={isExportingCustomers}
+      >
+        <FileSpreadsheet className="mr-2 h-5 w-5" />
+        {isExportingCustomers ? "Izvoz u toku..." : "Mesečni izveštaj po kupcima"}
+      </Button>
     </div>
   );
 };

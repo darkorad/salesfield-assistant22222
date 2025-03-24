@@ -47,36 +47,76 @@ export const saveWorkbookToStorage = async (
       throw new Error('Failed to convert file to base64 string');
     }
     
+    // Create documents directory - more aggressively ensure it exists
     try {
-      // Ensure the documents directory exists
-      await Filesystem.mkdir({
-        path: 'documents',
-        directory: Directory.Data,
-        recursive: true
-      });
+      // Try multiple approaches to create directory
+      const directories = [
+        { path: 'documents', directory: Directory.Data },
+        { path: 'Documents', directory: Directory.Data },
+        { path: '', directory: Directory.Data }
+      ];
+      
+      for (const dir of directories) {
+        try {
+          await Filesystem.mkdir({
+            path: dir.path,
+            directory: dir.directory,
+            recursive: true
+          });
+          console.log(`Successfully created or confirmed directory: ${dir.path}`);
+        } catch (err) {
+          console.log(`Directory might already exist: ${dir.path}`, err);
+        }
+      }
     } catch (err) {
-      // Directory might already exist, which is fine
-      console.log('Directory exists or creation failed:', err);
+      // Continue anyway as the writeFile will create directory if needed
+      console.log('Could not ensure directories exist, but will try to write file anyway:', err);
     }
     
-    // Save file to app storage
-    const result = await Filesystem.writeFile({
-      path: `documents/${fileName}`,
-      data: base64Data,
-      directory: Directory.Data,
-      recursive: true
-    });
+    // Try multiple save locations until one works
+    let result;
+    const saveLocations = [
+      { path: `documents/${fileName}`, directory: Directory.Data },
+      { path: `Documents/${fileName}`, directory: Directory.Data },
+      { path: fileName, directory: Directory.Data }
+    ];
     
-    console.log('File saved successfully:', result);
+    let savedPath = '';
+    let error;
+    
+    for (const location of saveLocations) {
+      try {
+        console.log(`Attempting to save to: ${location.directory}/${location.path}`);
+        result = await Filesystem.writeFile({
+          path: location.path,
+          data: base64Data,
+          directory: location.directory,
+          recursive: true
+        });
+        savedPath = location.path;
+        console.log('File saved successfully to:', result);
+        break;
+      } catch (err) {
+        error = err;
+        console.warn(`Failed to save to ${location.directory}/${location.path}:`, err);
+      }
+    }
+    
+    if (!result) {
+      throw new Error(`Could not save file to any location: ${error?.message || 'Unknown error'}`);
+    }
+    
+    console.log('File saved successfully to final path:', savedPath);
     
     // Get file size if possible
     let fileSize = 0;
     try {
       const fileInfo = await Filesystem.stat({
-        path: `documents/${fileName}`,
+        path: savedPath,
         directory: Directory.Data
       });
       fileSize = fileInfo.size;
+      console.log('File size retrieved:', fileSize);
     } catch (err) {
       console.warn('Could not get file size:', err);
     }
@@ -85,19 +125,29 @@ export const saveWorkbookToStorage = async (
     const fileInfo: StoredFile = {
       id: fileId,
       name: fileName,
-      path: result.uri,
+      path: result.uri || `file://${savedPath}`,
       date: new Date().toISOString(),
       type: 'xlsx',
       size: fileSize,
     };
     
     // Add to file registry
+    console.log('Adding file to registry:', fileInfo);
     await addFileToRegistry(fileInfo);
+    
+    // Display a toast with more detailed information
+    toast.success(`Fajl "${fileName}" je uspešno sačuvan`, {
+      description: "Dokument možete pronaći u sekciji 'Dokumenti'",
+      duration: 8000,
+    });
     
     return fileInfo;
   } catch (error) {
     console.error('Error saving workbook to storage:', error);
-    toast.error(`Greška pri čuvanju fajla: ${error instanceof Error ? error.message : String(error)}`);
+    toast.error(`Greška pri čuvanju fajla: ${error instanceof Error ? error.message : String(error)}`, {
+      description: "Pokušajte pristupiti 'Dokumenti' sekciji da proverite da li je fajl ipak sačuvan.",
+      duration: 10000
+    });
     return null;
   }
 };

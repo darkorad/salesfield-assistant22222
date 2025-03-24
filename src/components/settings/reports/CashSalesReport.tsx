@@ -1,90 +1,37 @@
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
+import { exportCashCustomersReport } from "@/utils/reports/exportCashCustomersReport";
+import { ReportButtonProps } from "./ReportsContainer";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { generateCashSalesReport } from "@/utils/reports/cashSales/reportGenerator";
-import { fetchCashSalesForDate, filterCashSales, formatCashSalesForReport } from "@/services/cashSalesService";
-import { createRedirectToDocuments } from "@/utils/fileExport";
 
-export const CashSalesReport = () => {
-  const [date, setDate] = useState<Date>(new Date());
-  const [isGenerating, setIsGenerating] = useState(false);
-  const navigate = useNavigate();
-  const redirectToDocuments = createRedirectToDocuments(navigate);
-
-  const handleGenerateReport = async () => {
+export const CashSalesReport = ({ redirectToDocuments }: ReportButtonProps) => {
+  const [isExporting, setIsExporting] = useState(false);
+  
+  const handleExport = async () => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
     try {
-      setIsGenerating(true);
-      
-      // Fetch all sales for the selected date
-      const salesData = await fetchCashSalesForDate(date);
-      if (!salesData || salesData.length === 0) {
-        setIsGenerating(false);
-        return;
-      }
-      
-      // Filter for cash sales only
-      const cashSales = filterCashSales(salesData);
-      if (cashSales.length === 0) {
-        setIsGenerating(false);
-        return;
-      }
-      
-      // Format data for the report
-      const formattedSales = formatCashSalesForReport(cashSales);
-      
-      // Generate the report
-      await generateCashSalesReport(formattedSales, date, redirectToDocuments);
+      console.log("Starting cash sales report export");
+      await exportCashCustomersReport(redirectToDocuments);
+      console.log("Finished cash sales report export");
     } catch (error) {
-      console.error("Error generating cash sales report:", error);
+      console.error("Error in cash sales report export:", error);
     } finally {
-      setIsGenerating(false);
+      setIsExporting(false);
     }
   };
-
+  
   return (
-    <div className="flex flex-col gap-4 p-4 bg-white rounded-md border">
-      <h3 className="text-lg font-medium">Izveštaj gotovinske prodaje</h3>
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "justify-start text-left font-normal w-full sm:w-auto",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "dd.MM.yyyy") : <span>Izaberi datum</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(date) => date && setDate(date)}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-        <Button 
-          onClick={handleGenerateReport}
-          disabled={isGenerating}
-          className="w-full sm:w-auto"
-        >
-          {isGenerating ? "Generisanje..." : "Generiši izveštaj"}
-        </Button>
-      </div>
-    </div>
+    <Button
+      variant="outline"
+      className="w-full"
+      onClick={handleExport}
+      disabled={isExporting}
+    >
+      <FileSpreadsheet className="mr-2 h-5 w-5" />
+      {isExporting ? "Izvoz u toku..." : "Izveštaj gotovinske prodaje"}
+    </Button>
   );
 };
