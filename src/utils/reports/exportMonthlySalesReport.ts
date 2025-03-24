@@ -50,7 +50,7 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
     // Prepare data for the first sheet (customer orders)
     const customerOrdersData = salesData.map((sale: Order) => {
       // Get customer data from either customers or kupci_darko
-      const customerName = sale.customer?.name || sale.kupci_darko?.name || 'Nepoznat kupac';
+      const customerName = sale.customer?.name || (sale.kupci_darko ? sale.kupci_darko.name : 'Nepoznat kupac');
       
       return {
         'Datum': new Date(sale.date).toLocaleDateString('sr-RS'),

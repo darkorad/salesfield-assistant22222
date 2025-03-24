@@ -12,4 +12,5 @@ export interface Order {
   payment_type: 'cash' | 'invoice';
   payment_status: 'gotovina' | 'racun';
   sent?: boolean;
+  kupci_darko?: any; // Adding the missing property to fix type error
 }
