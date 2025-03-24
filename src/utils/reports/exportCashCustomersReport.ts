@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { fetchTodayCashSales } from "@/services/salesService";
 import { generateCashSalesWorksheet } from "./worksheetGenerator";
 import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
+import { format } from "date-fns";
 
-export const exportCashCustomersReport = async () => {
+export const exportCashCustomersReport = async (redirectToDocuments?: () => void) => {
   try {
     toast.info("Priprema izveštaja gotovinske prodaje...");
     
@@ -14,10 +16,31 @@ export const exportCashCustomersReport = async () => {
 
     const { wb, ws } = generateCashSalesWorksheet(salesData);
 
-    // Export the workbook without specific tab name
+    // Format date for filename
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    await exportWorkbook(wb, `gotovinska-prodaja-${dateStr}`);
+    const formattedDate = format(today, "dd-MM-yyyy");
+    const filename = `Gotovinska-Prodaja-${formattedDate}`;
+    
+    // Save to Documents storage
+    const storedFile = await saveWorkbookToStorage(wb, filename);
+    
+    if (storedFile) {
+      toast.success(`Izveštaj gotovinske prodaje je uspešno sačuvan`, {
+        description: `Možete ga pronaći u meniju Dokumenti`,
+        action: {
+          label: 'Otvori Dokumenti',
+          onClick: () => {
+            if (redirectToDocuments) {
+              redirectToDocuments();
+            }
+          }
+        },
+        duration: 10000
+      });
+    }
+
+    // Export the workbook for download
+    await exportWorkbook(wb, filename);
 
   } catch (error) {
     console.error("Error exporting cash customers report:", error);

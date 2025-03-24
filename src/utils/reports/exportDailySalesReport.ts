@@ -1,9 +1,13 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { Order } from "@/types";
+import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
+import { format } from "date-fns";
 
-export const exportDailySalesReport = async () => {
+export const exportDailySalesReport = async (redirectToDocuments?: () => void) => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -110,13 +114,30 @@ export const exportDailySalesReport = async () => {
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Dnevni izveštaj");
 
-    // Generate filename with current date
-    const dateStr = today.toISOString().split('T')[0];
-    const filename = `dnevna-prodaja-${dateStr}.xlsx`;
+    // Generate filename with a more descriptive name and formatted date
+    const formattedDate = format(today, "dd-MM-yyyy");
+    const fileName = `Dnevni-Izvestaj-Prodaje-${formattedDate}`;
 
-    // Save the file
-    XLSX.writeFile(wb, filename);
-    toast.success("Izveštaj je uspešno izvezen");
+    // Save to Documents storage first
+    const storedFile = await saveWorkbookToStorage(wb, fileName);
+    
+    if (storedFile) {
+      toast.success(`Dnevni izveštaj je uspešno sačuvan`, {
+        description: `Možete ga pronaći u meniju Dokumenti`,
+        action: {
+          label: 'Otvori Dokumenti',
+          onClick: () => {
+            if (redirectToDocuments) {
+              redirectToDocuments();
+            }
+          }
+        },
+        duration: 10000
+      });
+    }
+
+    // Export the workbook for download
+    await exportWorkbook(wb, fileName);
 
   } catch (error) {
     console.error("Error generating report:", error);

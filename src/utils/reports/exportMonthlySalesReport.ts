@@ -1,9 +1,13 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { Order } from "@/types";
+import { exportWorkbook } from "@/utils/fileExport";
+import { saveWorkbookToStorage } from "@/utils/fileStorage";
+import { format } from "date-fns";
 
-export const exportMonthlySalesReport = async () => {
+export const exportMonthlySalesReport = async (redirectToDocuments?: () => void) => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -92,14 +96,38 @@ export const exportMonthlySalesReport = async () => {
       { wch: 15 }, // Količina
     ];
 
-    // Generate filename with current month and year
-    const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    const filename = `mesecna-prodaja-${monthStr}.xlsx`;
+    // Get month name in Serbian
+    const monthNames = [
+      'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Jun',
+      'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
+    ];
+    const monthName = monthNames[today.getMonth()];
+    const year = today.getFullYear();
+    
+    // Generate descriptive filename with month and year
+    const filename = `Mesecni-Izvestaj-Prodaje-${monthName}-${year}`;
 
-    // Save the file
-    XLSX.writeFile(wb, filename);
-    toast.success("Mesečni izveštaj je uspešno izvezen");
+    // Save to Documents storage first
+    const storedFile = await saveWorkbookToStorage(wb, filename);
+    
+    if (storedFile) {
+      toast.success(`Mesečni izveštaj je uspešno sačuvan`, {
+        description: `Možete ga pronaći u meniju Dokumenti`,
+        action: {
+          label: 'Otvori Dokumenti',
+          onClick: () => {
+            if (redirectToDocuments) {
+              redirectToDocuments();
+            }
+          }
+        },
+        duration: 10000
+      });
+    }
 
+    // Export the file for download as well
+    await exportWorkbook(wb, filename);
+    
   } catch (error) {
     console.error("Error generating report:", error);
     toast.error("Greška pri generisanju izveštaja");

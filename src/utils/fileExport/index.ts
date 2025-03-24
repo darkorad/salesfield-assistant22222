@@ -1,17 +1,8 @@
 
-// Main export file that re-exports all functionality
-import { exportWorkbook, WorkbookExportOptions } from './core';
+import { exportWorkbook } from './core';
+import { createRedirectToDocuments } from './utils';
 
-export { exportWorkbook };
-
-// Re-export types
-export type { WorkbookExportOptions };
-
-// Add a utility to create a redirect function based on navigate
-export const createRedirectToDocuments = (navigate: (path: string) => void) => {
-  return () => navigate('/documents');
+export { 
+  exportWorkbook,
+  createRedirectToDocuments
 };
-
-// Re-export types using explicit 'export type' syntax
-export type { StoredFile } from '../fileStorage/types';
-
