@@ -67,21 +67,25 @@ export const SalesActions = (props: SalesActionsProps) => {
             0
           );
 
+          const currentDate = new Date().toISOString();
+          
           const order: Order = {
             id: uuidv4(),
             customer: selectedCustomer,
             items: items,
             total: total,
             payment_type: paymentType,
+            payment_status: paymentType === 'cash' ? 'gotovina' : 'racun',
             sent: false,
-            created_at: new Date().toISOString(),
+            date: currentDate,
+            userId: (await supabase.auth.getUser()).data.user?.id || ''
           };
 
           const { error } = await supabase
             .from('sales')
             .insert({
               id: order.id,
-              user_id: (await supabase.auth.getUser()).data.user?.id,
+              user_id: order.userId,
               customer_id: selectedCustomer.id,
               customer_name: selectedCustomer.name,
               items: items.map(item => ({
@@ -94,7 +98,7 @@ export const SalesActions = (props: SalesActionsProps) => {
               total: total,
               payment_type: paymentType,
               sent: false,
-              created_at: order.created_at,
+              date: order.date,
             });
 
           if (error) {
