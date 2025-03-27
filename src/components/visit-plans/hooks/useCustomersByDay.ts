@@ -1,25 +1,26 @@
 
 import { Customer } from "@/types";
 import { useMemo } from "react";
+import { areDaysSimilar, normalizeDay } from "../utils/dayUtils";
 
 export const useCustomersByDay = (customers: Customer[] = [], day: string = '') => {
   return useMemo(() => {
     if (!day || !customers.length) return [];
     
-    const normalizedDay = day.toLowerCase().trim();
+    const normalizedDay = normalizeDay(day);
     console.log(`Filtering customers for day: ${normalizedDay}`);
     
     const filteredCustomers = customers.filter(customer => {
       // Check all possible day fields
-      const customerDanPosete = customer.dan_posete?.toLowerCase().trim() || '';
-      const customerDanObilaska = customer.dan_obilaska?.toLowerCase().trim() || '';
-      const customerVisitDay = customer.visit_day?.toLowerCase().trim() || '';
+      const customerDanPosete = normalizeDay(customer.dan_posete);
+      const customerDanObilaska = normalizeDay(customer.dan_obilaska);
+      const customerVisitDay = normalizeDay(customer.visit_day);
       
-      // Consider a match if any of the day fields match the target day
+      // We'll use our improved day matching function to compare days
       const isMatch = 
-        customerDanPosete === normalizedDay || 
-        customerDanObilaska === normalizedDay || 
-        customerVisitDay === normalizedDay;
+        areDaysSimilar(customerDanPosete, normalizedDay) || 
+        areDaysSimilar(customerDanObilaska, normalizedDay) || 
+        areDaysSimilar(customerVisitDay, normalizedDay);
       
       if (isMatch) {
         console.log(`Customer matched day ${normalizedDay}:`, customer.name, {

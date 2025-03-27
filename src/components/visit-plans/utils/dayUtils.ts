@@ -28,11 +28,10 @@ export const getDaySimilarityMap = () => ({
 
 // Compare days using the similarity map with improved matching
 export const areDaysSimilar = (day1: string, day2: string): boolean => {
-  const normalizedDay1 = normalizeDay(day1);
-  const normalizedDay2 = normalizeDay(day2);
+  if (!day1 || !day2) return false;
   
   // If direct match after normalization
-  if (normalizedDay1 === normalizedDay2) {
+  if (day1 === day2) {
     return true;
   }
   
@@ -41,12 +40,12 @@ export const areDaysSimilar = (day1: string, day2: string): boolean => {
   
   for (const [key, variations] of Object.entries(dayMap)) {
     // Check if either day exactly matches any variation
-    const day1ExactMatch = variations.some(v => normalizedDay1 === v.toLowerCase());
-    const day2ExactMatch = variations.some(v => normalizedDay2 === v.toLowerCase());
+    const day1ExactMatch = variations.some(v => day1 === normalizeDay(v));
+    const day2ExactMatch = variations.some(v => day2 === normalizeDay(v));
     
     // Check if either day includes any variation
-    const day1PartialMatch = variations.some(v => normalizedDay1.includes(v.toLowerCase()));
-    const day2PartialMatch = variations.some(v => normalizedDay2.includes(v.toLowerCase()));
+    const day1PartialMatch = variations.some(v => day1.includes(normalizeDay(v)));
+    const day2PartialMatch = variations.some(v => day2.includes(normalizeDay(v)));
     
     // Match if both days are in the same variation group
     if ((day1ExactMatch || day1PartialMatch) && (day2ExactMatch || day2PartialMatch)) {

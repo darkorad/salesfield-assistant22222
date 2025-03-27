@@ -38,6 +38,17 @@ export const DaySchedule = ({ day, customers, onCustomerSelect, isOffline }: Day
       filteredCustomers: filteredCustomers.length,
       isOffline: isOffline
     });
+    
+    if (customersForDay.length > 0) {
+      console.log(`Sample customers for ${day}:`, 
+        customersForDay.slice(0, 3).map(c => ({ 
+          name: c.name, 
+          dan_posete: c.dan_posete,
+          dan_obilaska: c.dan_obilaska,
+          visit_day: c.visit_day
+        }))
+      );
+    }
   }, [day, customers.length, customersForDay.length, filteredCustomers.length, isOffline]);
 
   const handleCustomerClick = (customer: Customer) => {

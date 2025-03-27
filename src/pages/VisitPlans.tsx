@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Customer } from "@/types";
 import { VisitPlansHeader } from "@/components/visit-plans/VisitPlansHeader";
 import { VisitPlanTabs } from "@/components/visit-plans/VisitPlanTabs";
@@ -7,7 +7,8 @@ import { TodayVisitsSection } from "@/components/visit-plans/TodayVisitsSection"
 import { useVisitPlansData } from "@/components/visit-plans/hooks/useVisitPlansData";
 import { FileImport } from "@/components/settings/FileImport";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, AlertCircle, WifiOff } from "lucide-react";
+import { UploadCloud, AlertCircle, WifiOff, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 const getCurrentDayInSerbian = () => {
   const day = new Date().toLocaleString('sr-Latn-RS', { weekday: 'long' }).toLowerCase();
@@ -34,6 +35,17 @@ const VisitPlans = () => {
   const { visitPlans, customers, isLoading, error, fetchData, lastDataRefresh, isOffline } = useVisitPlansData();
   const [selectedDay, setSelectedDay] = useState(getCurrentDayInSerbian());
   const [showImport, setShowImport] = useState(false);
+  
+  // Force data refresh when the component mounts
+  useEffect(() => {
+    console.log("VisitPlans component mounted, fetching fresh data");
+    fetchData();
+  }, [fetchData]);
+
+  const handleRefreshData = () => {
+    toast.info("Osvežavanje podataka...");
+    fetchData();
+  };
 
   return (
     <div className="container mx-auto p-2">
@@ -47,6 +59,21 @@ const VisitPlans = () => {
               Offline režim - koriste se lokalno sačuvani podaci
             </p>
           </div>
+        </div>
+      )}
+      
+      {!isOffline && !error && (
+        <div className="flex justify-end mb-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefreshData}
+            className="flex items-center gap-1"
+            disabled={isLoading}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Osveži podatke
+          </Button>
         </div>
       )}
       

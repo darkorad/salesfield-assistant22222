@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { processCustomerData } from "@/utils/import/customerImportUtils";
+import { normalizeDay } from "@/components/visit-plans/utils/dayUtils";
 
 export const CustomerImport = () => {
   const handleImportCustomers = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,8 +38,8 @@ export const CustomerImport = () => {
           
           const dayColumns = headers.filter(h => 
             h && typeof h === 'string' && 
-            h.toLowerCase().includes('dan') || 
-            h.toLowerCase().includes('day')
+            (h.toLowerCase().includes('dan') || 
+            h.toLowerCase().includes('day'))
           );
           
           if (dayColumns.length > 0) {
@@ -84,7 +85,8 @@ export const CustomerImport = () => {
           
           // Process each row from the Excel file
           for (const row of jsonData) {
-            // Check if there's a dan_posete field
+            // Normalize and process all day fields
+            // Check and normalize dan_posete field
             if ((row as any)["dan_posete"]) {
               (row as any)["dan_posete"] = ((row as any)["dan_posete"]).toString().trim();
               visitDaysFound.add((row as any)["dan_posete"]);
@@ -96,6 +98,10 @@ export const CustomerImport = () => {
               (row as any)["Dan posete"] = ((row as any)["Dan posete"]).toString().trim();
               visitDaysFound.add((row as any)["Dan posete"]);
               console.log(`Row has Dan posete: ${(row as any)["Dan posete"]}`);
+              // Make sure we also set dan_posete to ensure consistent field usage
+              if (!(row as any)["dan_posete"]) {
+                (row as any)["dan_posete"] = (row as any)["Dan posete"];
+              }
             }
             
             // Check for dan_obilaska
@@ -108,6 +114,10 @@ export const CustomerImport = () => {
             if ((row as any)["Dan obilaska"]) {
               (row as any)["Dan obilaska"] = ((row as any)["Dan obilaska"]).toString().trim();
               visitDaysFound.add((row as any)["Dan obilaska"]);
+              // Ensure consistency
+              if (!(row as any)["dan_obilaska"]) {
+                (row as any)["dan_obilaska"] = (row as any)["Dan obilaska"];
+              }
             }
             
             // For Veljko, we use the regular customers table
@@ -126,7 +136,7 @@ export const CustomerImport = () => {
                     is_vat_registered: (row as any).is_vat_registered === 'DA' || (row as any).is_vat_registered === true,
                     gps_coordinates: (row as any).gps_coordinates || '',
                     dan_obilaska: (row as any).Dan_obilaska || (row as any).dan_obilaska || '',
-                    visit_day: (row as any).visit_day || (row as any).Dan_posete || '',
+                    visit_day: (row as any).visit_day || '',
                     naselje: (row as any).naselje || '',
                     group_name: (row as any).group_name || '',
                     email: (row as any).email || '',
