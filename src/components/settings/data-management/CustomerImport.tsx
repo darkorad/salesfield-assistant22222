@@ -30,6 +30,23 @@ export const CustomerImport = () => {
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
           console.log("Parsed customer data:", jsonData);
+          
+          // Check for day columns
+          const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
+          console.log("Excel headers found:", headers);
+          
+          const dayColumns = headers.filter(h => 
+            h && typeof h === 'string' && 
+            h.toLowerCase().includes('dan') || 
+            h.toLowerCase().includes('day')
+          );
+          
+          if (dayColumns.length > 0) {
+            console.log("Found day columns:", dayColumns);
+            toast.info(`Pronađene kolone za dane posete: ${dayColumns.join(', ')}`);
+          } else {
+            toast.warning("Nisu pronađene kolone za dane posete u Excel fajlu");
+          }
 
           // Clear all existing customer data
           try {
@@ -65,29 +82,32 @@ export const CustomerImport = () => {
           // Display what days are found in the import
           const visitDaysFound = new Set();
           
-          // Map the day fields for consistency
+          // Process each row from the Excel file
           for (const row of jsonData) {
-            // Normalize day fields to lowercase for consistency
+            // Check if there's a dan_posete field
+            if ((row as any)["dan_posete"]) {
+              (row as any)["dan_posete"] = ((row as any)["dan_posete"]).toString().trim();
+              visitDaysFound.add((row as any)["dan_posete"]);
+              console.log(`Row has dan_posete: ${(row as any)["dan_posete"]}`);
+            }
+            
+            // Also check Dan posete with capital letter
             if ((row as any)["Dan posete"]) {
-              (row as any)["Dan posete"] = ((row as any)["Dan posete"]).toString().toLowerCase().trim();
+              (row as any)["Dan posete"] = ((row as any)["Dan posete"]).toString().trim();
               visitDaysFound.add((row as any)["Dan posete"]);
+              console.log(`Row has Dan posete: ${(row as any)["Dan posete"]}`);
             }
             
+            // Check for dan_obilaska
+            if ((row as any)["dan_obilaska"]) {
+              (row as any)["dan_obilaska"] = ((row as any)["dan_obilaska"]).toString().trim();
+              visitDaysFound.add((row as any)["dan_obilaska"]);
+            }
+            
+            // Check for Dan obilaska
             if ((row as any)["Dan obilaska"]) {
-              (row as any)["Dan obilaska"] = ((row as any)["Dan obilaska"]).toString().toLowerCase().trim();
+              (row as any)["Dan obilaska"] = ((row as any)["Dan obilaska"]).toString().trim();
               visitDaysFound.add((row as any)["Dan obilaska"]);
-            }
-            
-            // Make sure the day values are synchronized
-            if ((row as any)["Dan posete"] && !(row as any)["Dan obilaska"]) {
-              (row as any)["Dan obilaska"] = (row as any)["Dan posete"];
-              (row as any)["visit_day"] = (row as any)["Dan posete"];
-            } else if ((row as any)["Dan obilaska"] && !(row as any)["Dan posete"]) {
-              (row as any)["Dan posete"] = (row as any)["Dan obilaska"];
-              (row as any)["visit_day"] = (row as any)["Dan obilaska"];
-            } else if ((row as any)["Dan posete"] && (row as any)["Dan obilaska"]) {
-              // If both are present, set visit_day to the value of Dan obilaska
-              (row as any)["visit_day"] = (row as any)["Dan obilaska"];
             }
             
             // For Veljko, we use the regular customers table
@@ -109,7 +129,8 @@ export const CustomerImport = () => {
                     visit_day: (row as any).visit_day || (row as any).Dan_posete || '',
                     naselje: (row as any).naselje || '',
                     group_name: (row as any).group_name || '',
-                    email: (row as any).email || ''
+                    email: (row as any).email || '',
+                    dan_posete: (row as any).dan_posete || (row as any)["Dan posete"] || ''
                   });
 
                 if (error) {

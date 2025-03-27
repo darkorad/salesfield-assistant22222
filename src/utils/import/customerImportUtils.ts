@@ -46,45 +46,70 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       code: (rawData as any)["Šifra kupca"] || (rawData as any).code
     };
     
-    // Extract day values from any matching field names
-    // Check each possible day field and use the first non-empty one found
-    let dayValue = null;
-    for (const field of possibleDayFields) {
-      if ((rawData as any)[field] && (rawData as any)[field].toString().trim() !== '') {
-        dayValue = (rawData as any)[field].toString().trim().toLowerCase();
-        console.log(`Found day value in field ${field}: ${dayValue}`);
-        break;
-      }
-    }
-    
-    // Directly look for dan_posete column as shown in the image
+    // Check for dan_posete field directly
     if ((rawData as any)["dan_posete"] !== undefined) {
-      data.dan_posete = (rawData as any)["dan_posete"].toString().trim().toLowerCase();
+      data.dan_posete = (rawData as any)["dan_posete"].toString().trim();
       console.log(`Found dan_posete field with value: ${data.dan_posete}`);
-    }
-    
-    // Also check for other variants of the same field
-    if (!data.dan_posete && (rawData as any)["Dan posete"] !== undefined) {
-      data.dan_posete = (rawData as any)["Dan posete"].toString().trim().toLowerCase();
+    } else if ((rawData as any)["Dan posete"] !== undefined) {
+      data.dan_posete = (rawData as any)["Dan posete"].toString().trim();
       console.log(`Found Dan posete field with value: ${data.dan_posete}`);
     }
     
-    // Ensure all day fields are populated if at least one is found
+    // Check for dan_obilaska field
+    if ((rawData as any)["dan_obilaska"] !== undefined) {
+      data.dan_obilaska = (rawData as any)["dan_obilaska"].toString().trim();
+      console.log(`Found dan_obilaska field with value: ${data.dan_obilaska}`);
+    } else if ((rawData as any)["Dan obilaska"] !== undefined) {
+      data.dan_obilaska = (rawData as any)["Dan obilaska"].toString().trim();
+      console.log(`Found Dan obilaska field with value: ${data.dan_obilaska}`);
+    }
+    
+    // Check for visit_day field
+    if ((rawData as any)["visit_day"] !== undefined) {
+      data.visit_day = (rawData as any)["visit_day"].toString().trim();
+      console.log(`Found visit_day field with value: ${data.visit_day}`);
+    } else if ((rawData as any)["Visit day"] !== undefined) {
+      data.visit_day = (rawData as any)["Visit day"].toString().trim();
+      console.log(`Found Visit day field with value: ${data.visit_day}`);
+    }
+    
+    // If none of the specific fields were found, check all possible day fields
+    if (!data.dan_posete && !data.dan_obilaska && !data.visit_day) {
+      for (const field of possibleDayFields) {
+        if ((rawData as any)[field] && (rawData as any)[field].toString().trim() !== '') {
+          const dayValue = (rawData as any)[field].toString().trim();
+          console.log(`Found day value in field ${field}: ${dayValue}`);
+          
+          // Use the found day value for all day fields
+          data.dan_posete = dayValue;
+          data.dan_obilaska = dayValue;
+          data.visit_day = dayValue;
+          break;
+        }
+      }
+    }
+    
+    // Ensure all day fields are synchronized if at least one is found
     if (data.dan_posete) {
-      data.dan_obilaska = data.dan_obilaska || data.dan_posete;
-      data.visit_day = data.visit_day || data.dan_posete;
+      // Normalize the primary field first
+      data.dan_posete = normalizeDay(data.dan_posete);
+      console.log(`Normalized dan_posete: ${data.dan_posete}`);
+      
+      // Copy to other fields if they're not set
+      if (!data.dan_obilaska) data.dan_obilaska = data.dan_posete;
+      if (!data.visit_day) data.visit_day = data.dan_posete;
     } else if (data.dan_obilaska) {
-      data.dan_posete = data.dan_posete || data.dan_obilaska;
-      data.visit_day = data.visit_day || data.dan_obilaska;
+      data.dan_obilaska = normalizeDay(data.dan_obilaska);
+      console.log(`Normalized dan_obilaska: ${data.dan_obilaska}`);
+      
+      if (!data.dan_posete) data.dan_posete = data.dan_obilaska;
+      if (!data.visit_day) data.visit_day = data.dan_obilaska;
     } else if (data.visit_day) {
-      data.dan_posete = data.dan_posete || data.visit_day;
-      data.dan_obilaska = data.dan_obilaska || data.visit_day;
-    } else if (dayValue) {
-      // Use the found day value for all day fields
-      data.dan_posete = dayValue;
-      data.dan_obilaska = dayValue;
-      data.visit_day = dayValue;
-      console.log(`Using found day value for all day fields: ${dayValue}`);
+      data.visit_day = normalizeDay(data.visit_day);
+      console.log(`Normalized visit_day: ${data.visit_day}`);
+      
+      if (!data.dan_posete) data.dan_posete = data.visit_day;
+      if (!data.dan_obilaska) data.dan_obilaska = data.visit_day;
     }
     
     // Extract name from object if it's in that format
@@ -114,26 +139,6 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       console.log(`Generated temporary PIB for ${data.name}`);
     }
     
-    // Normalize day data to ensure consistency
-    if (data.dan_posete) {
-      // Clean and normalize the day value
-      const normalized = normalizeDay(data.dan_posete);
-      data.dan_posete = normalized;
-      console.log(`Normalized dan_posete for ${data.name}: ${data.dan_posete}`);
-    }
-    
-    if (data.dan_obilaska) {
-      const normalized = normalizeDay(data.dan_obilaska);
-      data.dan_obilaska = normalized;
-      console.log(`Normalized dan_obilaska for ${data.name}: ${data.dan_obilaska}`);
-    }
-    
-    if (data.visit_day) {
-      const normalized = normalizeDay(data.visit_day);
-      data.visit_day = normalized;
-      console.log(`Normalized visit_day for ${data.name}: ${data.visit_day}`);
-    }
-
     console.log(`Final day fields for customer ${data.name}:`, {
       dan_posete: data.dan_posete,
       dan_obilaska: data.dan_obilaska,
@@ -262,4 +267,3 @@ const normalizeDay = (day: string): string => {
   // If no match found, return the original lowercased value
   return dayStr;
 };
-
