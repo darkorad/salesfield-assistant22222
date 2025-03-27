@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Reports } from "@/components/settings/Reports";
 import MonthlySales from "./MonthlySales";
 import { AddCustomerCard } from "@/components/settings/AddCustomerCard";
-import { DuplicateCustomersChecker } from "@/components/settings/DuplicateCustomersChecker";
 import { DataManagement } from "@/components/settings/data-management/DataManagement";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -90,10 +89,6 @@ const Settings = () => {
             
             <div className="w-full">
               <AddCustomerCard />
-            </div>
-            
-            <div className="w-full">
-              <DuplicateCustomersChecker />
             </div>
 
             <div>
