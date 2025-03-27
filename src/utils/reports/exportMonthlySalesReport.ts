@@ -6,6 +6,8 @@ import { Order } from "@/types";
 import { exportWorkbook } from "@/utils/fileExport";
 import { saveWorkbookToStorage } from "@/utils/fileStorage";
 import { format } from "date-fns";
+import { Share } from "@capacitor/share";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const exportMonthlySalesReport = async (redirectToDocuments?: () => void) => {
   try {
@@ -121,9 +123,10 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
     ];
     const monthName = monthNames[today.getMonth()];
     const year = today.getFullYear();
+    const formattedDate = format(today, "dd-MM-yyyy");
     
-    // Generate descriptive filename with month and year
-    const filename = `Mesecni-Izvestaj-Prodaje-${monthName}-${year}`;
+    // Generate descriptive filename with month, year and date
+    const filename = `Mesecni-Izvestaj-Prodaje-${monthName}-${year}-${formattedDate}`;
 
     // Save to Documents storage first
     const storedFile = await saveWorkbookToStorage(wb, filename);
@@ -139,19 +142,39 @@ export const exportMonthlySalesReport = async (redirectToDocuments?: () => void)
             }
           }
         },
-        duration: 10000
+        duration: 5000,
+        dismissible: true
       });
     }
 
-    // Export the file for download as well
-    await exportWorkbook(wb, filename);
-    toast.success("Mesečni izveštaj je uspešno izvezen", {
-      description: "Preuzimanje će početi automatski",
-      duration: 5000
-    });
+    // Export the file for download with options for sharing
+    const exportOptions = {
+      showToasts: true,
+      onSuccess: async () => {
+        // Check if we're on mobile to offer sharing
+        if ('Capacitor' in window) {
+          try {
+            // Try to share the file to make it more accessible
+            await Share.share({
+              title: 'Izvezeni izveštaj',
+              text: `Izveštaj prodaje za ${monthName} ${year}`,
+              dialogTitle: 'Podelite ili sačuvajte izveštaj'
+            });
+          } catch (shareError) {
+            console.warn('Could not share file, but it was saved:', shareError);
+          }
+        }
+      }
+    };
+
+    // Export the workbook
+    await exportWorkbook(wb, filename, exportOptions);
     
   } catch (error) {
     console.error("Error generating report:", error);
-    toast.error(`Greška pri generisanju izveštaja: ${error instanceof Error ? error.message : String(error)}`);
+    toast.error(`Greška pri generisanju izveštaja: ${error instanceof Error ? error.message : String(error)}`, {
+      duration: 4000,
+      dismissible: true
+    });
   }
 };

@@ -5,6 +5,7 @@ import { exportToWeb } from './webExport';
 import { WorkbookExportOptions } from './types';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
+import { Share } from '@capacitor/share';
 
 /**
  * Determines the platform and exports the workbook accordingly
@@ -16,7 +17,12 @@ export async function exportWorkbook(
 ): Promise<boolean> {
   try {
     console.log(`Starting export process for file: ${fileName}`);
-    toast.info(`Priprema fajla "${fileName}.xlsx" za preuzimanje...`);
+    
+    // Show a dismissible toast
+    const toastId = toast.info(`Priprema fajla "${fileName}.xlsx" za preuzimanje...`, {
+      duration: 3000,
+      dismissible: true
+    });
     
     // Generate the Excel file as an array buffer
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
@@ -45,12 +51,17 @@ export async function exportWorkbook(
     } catch (primaryError) {
       console.error('Primary export method failed, using fallback:', primaryError);
       
+      // Dismiss the previous toast
+      toast.dismiss(toastId);
+      
       // Use the universal fallback method
       return await useUniversalFallback(blob, fileName);
     }
   } catch (error) {
     console.error('Error in exportWorkbook:', error);
-    toast.error(`Greška pri izvozu: ${error instanceof Error ? error.message : String(error)}`);
+    toast.error(`Greška pri izvozu: ${error instanceof Error ? error.message : String(error)}`, {
+      dismissible: true
+    });
     return false;
   }
 }
@@ -75,16 +86,20 @@ async function useUniversalFallback(blob: Blob, fileName: string): Promise<boole
     // Trigger download
     a.click();
     
-    // Show persistent download option
+    // Show persistent download option with dismissible toast
     toast.info(`Preuzimanje "${fileName}"`, {
       action: {
         label: 'Preuzmi direktno',
         onClick: () => {
           window.open(url, '_blank');
-          toast.success('Fajl otvoren, sačuvajte ga na svoj uređaj');
+          toast.success('Fajl otvoren, sačuvajte ga na svoj uređaj', {
+            dismissible: true,
+            duration: 3000
+          });
         }
       },
-      duration: 30000
+      duration: 8000,
+      dismissible: true
     });
     
     // Clean up

@@ -23,7 +23,7 @@ export async function exportToMobile(
     // Convert blob to base64
     const base64Data = await blobToBase64(blob);
     
-    // Show toast with direct download option
+    // Show dismissible toast with direct download option
     if (options?.showToasts !== false) {
       const blobUrl = URL.createObjectURL(blob);
       
@@ -32,10 +32,14 @@ export async function exportToMobile(
           label: 'Preuzmi direktno',
           onClick: () => {
             window.open(blobUrl, '_blank');
-            toast.success('Fajl otvoren, sačuvajte ga na svoj uređaj');
+            toast.success('Fajl otvoren, sačuvajte ga na svoj uređaj', {
+              dismissible: true,
+              duration: 3000
+            });
           }
         },
-        duration: 15000
+        duration: 5000,
+        dismissible: true
       });
     }
     
@@ -45,6 +49,18 @@ export async function exportToMobile(
     // Call success callback if provided
     if (success && options?.onSuccess) {
       options.onSuccess();
+    } else if (success) {
+      // If no callback provided but save was successful, try sharing
+      try {
+        // Attempt to share the file
+        await Share.share({
+          title: 'Izvezeni izveštaj',
+          text: `Izveštaj ${fileName}`,
+          dialogTitle: 'Podelite ili sačuvajte izveštaj'
+        });
+      } catch (shareError) {
+        console.warn('Could not share file after saving:', shareError);
+      }
     }
     
     return success;
@@ -123,7 +139,8 @@ async function trySaveToDownloads(
       if (options?.showToasts !== false) {
         toast.success(`Fajl "${fileName}" uspešno sačuvan`, {
           description: `Lokacija: ${downloadPath || 'root'}/${fileName}. Otvorite 'Files' ili 'My Files' aplikaciju i proverite u Download folderu.`,
-          duration: 8000
+          duration: 5000,
+          dismissible: true
         });
       }
       
@@ -165,7 +182,8 @@ async function trySaveToDataAndShare(
     if (options?.showToasts !== false) {
       toast.success(`Fajl "${fileName}" je spreman za deljenje`, {
         description: "Izaberite 'Sačuvaj na uređaj' opciju u meniju za deljenje.",
-        duration: 8000
+        duration: 5000,
+        dismissible: true
       });
     }
     

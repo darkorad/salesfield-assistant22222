@@ -1,16 +1,19 @@
+
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, Share } from "lucide-react";
 import { useState } from "react";
 import { exportMonthlySalesReport } from "@/utils/reports/exportMonthlySalesReport";
 import { exportMonthlyCustomerReport } from "@/utils/reports/monthlyCustomerReport";
 import { exportMonthlyItemsReport } from "@/utils/reports/monthlyItemsReport";
 import { ReportButtonProps } from "./ReportsContainer";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps) => {
   const [isExportingSales, setIsExportingSales] = useState(false);
   const [isExportingCustomers, setIsExportingCustomers] = useState(false);
   const [isExportingItems, setIsExportingItems] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleExportSales = async () => {
     if (isExportingSales) return;
@@ -18,12 +21,24 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
     setIsExportingSales(true);
     try {
       console.log("Starting monthly sales report export");
-      toast.info("Izvoz mesečnog izveštaja prodaje u toku...");
+      
+      // Use dismissible toast on mobile
+      const toastId = toast.info("Izvoz mesečnog izveštaja prodaje u toku...", {
+        duration: isMobile ? 3000 : 5000,
+        dismissible: true
+      });
+      
       await exportMonthlySalesReport(redirectToDocuments);
       console.log("Finished monthly sales report export");
+      
+      // Dismiss the previous toast if it's still active
+      toast.dismiss(toastId);
     } catch (error) {
       console.error("Error in monthly sales report export:", error);
-      toast.error("Greška pri izvozu mesečnog izveštaja prodaje");
+      toast.error("Greška pri izvozu mesečnog izveštaja prodaje", {
+        duration: 4000,
+        dismissible: true
+      });
     } finally {
       setIsExportingSales(false);
     }
@@ -35,12 +50,22 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
     setIsExportingCustomers(true);
     try {
       console.log("Starting monthly customer report export");
-      toast.info("Izvoz mesečnog izveštaja po kupcima u toku...");
+      
+      const toastId = toast.info("Izvoz mesečnog izveštaja po kupcima u toku...", {
+        duration: isMobile ? 3000 : 5000,
+        dismissible: true
+      });
+      
       await exportMonthlyCustomerReport(redirectToDocuments);
       console.log("Finished monthly customer report export");
+      
+      toast.dismiss(toastId);
     } catch (error) {
       console.error("Error in monthly customer report export:", error);
-      toast.error("Greška pri izvozu mesečnog izveštaja po kupcima");
+      toast.error("Greška pri izvozu mesečnog izveštaja po kupcima", {
+        duration: 4000,
+        dismissible: true
+      });
     } finally {
       setIsExportingCustomers(false);
     }
@@ -52,12 +77,22 @@ export const MonthlyReportButtons = ({ redirectToDocuments }: ReportButtonProps)
     setIsExportingItems(true);
     try {
       console.log("Starting monthly items report export");
-      toast.info("Izvoz mesečnog izveštaja po artiklima u toku...");
+      
+      const toastId = toast.info("Izvoz mesečnog izveštaja po artiklima u toku...", {
+        duration: isMobile ? 3000 : 5000,
+        dismissible: true
+      });
+      
       await exportMonthlyItemsReport(redirectToDocuments);
       console.log("Finished monthly items report export");
+      
+      toast.dismiss(toastId);
     } catch (error) {
       console.error("Error in monthly items report export:", error);
-      toast.error("Greška pri izvozu mesečnog izveštaja po artiklima");
+      toast.error("Greška pri izvozu mesečnog izveštaja po artiklima", {
+        duration: 4000,
+        dismissible: true
+      });
     } finally {
       setIsExportingItems(false);
     }
