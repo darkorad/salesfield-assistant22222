@@ -29,16 +29,30 @@ export const CustomerImport = () => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+          console.log("Parsed customer data:", jsonData);
+
           // Clear all existing customer data
           try {
             toast.info("Brisanje postojećih podataka...");
-            const { error: deleteError } = await supabase
+            
+            // First, delete related sales data
+            const { error: salesDeleteError } = await supabase
               .from('sales')
               .delete()
               .eq('user_id', session.user.id);
               
-            if (deleteError) {
-              console.error("Error deleting old sales data:", deleteError);
+            if (salesDeleteError) {
+              console.error("Error deleting old sales data:", salesDeleteError);
+            }
+            
+            // Then delete visit plans
+            const { error: visitPlansDeleteError } = await supabase
+              .from('visit_plans')
+              .delete()
+              .eq('user_id', session.user.id);
+              
+            if (visitPlansDeleteError) {
+              console.error("Error deleting old visit plans:", visitPlansDeleteError);
             }
           } catch (err) {
             console.error("Error during data cleanup:", err);
@@ -48,14 +62,31 @@ export const CustomerImport = () => {
           let errorCount = 0;
           const userEmail = session.user.email;
 
+          // Display what days are found in the import
+          const visitDaysFound = new Set();
+          
           // Map the day fields for consistency
           for (const row of jsonData) {
+            // Normalize day fields to lowercase for consistency
+            if ((row as any)["Dan posete"]) {
+              (row as any)["Dan posete"] = ((row as any)["Dan posete"]).toString().toLowerCase().trim();
+              visitDaysFound.add((row as any)["Dan posete"]);
+            }
+            
+            if ((row as any)["Dan obilaska"]) {
+              (row as any)["Dan obilaska"] = ((row as any)["Dan obilaska"]).toString().toLowerCase().trim();
+              visitDaysFound.add((row as any)["Dan obilaska"]);
+            }
+            
             // Make sure the day values are synchronized
             if ((row as any)["Dan posete"] && !(row as any)["Dan obilaska"]) {
               (row as any)["Dan obilaska"] = (row as any)["Dan posete"];
               (row as any)["visit_day"] = (row as any)["Dan posete"];
             } else if ((row as any)["Dan obilaska"] && !(row as any)["Dan posete"]) {
               (row as any)["Dan posete"] = (row as any)["Dan obilaska"];
+              (row as any)["visit_day"] = (row as any)["Dan obilaska"];
+            } else if ((row as any)["Dan posete"] && (row as any)["Dan obilaska"]) {
+              // If both are present, set visit_day to the value of Dan obilaska
               (row as any)["visit_day"] = (row as any)["Dan obilaska"];
             }
             
@@ -96,6 +127,13 @@ export const CustomerImport = () => {
               const success = await processCustomerData(row, session.user.id);
               if (success) successCount++; else errorCount++;
             }
+          }
+
+          console.log("Visit days found in import:", Array.from(visitDaysFound));
+          if (visitDaysFound.size === 0) {
+            toast.warning("Nisu pronađeni dani posete u uvezenoj datoteci. Molimo proverite format.");
+          } else {
+            toast.info(`Pronađeni dani posete: ${Array.from(visitDaysFound).join(', ')}`);
           }
 
           // Set the timestamp for the data import

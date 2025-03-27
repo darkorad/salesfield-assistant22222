@@ -21,6 +21,8 @@ export interface ImportCustomer {
 
 export const processCustomerData = async (rawData: unknown, userId: string) => {
   try {
+    console.log("Processing customer data:", rawData);
+    
     // Map Excel column names to our field names
     const data = {
       ...rawData as any,
@@ -72,6 +74,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     // Normalize day fields and ensure consistency
     if (data.dan_posete) {
       data.dan_posete = data.dan_posete.toString().toLowerCase().trim();
+      console.log(`Customer ${data.name} has dan_posete: ${data.dan_posete}`);
       // Make sure visit_day is set if dan_posete is available
       if (!data.visit_day) {
         data.visit_day = data.dan_posete;
@@ -80,6 +83,7 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     
     if (data.dan_obilaska) {
       data.dan_obilaska = data.dan_obilaska.toString().toLowerCase().trim();
+      console.log(`Customer ${data.name} has dan_obilaska: ${data.dan_obilaska}`);
       // Make sure visit_day is set if dan_obilaska is available
       if (!data.visit_day) {
         data.visit_day = data.dan_obilaska;
@@ -88,9 +92,15 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
     
     if (data.visit_day) {
       data.visit_day = data.visit_day.toString().toLowerCase().trim();
+      console.log(`Customer ${data.name} has visit_day: ${data.visit_day}`);
       // Make sure dan_posete is set if visit_day is available
       if (!data.dan_posete) {
         data.dan_posete = data.visit_day;
+      }
+      
+      // Make sure dan_obilaska is set if visit_day is available
+      if (!data.dan_obilaska) {
+        data.dan_obilaska = data.visit_day;
       }
     }
 
@@ -111,6 +121,12 @@ export const processCustomerData = async (rawData: unknown, userId: string) => {
       dan_obilaska: data.dan_obilaska || null,
       visit_day: data.visit_day || null
     };
+
+    console.log(`Final data for customer ${customerData.name}:`, {
+      dan_posete: customerData.dan_posete,
+      dan_obilaska: customerData.dan_obilaska,
+      visit_day: customerData.visit_day
+    });
 
     // First try to find if a customer with this code already exists
     const { data: existingCustomer } = await supabase

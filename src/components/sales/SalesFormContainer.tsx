@@ -8,6 +8,8 @@ import { CustomerSelect } from "./CustomerSelect";
 import { ProductSelect } from "./ProductSelect";
 import { OrderSummary } from './OrderSummary';
 import { SalesActions } from "./SalesActions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface SalesFormContainerProps {
   customers: Customer[];
@@ -29,6 +31,14 @@ export const SalesFormContainer = ({ customers, products }: SalesFormContainerPr
     <Card className="w-full max-w-5xl mx-auto border-0 shadow-lg bg-white/50 backdrop-blur-sm">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-semibold text-primary">Nova porudžbina</CardTitle>
+        {customers.length === 1 && (
+          <Alert className="mt-2 bg-amber-50 border-amber-200">
+            <InfoIcon className="h-4 w-4 text-amber-500 mr-2" />
+            <AlertDescription>
+              Samo jedan kupac je pronađen u sistemu. Koristite opciju "Plan poseta" da vidite kupce po danima posete.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         <CustomerSelect 
