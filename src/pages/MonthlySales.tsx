@@ -31,21 +31,20 @@ const MonthlySales = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Check if there was a recent data import
+      // Check if there was a recent data reset
       const userId = session.user.id;
-      const lastImport = localStorage.getItem(`lastCustomersImport_${userId}`);
-      setLastDataRefresh(lastImport);
+      const lastReset = localStorage.getItem(`lastSalesReset_${userId}`);
+      setLastDataRefresh(lastReset);
 
-      // If data was recently imported, don't show old sales data
-      if (lastImport) {
-        const lastImportDate = new Date(lastImport);
+      // If data was recently reset, just show zeros
+      if (lastReset) {
+        const lastResetDate = new Date(lastReset);
         const now = new Date();
-        const differenceInHours = (now.getTime() - lastImportDate.getTime()) / (1000 * 60 * 60);
+        const differenceInHours = (now.getTime() - lastResetDate.getTime()) / (1000 * 60 * 60);
         
-        // If the import was in the last 24 hours, just show zeros
-        // This assumes that after import, new sales should start fresh
+        // If the reset was in the last 24 hours, just show zeros
         if (differenceInHours < 24) {
-          console.log("Recent import detected. Showing zero values for monthly sales.");
+          console.log("Recent reset detected. Showing zero values for monthly sales.");
           setMonthlySales({
             totalCash: 0,
             totalInvoice: 0,
@@ -64,7 +63,7 @@ const MonthlySales = () => {
       const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 1);
       lastDay.setHours(0, 0, 0, 0);
 
-      // Only get sales created after the last import (if any)
+      // Only get sales created after the last reset (if any)
       let query = supabase
         .from('sales')
         .select('*')
@@ -72,9 +71,9 @@ const MonthlySales = () => {
         .gte('created_at', firstDay.toISOString())
         .lt('created_at', lastDay.toISOString());
 
-      if (lastImport) {
-        // Only include sales created after the last import
-        query = query.gte('created_at', new Date(lastImport).toISOString());
+      if (lastReset) {
+        // Only include sales created after the last reset
+        query = query.gte('created_at', new Date(lastReset).toISOString());
       }
 
       const { data: salesData, error } = await query;
@@ -117,13 +116,27 @@ const MonthlySales = () => {
     try {
       setIsRefreshing(true);
       
-      // Update the lastCustomersImport timestamp to force a reset
+      // Get the current user session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       
       const userId = session.user.id;
+      
+      // Delete all sales records for this user
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .eq('user_id', userId);
+        
+      if (error) {
+        console.error("Error deleting sales:", error);
+        toast.error("Greška pri brisanju podataka o prodaji");
+        return;
+      }
+      
+      // Set timestamp for the reset
       const timestamp = new Date().toISOString();
-      localStorage.setItem(`lastCustomersImport_${userId}`, timestamp);
+      localStorage.setItem(`lastSalesReset_${userId}`, timestamp);
       
       // Reset sales data in state
       setMonthlySales({
@@ -133,7 +146,7 @@ const MonthlySales = () => {
       });
       
       setLastDataRefresh(timestamp);
-      toast.success("Podaci o prodaji su resetovani");
+      toast.success("Svi podaci o prodaji su uspešno obrisani");
     } catch (error) {
       console.error("Error resetting data:", error);
       toast.error("Greška pri resetovanju podataka");
@@ -171,7 +184,7 @@ const MonthlySales = () => {
         <div className="space-y-4">
           {lastDataRefresh && (
             <div className="text-xs text-muted-foreground">
-              Poslednji uvoz podataka: {new Date(lastDataRefresh).toLocaleString('sr-Latn-RS')}
+              Poslednji reset podataka: {new Date(lastDataRefresh).toLocaleString('sr-Latn-RS')}
             </div>
           )}
           <div className="pt-4 space-y-2">
@@ -206,7 +219,7 @@ const MonthlySales = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Resetovanje podataka o prodaji</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Ova akcija će resetovati sve podatke o prodaji u aplikaciji za tekući mesec. Podaci neće biti obrisani iz baze podataka, ali će biti skriveni u aplikaciji dok ne unesete nove prodaje.
+                    Ova akcija će obrisati SVE podatke o prodaji iz aplikacije. Svi vaši unosi prodaje će biti trajno izbrisani iz baze podataka.
                     <p className="font-semibold mt-2 text-destructive">
                       Ova akcija se ne može poništiti!
                     </p>
@@ -219,7 +232,7 @@ const MonthlySales = () => {
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    Resetuj podatke
+                    Obriši sve podatke
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
