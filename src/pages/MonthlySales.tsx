@@ -4,7 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { RefreshCw, AlertTriangle } from "lucide-react";
 
 const MonthlySales = () => {
   const [monthlySales, setMonthlySales] = useState({
@@ -153,18 +164,8 @@ const MonthlySales = () => {
 
   return (
     <Card className="mt-4 md:mt-6">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg md:text-xl">Mesečna prodaja</CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleClearData}
-          disabled={isRefreshing}
-          className="h-8"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Resetuj podatke
-        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -186,6 +187,43 @@ const MonthlySales = () => {
               <span className="font-medium">Ukupno za mesec:</span>
               <span className="font-bold">{monthlySales.total} RSD</span>
             </div>
+          </div>
+          
+          <div className="pt-8 mt-4 border-t border-gray-200">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="w-full mt-2"
+                  disabled={isRefreshing}
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Resetuj podatke o prodaji
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Resetovanje podataka o prodaji</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Ova akcija će resetovati sve podatke o prodaji u aplikaciji za tekući mesec. Podaci neće biti obrisani iz baze podataka, ali će biti skriveni u aplikaciji dok ne unesete nove prodaje.
+                    <p className="font-semibold mt-2 text-destructive">
+                      Ova akcija se ne može poništiti!
+                    </p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Odustani</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleClearData}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Resetuj podatke
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </CardContent>
