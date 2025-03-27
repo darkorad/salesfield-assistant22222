@@ -17,13 +17,13 @@ export const normalizeDay = (day: string | undefined | null): string => {
 
 // Create a map of similar day names for better matching
 export const getDaySimilarityMap = () => ({
-  'ponedeljak': ['ponedeljak', 'pon', 'monday', 'mon', 'пон', 'понедељак'],
-  'utorak': ['utorak', 'uto', 'tuesday', 'tue', 'уто', 'уторак'],
-  'sreda': ['sreda', 'sre', 'wednesday', 'wed', 'сре', 'среда'],
-  'četvrtak': ['četvrtak', 'cet', 'cetvrtak', 'thursday', 'thu', 'чет', 'четвртак'],
-  'petak': ['petak', 'pet', 'friday', 'fri', 'пет', 'петак'],
-  'subota': ['subota', 'sub', 'saturday', 'sat', 'суб', 'субота'],
-  'nedelja': ['nedelja', 'ned', 'sunday', 'sun', 'нед', 'недеља']
+  'ponedeljak': ['ponedeljak', 'pon', 'monday', 'mon', 'пон', 'понедељак', 'ponedeljkom'],
+  'utorak': ['utorak', 'uto', 'tuesday', 'tue', 'уто', 'уторак', 'utorkom'],
+  'sreda': ['sreda', 'sre', 'wednesday', 'wed', 'сре', 'среда', 'sredom'],
+  'četvrtak': ['četvrtak', 'cet', 'cetvrtak', 'thursday', 'thu', 'чет', 'четвртак', 'cetvrtkom'],
+  'petak': ['petak', 'pet', 'friday', 'fri', 'пет', 'петак', 'petkom'],
+  'subota': ['subota', 'sub', 'saturday', 'sat', 'суб', 'субота', 'subotom'],
+  'nedelja': ['nedelja', 'ned', 'sunday', 'sun', 'нед', 'недеља', 'nedeljom']
 });
 
 // Compare days using the similarity map with improved matching

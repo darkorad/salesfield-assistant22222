@@ -39,10 +39,29 @@ export const useCustomerSubscription = (fetchData: () => Promise<void>, isOfflin
       }
     };
     
+    // Add real-time subscription for the customers table as well
+    const customerChannel = supabase
+      .channel('regular-customers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'customers'
+        },
+        (payload) => {
+          console.log('Regular customer update received:', payload);
+          toast.success("Podaci o kupcima su ažurirani");
+          fetchData();
+        }
+      )
+      .subscribe();
+    
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(customerChannel);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [fetchData, isOffline]);

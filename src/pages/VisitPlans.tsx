@@ -42,6 +42,19 @@ const VisitPlans = () => {
     fetchData();
   }, [fetchData]);
 
+  // Log customer day information for debugging
+  useEffect(() => {
+    if (customers.length > 0) {
+      const dayFields = customers.slice(0, 10).map(c => ({
+        name: c.name,
+        dan_posete: c.dan_posete,
+        dan_obilaska: c.dan_obilaska,
+        visit_day: c.visit_day
+      }));
+      console.log("Sample customer day fields:", dayFields);
+    }
+  }, [customers]);
+
   const handleRefreshData = () => {
     toast.info("Osvežavanje podataka...");
     fetchData();
